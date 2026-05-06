@@ -1160,6 +1160,10 @@ self.addEventListener('fetch', e => {
     <div id="page-library" class="page">
       <div class="page-header">
         <div class="page-title">مكتبة <span class="gold">التمارين</span></div>
+        <button class="btn btn-gold" style="padding:8px 14px;font-size:12px;display:flex;align-items:center;gap:6px" onclick="openAddExModal()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          إضافة
+        </button>
       </div>
       <input type="text" class="search-input" placeholder="🔍  ابحث عن تمرين..." id="lib-search" oninput="renderLibrary()">
       <div class="filter-row" id="muscle-filters"></div>
@@ -1638,9 +1642,12 @@ function renderLibrary() {
   }
 
   list.innerHTML = filtered.map(ex => `
-    <div class="lib-exercise-item">
+    <div class="lib-exercise-item" style="${ex.custom ? 'border-color:rgba(232,34,42,0.3)' : ''}">
       <div class="lib-ex-info">
-        <div class="lib-ex-name">${ex.nameAr || ex.name}</div>
+        <div class="lib-ex-name">
+          ${ex.nameAr || ex.name}
+          ${ex.custom ? '<span style="background:rgba(232,34,42,0.15);border:1px solid rgba(232,34,42,0.4);color:#e8222a;border-radius:4px;padding:1px 6px;font-size:9px;font-family:var(--font-condensed);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-right:6px">مخصص</span>' : ''}
+        </div>
         <div style="font-size:11px;color:var(--text-dim);font-family:var(--font-condensed)">${ex.name}</div>
         <div class="lib-ex-tags">
           <span class="tag muscle">${ex.muscle}</span>
@@ -1648,7 +1655,10 @@ function renderLibrary() {
           <span class="tag">${ex.equipment}</span>
         </div>
       </div>
-      <button class="add-to-day-btn" onclick="openAddToDay(null,null,'${ex.id}')">+ أضف</button>
+      <div style="display:flex;gap:6px;align-items:center">
+        ${ex.custom ? `<button onclick="deleteCustomExercise('${ex.id}')" style="background:rgba(232,34,42,0.1);border:1px solid rgba(232,34,42,0.3);color:#e8222a;border-radius:6px;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>` : ''}
+        <button class="add-to-day-btn" onclick="openAddToDay(null,null,'${ex.id}')">+ أضف</button>
+      </div>
     </div>
   `).join('');
 }
@@ -2087,6 +2097,7 @@ function restoreActiveWorkout() {
 // ============================================================
 // INIT
 // ============================================================
+loadCustomExercises();
 renderDash();
 restoreActiveWorkout();
 
@@ -2094,6 +2105,103 @@ restoreActiveWorkout();
 document.getElementById('add-to-day-modal').addEventListener('click', function(e) {
   if (e.target === this) closeModal('add-to-day-modal');
 });
+
+
+// ── CUSTOM EXERCISES ──
+let selectedMuscle = '';
+let selectedType = '';
+
+function openAddExModal() {
+  // Reset form
+  document.getElementById('cex-name-ar').value = '';
+  document.getElementById('cex-name-en').value = '';
+  document.getElementById('cex-muscle-custom').value = '';
+  document.getElementById('cex-equipment').value = '';
+  selectedMuscle = '';
+  selectedType = '';
+  document.querySelectorAll('.muscle-opt').forEach(el => el.classList.remove('selected'));
+  document.querySelectorAll('.type-opt').forEach(el => el.classList.remove('selected'));
+  document.getElementById('add-ex-modal').classList.add('open');
+}
+
+function pickMuscle(el) {
+  document.querySelectorAll('.muscle-opt').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedMuscle = el.dataset.val;
+  document.getElementById('cex-muscle-custom').value = '';
+}
+
+function pickType(el) {
+  document.querySelectorAll('.type-opt').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedType = el.dataset.val;
+}
+
+function saveCustomExercise() {
+  const nameAr = document.getElementById('cex-name-ar').value.trim();
+  const nameEn = document.getElementById('cex-name-en').value.trim();
+  const muscleCustom = document.getElementById('cex-muscle-custom').value.trim();
+  const muscle = muscleCustom || selectedMuscle;
+  const type = selectedType || 'Custom';
+  const equipment = document.getElementById('cex-equipment').value.trim() || type;
+
+  if (!nameAr && !nameEn) {
+    alert('اكتب اسم التمرين على الأقل');
+    return;
+  }
+  if (!muscle) {
+    alert('اختر العضلة أو اكتبها');
+    return;
+  }
+
+  const newEx = {
+    id: 'custom_' + Date.now(),
+    name: nameEn || nameAr,
+    nameAr: nameAr || nameEn,
+    muscle,
+    type,
+    equipment,
+    custom: true
+  };
+
+  // Add to runtime DB
+  EXERCISES_DB.push(newEx);
+
+  // Persist to localStorage
+  const saved = JSON.parse(localStorage.getItem('custom_exercises') || '[]');
+  saved.push(newEx);
+  localStorage.setItem('custom_exercises', JSON.stringify(saved));
+
+  closeModal('add-ex-modal');
+  renderLibrary();
+
+  // Toast
+  showToast('✓ تم حفظ التمرين — ' + (nameAr || nameEn));
+}
+
+function deleteCustomExercise(id) {
+  const idx = EXERCISES_DB.findIndex(e => e.id === id);
+  if (idx !== -1) EXERCISES_DB.splice(idx, 1);
+  const saved = JSON.parse(localStorage.getItem('custom_exercises') || '[]').filter(e => e.id !== id);
+  localStorage.setItem('custom_exercises', JSON.stringify(saved));
+  renderLibrary();
+}
+
+function loadCustomExercises() {
+  const saved = JSON.parse(localStorage.getItem('custom_exercises') || '[]');
+  saved.forEach(ex => {
+    if (!EXERCISES_DB.find(e => e.id === ex.id)) EXERCISES_DB.push(ex);
+  });
+}
+
+// Toast notification
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.textContent = msg;
+  t.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#242426;border:1px solid #e8222a;color:#f5f5f7;padding:10px 20px;border-radius:10px;font-family:var(--font-condensed);font-size:13px;font-weight:600;z-index:9998;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,0.5);animation:fadeIn .2s ease';
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
 
 // PWA Install
 let deferredPrompt = null;
@@ -2116,5 +2224,74 @@ window.addEventListener('appinstalled', () => {
   document.getElementById('pwa-install-bar').style.display = 'none';
 });
 </script>
+
+<!-- ADD CUSTOM EXERCISE MODAL -->
+<div class="modal-overlay" id="add-ex-modal">
+  <div class="modal-sheet" style="max-height:85vh">
+    <div class="modal-handle"></div>
+    <div class="modal-title">➕ تمرين مخصص</div>
+
+    <div style="margin-bottom:10px">
+      <div style="font-family:var(--font-condensed);font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">اسم التمرين (عربي)</div>
+      <input type="text" id="cex-name-ar" class="search-input" style="margin-bottom:0" placeholder="مثال: بنش بريس">
+    </div>
+
+    <div style="margin-bottom:10px">
+      <div style="font-family:var(--font-condensed);font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">اسم التمرين (إنجليزي)</div>
+      <input type="text" id="cex-name-en" class="search-input" style="margin-bottom:0" placeholder="مثال: Bench Press">
+    </div>
+
+    <div style="margin-bottom:10px">
+      <div style="font-family:var(--font-condensed);font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">العضلة / الكاتيجوري</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px" id="muscle-picker">
+        <div class="modal-option muscle-opt" data-val="Chest" onclick="pickMuscle(this)">Chest — صدر</div>
+        <div class="modal-option muscle-opt" data-val="Back" onclick="pickMuscle(this)">Back — ظهر</div>
+        <div class="modal-option muscle-opt" data-val="Shoulders" onclick="pickMuscle(this)">Shoulders — أكتاف</div>
+        <div class="modal-option muscle-opt" data-val="Biceps" onclick="pickMuscle(this)">Biceps — بايسبس</div>
+        <div class="modal-option muscle-opt" data-val="Triceps" onclick="pickMuscle(this)">Triceps — ترايسبس</div>
+        <div class="modal-option muscle-opt" data-val="Legs" onclick="pickMuscle(this)">Legs — أرجل</div>
+        <div class="modal-option muscle-opt" data-val="Calves" onclick="pickMuscle(this)">Calves — ساق</div>
+        <div class="modal-option muscle-opt" data-val="Abs" onclick="pickMuscle(this)">Abs — بطن</div>
+        <div class="modal-option muscle-opt" data-val="Cardio" onclick="pickMuscle(this)">Cardio — كارديو</div>
+        <div class="modal-option muscle-opt" data-val="Full Body" onclick="pickMuscle(this)">Full Body — كامل</div>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:6px;align-items:center">
+        <input type="text" id="cex-muscle-custom" class="search-input" style="margin-bottom:0;flex:1" placeholder="أو اكتب كاتيجوري مخصص...">
+      </div>
+    </div>
+
+    <div style="margin-bottom:10px">
+      <div style="font-family:var(--font-condensed);font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">نوع التمرين</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px" id="type-picker">
+        <div class="modal-option type-opt" data-val="Barbell" onclick="pickType(this)" style="padding:8px 12px;font-size:12px">Barbell</div>
+        <div class="modal-option type-opt" data-val="Dumbbell" onclick="pickType(this)" style="padding:8px 12px;font-size:12px">Dumbbell</div>
+        <div class="modal-option type-opt" data-val="Cable" onclick="pickType(this)" style="padding:8px 12px;font-size:12px">Cable</div>
+        <div class="modal-option type-opt" data-val="Machine" onclick="pickType(this)" style="padding:8px 12px;font-size:12px">Machine</div>
+        <div class="modal-option type-opt" data-val="Bodyweight" onclick="pickType(this)" style="padding:8px 12px;font-size:12px">Bodyweight</div>
+        <div class="modal-option type-opt" data-val="Resistance Band" onclick="pickType(this)" style="padding:8px 12px;font-size:12px">Band</div>
+        <div class="modal-option type-opt" data-val="Cardio" onclick="pickType(this)" style="padding:8px 12px;font-size:12px">Cardio</div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:16px">
+      <div style="font-family:var(--font-condensed);font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">الجهاز / المعدة</div>
+      <input type="text" id="cex-equipment" class="search-input" style="margin-bottom:0" placeholder="مثال: Barbell, Dumbbell, Machine...">
+    </div>
+
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-gold btn-full" style="font-family:var(--font-display);font-size:15px;padding:14px;letter-spacing:1px" onclick="saveCustomExercise()">حفظ التمرين ✓</button>
+      <button class="btn btn-outline" style="padding:14px 16px" onclick="closeModal('add-ex-modal')">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.muscle-opt.selected, .type-opt.selected {
+  background: var(--gold) !important;
+  border-color: var(--gold) !important;
+  color: #fff !important;
+}
+</style>
+
 </body>
 </html>
