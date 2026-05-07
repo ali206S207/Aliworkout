@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Barlow+Condensed:wght@300;400;500;600;700&family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 :root {
   --gold: #e8222a;
@@ -1072,22 +1073,36 @@ body::before {
   // Register service worker inline via blob
   if ('serviceWorker' in navigator) {
     const swCode = `
-const CACHE = 'trainer-v1';
-self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(['./', self.location.href])));
-  self.skipWaiting();
-});
+const CACHE = 'trainer-v2';
+self.addEventListener('install', e => { self.skipWaiting(); });
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));
   self.clients.claim();
 });
 self.addEventListener('fetch', e => {
-  e.respondWith(caches.match(e.request).then(r => r || fetch(e.request).catch(() => caches.match('./'))));
+  e.respondWith(caches.match(e.request).then(r => r || fetch(e.request).catch(() => new Response('offline'))));
+});
+self.addEventListener('message', e => {
+  if (e.data && e.data.type === 'REST_DONE') {
+    self.registration.showNotification('TRAINER PRO 💪', {
+      body: 'انتهى وقت الراحة — ابدأ السيت الجديد!',
+      icon: e.data.icon || '',
+      badge: e.data.icon || '',
+      vibrate: [200, 100, 200],
+      tag: 'rest-done',
+      renotify: true,
+      requireInteraction: false,
+      silent: false,
+    });
+  }
+  if (e.data && e.data.type === 'CACHE_PAGE') {
+    e.waitUntil(caches.open(CACHE).then(c => c.add(e.data.url)));
+  }
 });
 `;
     const swBlob = new Blob([swCode], {type:'application/javascript'});
     const swUrl = URL.createObjectURL(swBlob);
-    navigator.serviceWorker.register(swUrl, {scope: './'}). catch(()=>{});
+    navigator.serviceWorker.register(swUrl, {scope: './'}).then(reg => { _swReg = reg; reg.active && reg.active.postMessage({type:'CACHE_PAGE',url:location.href}); requestNotifPermission(); }). catch(()=>{});
   }
 })();
 </script>
@@ -1178,6 +1193,29 @@ self.addEventListener('fetch', e => {
       </div>
       <div id="log-list"></div>
     </div>
+
+    <!-- PROGRESS PAGE -->
+    <div id="page-progress" class="page">
+      <div class="page-header">
+        <div class="page-title">تقدم <span class="gold">وأرقام</span></div>
+        <button class="btn btn-gold" style="padding:8px 14px;font-size:12px" onclick="openWeightModal()">+ وزن</button>
+      </div>
+
+      <div class="section-title">وزن الجسم</div>
+      <div class="card" id="bodyweight-chart-wrap">
+        <canvas id="bw-chart" height="120"></canvas>
+        <div id="bw-empty" style="text-align:center;padding:20px;color:var(--text-muted);font-family:var(--font-condensed);font-size:13px;display:none">سجل وزنك لرؤية التقدم</div>
+      </div>
+      <div id="bw-stats-row" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px"></div>
+
+      <div class="section-title">أرقامك القياسية (PR)</div>
+      <div id="pr-list"></div>
+
+      <div class="section-title" style="margin-top:16px">حجم التدريب الشهري</div>
+      <div class="card">
+        <canvas id="vol-chart" height="120"></canvas>
+      </div>
+    </div>
   </div>
 
   <!-- BOTTOM NAV -->
@@ -1194,9 +1232,13 @@ self.addEventListener('fetch', e => {
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
       مكتبة
     </button>
+    <button class="nav-btn" onclick="navigate('progress')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      تقدم
+    </button>
     <button class="nav-btn" onclick="navigate('log')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-      السجل
+      سجل
     </button>
   </nav>
 </div>
@@ -1382,14 +1424,22 @@ let activeFilterMuscle = 'All';
 function loadState() {
   try {
     const s = localStorage.getItem('trainer_state');
-    if (s) return JSON.parse(s);
+    if (s) return migrateState(JSON.parse(s));
   } catch(e) {}
   return {
     schedule: JSON.parse(JSON.stringify(DEFAULT_SCHEDULE)),
     log: [],
     activeWorkout: null,
     workoutStartTime: null,
+    bodyWeights: [],
+    prs: {},
   };
+}
+
+function migrateState(s) {
+  if (!s.bodyWeights) s.bodyWeights = [];
+  if (!s.prs) s.prs = {};
+  return s;
 }
 
 function saveState() {
@@ -1403,12 +1453,13 @@ function navigate(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('page-' + page).classList.add('active');
-  document.querySelectorAll('.nav-btn')[['dash','workout','library','log'].indexOf(page)].classList.add('active');
+  document.querySelectorAll('.nav-btn')[['dash','workout','library','progress','log'].indexOf(page)].classList.add('active');
   
   if (page === 'dash') renderDash();
   if (page === 'workout') renderPPL();
   if (page === 'library') renderLibrary();
   if (page === 'log') renderLog();
+  if (page === 'progress') renderProgress();
 }
 
 // ============================================================
@@ -1709,9 +1760,19 @@ function renderActiveExercises() {
   container.innerHTML = activeWorkout.exercises.map((ex, ei) => `
     <div class="active-exercise-card">
       <div class="active-exercise-header">
-        <div>
+        <div style="flex:1">
           <div class="active-ex-name">${ex.name}</div>
-          <div class="active-ex-muscle">${ex.muscle}</div>
+          <div style="display:flex;gap:10px;margin-top:2px">
+            <div class="active-ex-muscle">${ex.muscle}</div>
+            ${(()=>{const pr=state.prs[ex.id]; return pr?`<span style="color:var(--gold);font-family:var(--font-condensed);font-size:11px;text-transform:uppercase;letter-spacing:0.5px">🏆 PR: ${pr.weight}kg×${pr.reps}</span>`:''})()}
+          </div>
+          ${(()=>{const last=getLastSession(ex.id); return last?`<div style="font-family:var(--font-condensed);font-size:11px;color:var(--text-muted);margin-top:2px">آخر جلسة: ${last}</div>`:''})()}
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-family:var(--font-condensed);font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px">راحة</div>
+          <select onchange="setExRestTime(${ei},this.value)" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 6px;font-family:var(--font-condensed);font-size:12px;font-weight:600">
+            ${[30,60,90,120,180,240].map(s=>`<option value="${s}" ${(ex.restTime||90)==s?'selected':''}>${s}s</option>`).join('')}
+          </select>
         </div>
       </div>
       <table class="sets-table">
@@ -1720,6 +1781,7 @@ function renderActiveExercises() {
             <th style="width:32px">سيت</th>
             <th>وزن (kg)</th>
             <th>عدات</th>
+            <th style="width:36px;font-size:9px">نوع</th>
             <th style="width:44px">تم</th>
           </tr>
         </thead>
@@ -1729,20 +1791,29 @@ function renderActiveExercises() {
       </table>
       <div class="add-set-row">
         <button class="btn btn-outline btn-full" style="font-size:11px;padding:8px" onclick="addSet(${ei})">+ إضافة سيت</button>
+        <textarea id="note-${ei}" placeholder="ملاحظة على التمرين..." oninput="updateNote(${ei},this.value)" style="width:100%;margin-top:8px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-main);font-size:13px;padding:8px;resize:none;height:60px;outline:none">${'${ex.note||""}'}</textarea>
       </div>
     </div>
   `).join('');
 }
 
 function renderSetRow(ei, si, s) {
+  const exId = activeWorkout.exercises[ei].id;
+  const pr = state.prs[exId];
+  const isPR = s.done && pr && parseFloat(s.weight) >= pr.weight && parseInt(s.reps) >= pr.reps;
   return `
     <tr id="row-${ei}-${si}">
       <td><span class="set-num">${si+1}</span></td>
       <td><input type="number" class="set-input" value="${s.weight}" placeholder="kg" min="0" step="0.5" onchange="updateSet(${ei},${si},'weight',this.value)" inputmode="decimal"></td>
       <td><input type="number" class="set-input" value="${s.reps}" placeholder="×" min="0" onchange="updateSet(${ei},${si},'reps',this.value)" inputmode="numeric"></td>
+      <td style="width:36px">
+        <button onclick="cycleSetType(${ei},${si})" style="width:30px;height:30px;border-radius:6px;border:1px solid var(--border);background:${s.setType==='superset'?'rgba(232,34,42,0.2)':s.setType==='dropset'?'rgba(100,80,200,0.2)':'var(--bg3)'};color:${s.setType?'var(--text)':'var(--text-muted)'};font-size:9px;font-family:var(--font-condensed);font-weight:700;cursor:pointer;letter-spacing:0px" title="${s.setType||'normal'}">
+          ${s.setType==='superset'?'SS':s.setType==='dropset'?'DS':'—'}
+        </button>
+      </td>
       <td>
-        <button class="set-done-btn ${s.done ? 'done' : ''}" onclick="toggleSetDone(${ei},${si})">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+        <button class="set-done-btn ${s.done ? 'done' : ''}" onclick="toggleSetDone(${ei},${si})" style="${isPR ? 'background:var(--gold);border-color:var(--gold);color:#000' : ''}">
+          ${isPR ? '🏆' : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>'}
         </button>
       </td>
     </tr>`;
@@ -1754,17 +1825,43 @@ function updateSet(ei, si, field, val) {
   saveState();
 }
 
+function setExRestTime(ei, val) {
+  activeWorkout.exercises[ei].restTime = parseInt(val);
+  state.activeWorkout = activeWorkout;
+  saveState();
+}
+
+function cycleSetType(ei, si) {
+  const s = activeWorkout.exercises[ei].sets[si];
+  const types = [undefined, 'superset', 'dropset'];
+  const cur = types.indexOf(s.setType);
+  s.setType = types[(cur + 1) % types.length];
+  state.activeWorkout = activeWorkout;
+  saveState();
+  renderActiveExercises();
+}
+
 function toggleSetDone(ei, si) {
   const set = activeWorkout.exercises[ei].sets[si];
   set.done = !set.done;
   state.activeWorkout = activeWorkout;
+
+  if (set.done) {
+    const exId = activeWorkout.exercises[ei].id;
+    const w = parseFloat(set.weight) || 0;
+    const r = parseInt(set.reps) || 0;
+    if (w > 0 && r > 0) {
+      const cur = state.prs[exId];
+      if (!cur || w > cur.weight || (w === cur.weight && r > cur.reps)) {
+        state.prs[exId] = { weight: w, reps: r, date: dateStr(new Date()) };
+        showToast('🏆 رقم قياسي جديد! ' + w + 'kg × ' + r);
+      }
+    }
+  }
+
   saveState();
-  
-  // Update just the button
-  const btn = document.querySelector(`#row-${ei}-${si} .set-done-btn`);
-  if (btn) btn.className = `set-done-btn ${set.done ? 'done' : ''}`;
-  
-  if (set.done) showRestTimer();
+  renderActiveExercises();
+  if (set.done) { const rt = activeWorkout.exercises[ei].restTime || 90; showRestTimer(rt); }
 }
 
 function addSet(ei) {
@@ -1887,8 +1984,8 @@ function showRestTimer(seconds = 90) {
     
     if (restRemaining <= 0) {
       skipRest();
-      // vibrate
       if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+      notifyRestDone();
     }
   }, 1000);
 }
@@ -2107,6 +2204,190 @@ document.getElementById('add-to-day-modal').addEventListener('click', function(e
 });
 
 
+
+// ── HELPERS ──
+function getLastSession(exId) {
+  for (let i = state.log.length - 1; i >= 0; i--) {
+    const logEx = (state.log[i].exercises || []).find(e => e.id === exId);
+    if (logEx) {
+      const doneSets = (logEx.sets || []).filter(s => s.done && s.weight);
+      if (doneSets.length) return doneSets.map(s => s.weight + 'kg×' + s.reps).join(' | ');
+    }
+  }
+  return null;
+}
+
+function updateNote(ei, val) {
+  activeWorkout.exercises[ei].note = val;
+  state.activeWorkout = activeWorkout;
+  saveState();
+}
+
+// ── BODY WEIGHT ──
+function openWeightModal() {
+  document.getElementById('bw-input').value = '';
+  document.getElementById('bw-date').value = dateStr(new Date());
+  document.getElementById('weight-modal').classList.add('open');
+}
+
+function saveBodyWeight() {
+  const val = parseFloat(document.getElementById('bw-input').value);
+  const date = document.getElementById('bw-date').value;
+  if (!val || val < 20 || val > 300) { alert('أدخل وزن صحيح'); return; }
+  state.bodyWeights = state.bodyWeights || [];
+  const existing = state.bodyWeights.findIndex(b => b.date === date);
+  if (existing !== -1) state.bodyWeights[existing].weight = val;
+  else state.bodyWeights.push({ date, weight: val });
+  state.bodyWeights.sort((a, b) => a.date.localeCompare(b.date));
+  saveState();
+  closeModal('weight-modal');
+  renderProgress();
+  showToast('✓ تم تسجيل ' + val + ' kg');
+}
+
+// ── PROGRESS PAGE ──
+let bwChart = null, volChart = null;
+
+function renderProgress() {
+  renderBodyWeightChart();
+  renderPRList();
+  renderVolumeChart();
+}
+
+function renderBodyWeightChart() {
+  const bws = state.bodyWeights || [];
+  const empty = document.getElementById('bw-empty');
+  const canvas = document.getElementById('bw-chart');
+
+  if (!bws.length) {
+    canvas.style.display = 'none';
+    empty.style.display = 'block';
+    document.getElementById('bw-stats-row').innerHTML = '';
+    return;
+  }
+  canvas.style.display = 'block';
+  empty.style.display = 'none';
+
+  const last14 = bws.slice(-14);
+  const labels = last14.map(b => b.date.slice(5));
+  const data = last14.map(b => b.weight);
+  const cur = data[data.length - 1];
+  const first = data[0];
+  const diff = (cur - first).toFixed(1);
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+
+  document.getElementById('bw-stats-row').innerHTML = `
+    <div class="stat-card"><div class="stat-num">${cur}</div><div class="stat-label">الآن (kg)</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:${diff<=0?'var(--green)':'var(--red)'}">${diff>0?'+':''}${diff}</div><div class="stat-label">تغيير</div></div>
+    <div class="stat-card"><div class="stat-num">${min}</div><div class="stat-label">أدنى</div></div>`;
+
+  if (bwChart) bwChart.destroy();
+  const ctx = canvas.getContext('2d');
+  bwChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        borderColor: '#e8222a',
+        backgroundColor: 'rgba(232,34,42,0.1)',
+        borderWidth: 2,
+        pointRadius: 4,
+        pointBackgroundColor: '#e8222a',
+        tension: 0.3,
+        fill: true,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#888', font: { size: 10 } }, grid: { color: '#2e2e30' } },
+        y: { ticks: { color: '#888', font: { size: 10 } }, grid: { color: '#2e2e30' } }
+      }
+    }
+  });
+}
+
+function renderPRList() {
+  const prEl = document.getElementById('pr-list');
+  const prs = state.prs || {};
+  const keys = Object.keys(prs);
+  if (!keys.length) {
+    prEl.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🏆</div><div class="empty-state-text">سجل تمارين لرؤية أرقامك القياسية</div></div>';
+    return;
+  }
+  prEl.innerHTML = keys.map(id => {
+    const ex = EXERCISES_DB.find(e => e.id === id);
+    const pr = prs[id];
+    return `<div class="card card-accent" style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;margin-bottom:8px">
+      <div>
+        <div style="font-family:var(--font-condensed);font-size:14px;font-weight:700;text-transform:uppercase">${ex ? (ex.nameAr || ex.name) : id}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${pr.date}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--gold)">${pr.weight}<span style="font-size:12px;color:var(--text-dim)">kg</span></div>
+        <div style="font-family:var(--font-condensed);font-size:12px;color:var(--text-dim)">× ${pr.reps} reps</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderVolumeChart() {
+  const canvas = document.getElementById('vol-chart');
+  if (!state.log.length) { canvas.style.display='none'; return; }
+  canvas.style.display = 'block';
+
+  const months = {};
+  state.log.forEach(l => {
+    const m = (l.date||'').slice(0,7);
+    if (!m) return;
+    months[m] = (months[m]||0) + (l.volume||0);
+  });
+  const sorted = Object.keys(months).sort().slice(-6);
+  const labels = sorted.map(m => m.slice(5));
+  const data = sorted.map(m => Math.round(months[m]));
+
+  if (volChart) volChart.destroy();
+  const ctx = canvas.getContext('2d');
+  volChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: 'rgba(232,34,42,0.7)',
+        borderRadius: 6,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#888', font: { size: 10 } }, grid: { color: '#2e2e30' } },
+        y: { ticks: { color: '#888', font: { size: 10 } }, grid: { color: '#2e2e30' } }
+      }
+    }
+  });
+}
+
+
+// ── NOTIFICATIONS ──
+let _swReg = null;
+function requestNotifPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+}
+
+function notifyRestDone() {
+  if (!_swReg) return;
+  const icon = document.getElementById('apple-icon') ? document.getElementById('apple-icon').href : '';
+  _swReg.active && _swReg.active.postMessage({ type: 'REST_DONE', icon });
+}
+
 // ── CUSTOM EXERCISES ──
 let selectedMuscle = '';
 let selectedType = '';
@@ -2224,6 +2505,27 @@ window.addEventListener('appinstalled', () => {
   document.getElementById('pwa-install-bar').style.display = 'none';
 });
 </script>
+
+
+<!-- BODY WEIGHT MODAL -->
+<div class="modal-overlay" id="weight-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">⚖️ تسجيل وزن الجسم</div>
+    <div style="margin-bottom:12px">
+      <div style="font-family:var(--font-condensed);font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">الوزن (kg)</div>
+      <input type="number" id="bw-input" class="search-input" style="margin-bottom:0;font-size:24px;font-family:var(--font-display);font-weight:700;text-align:center;color:var(--gold)" placeholder="75.0" step="0.1" inputmode="decimal">
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-family:var(--font-condensed);font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">التاريخ</div>
+      <input type="date" id="bw-date" class="search-input" style="margin-bottom:0">
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-gold btn-full" style="font-family:var(--font-display);font-size:15px;padding:14px" onclick="saveBodyWeight()">حفظ ✓</button>
+      <button class="btn btn-outline" style="padding:14px 16px" onclick="closeModal('weight-modal')">إلغاء</button>
+    </div>
+  </div>
+</div>
 
 <!-- ADD CUSTOM EXERCISE MODAL -->
 <div class="modal-overlay" id="add-ex-modal">
