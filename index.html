@@ -1073,7 +1073,9 @@ body::before {
   // Register service worker inline via blob
   if ('serviceWorker' in navigator) {
     const swCode = `
-const CACHE = 'trainer-v2';
+const CACHE = 'trainer-v3';
+let restTimer = null;
+
 self.addEventListener('install', e => { self.skipWaiting(); });
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));
@@ -1082,22 +1084,51 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   e.respondWith(caches.match(e.request).then(r => r || fetch(e.request).catch(() => new Response('offline'))));
 });
+
 self.addEventListener('message', e => {
-  if (e.data && e.data.type === 'REST_DONE') {
-    self.registration.showNotification('TRAINER PRO 💪', {
-      body: 'انتهى وقت الراحة — ابدأ السيت الجديد!',
-      icon: e.data.icon || '',
-      badge: e.data.icon || '',
-      vibrate: [200, 100, 200],
-      tag: 'rest-done',
-      renotify: true,
-      requireInteraction: false,
-      silent: false,
-    });
+  if (!e.data) return;
+
+  if (e.data.type === 'START_REST') {
+    // Cancel any existing timer
+    if (restTimer) { clearTimeout(restTimer); restTimer = null; }
+    const ms = e.data.seconds * 1000;
+    const icon = e.data.icon || '';
+    restTimer = setTimeout(() => {
+      restTimer = null;
+      // Notify all clients to update UI
+      self.clients.matchAll().then(clients => {
+        clients.forEach(c => c.postMessage({ type: 'REST_DONE' }));
+      });
+      // Show notification (works even if app is in background)
+      self.registration.showNotification('TRAINER PRO 💪', {
+        body: 'انتهى وقت الراحة — ابدأ السيت الجديد!',
+        icon,
+        badge: icon,
+        vibrate: [300, 100, 300, 100, 300],
+        tag: 'rest-done',
+        renotify: true,
+        requireInteraction: true,
+        silent: false,
+        actions: [{ action: 'ok', title: '✓ جاهز' }]
+      });
+    }, ms);
   }
-  if (e.data && e.data.type === 'CACHE_PAGE') {
+
+  if (e.data.type === 'CANCEL_REST') {
+    if (restTimer) { clearTimeout(restTimer); restTimer = null; }
+  }
+
+  if (e.data.type === 'CACHE_PAGE') {
     e.waitUntil(caches.open(CACHE).then(c => c.add(e.data.url)));
   }
+});
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(self.clients.matchAll({ type: 'window' }).then(clients => {
+    if (clients.length) clients[0].focus();
+    else self.clients.openWindow('./');
+  }));
 });
 `;
     const swBlob = new Blob([swCode], {type:'application/javascript'});
@@ -1963,47 +1994,80 @@ function closeCompleteModal() {
 // ============================================================
 const CIRCUMFERENCE = 2 * Math.PI * 95;
 
+let restEndTime = null;
+
 function showRestTimer(seconds = 90) {
   restTotal = seconds;
-  restRemaining = seconds;
-  
-  const circle = document.getElementById('rest-progress-circle');
-  circle.style.strokeDasharray = CIRCUMFERENCE;
-  circle.style.strokeDashoffset = 0;
-  
-  document.getElementById('rest-time-text').textContent = restRemaining;
+  restEndTime = Date.now() + seconds * 1000;
+
+  // Tell SW to fire notification after `seconds`
+  sendToSW({ type: 'START_REST', seconds, icon: document.getElementById('apple-icon')?.href || '' });
+
+  _tickRest();
   document.getElementById('rest-modal').classList.add('open');
-  
+}
+
+function _tickRest() {
   if (restTimerInterval) clearInterval(restTimerInterval);
-  
   restTimerInterval = setInterval(() => {
-    restRemaining--;
-    document.getElementById('rest-time-text').textContent = Math.max(0, restRemaining);
+    if (!restEndTime) return;
+    restRemaining = Math.max(0, Math.round((restEndTime - Date.now()) / 1000));
+
+    const circle = document.getElementById('rest-progress-circle');
+    const timeEl = document.getElementById('rest-time-text');
+    if (!circle || !timeEl) return;
+
+    circle.style.strokeDasharray = CIRCUMFERENCE;
+    timeEl.textContent = restRemaining;
     const progress = 1 - (restRemaining / restTotal);
     circle.style.strokeDashoffset = CIRCUMFERENCE * (1 - progress);
-    
+
     if (restRemaining <= 0) {
+      clearInterval(restTimerInterval);
+      if (navigator.vibrate) navigator.vibrate([300, 100, 300]);
+      // auto-close modal if app is in foreground
       skipRest();
-      if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-      notifyRestDone();
     }
-  }, 1000);
+  }, 500);
+}
+
+// Resync when user comes back to app
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && restEndTime) _tickRest();
+});
+
+// Listen for SW message (REST_DONE from background)
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', e => {
+    if (e.data && e.data.type === 'REST_DONE') {
+      if (navigator.vibrate) navigator.vibrate([300, 100, 300]);
+      skipRest();
+    }
+  });
 }
 
 function adjustRest(delta) {
-  restRemaining = Math.max(5, restRemaining + delta);
-  restTotal = Math.max(restTotal, restRemaining);
-  document.getElementById('rest-time-text').textContent = restRemaining;
+  if (!restEndTime) return;
+  restEndTime += delta * 1000;
+  restTotal += delta;
+  if (restEndTime < Date.now() + 5000) restEndTime = Date.now() + 5000;
+  // Update SW with new remaining time
+  const newSecs = Math.round((restEndTime - Date.now()) / 1000);
+  sendToSW({ type: 'START_REST', seconds: newSecs, icon: document.getElementById('apple-icon')?.href || '' });
+  document.getElementById('rest-time-text').textContent = newSecs;
 }
 
 function skipRest() {
   clearInterval(restTimerInterval);
+  restEndTime = null;
+  sendToSW({ type: 'CANCEL_REST' });
   closeRestTimer();
 }
 
 function closeRestTimer() {
   document.getElementById('rest-modal').classList.remove('open');
   clearInterval(restTimerInterval);
+  restEndTime = null;
 }
 
 // ============================================================
@@ -2376,16 +2440,21 @@ function renderVolumeChart() {
 
 // ── NOTIFICATIONS ──
 let _swReg = null;
-function requestNotifPermission() {
-  if ('Notification' in window && Notification.permission === 'default') {
-    Notification.requestPermission();
-  }
+
+function sendToSW(msg) {
+  if (_swReg && _swReg.active) { _swReg.active.postMessage(msg); return; }
+  navigator.serviceWorker && navigator.serviceWorker.ready.then(reg => {
+    _swReg = reg;
+    reg.active && reg.active.postMessage(msg);
+  });
 }
 
-function notifyRestDone() {
-  if (!_swReg) return;
-  const icon = document.getElementById('apple-icon') ? document.getElementById('apple-icon').href : '';
-  _swReg.active && _swReg.active.postMessage({ type: 'REST_DONE', icon });
+function requestNotifPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission().then(p => {
+      if (p === 'granted') showToast('✓ الإشعارات مفعلة');
+    });
+  }
 }
 
 // ── CUSTOM EXERCISES ──
