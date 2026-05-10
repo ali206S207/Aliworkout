@@ -2449,7 +2449,7 @@ function finishWorkout() {
   
   // Store for saving
   window._pendingLog = {
-    date: dateStr(new Date()),
+    date: dateStr(new Date(state.workoutStartTime || Date.now())),
     type: activeWorkout.type,
     ppl: activeWorkout.ppl,
     duration: formatTime(elapsed),
