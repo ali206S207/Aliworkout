@@ -2961,7 +2961,10 @@ function formatTime(secs) {
 }
 
 function dateStr(d) {
-  return d.toISOString().split('T')[0];
+  // New day starts at 4:00 AM — before that, treat as previous day
+  const adjusted = new Date(d);
+  adjusted.setHours(adjusted.getHours() - 4);
+  return adjusted.toISOString().split('T')[0];
 }
 
 // ============================================================
@@ -3108,17 +3111,18 @@ function markTodayAsWorkout(date) {
 // Run on load
 checkAndMarkRestDay();
 
-// Schedule midnight check
+// Schedule 4AM check (new day boundary)
 function scheduleMidnightCheck() {
   const now = new Date();
-  const midnight = new Date(now);
-  midnight.setHours(24, 0, 30, 0); // 00:00:30 next day
-  const msToMidnight = midnight - now;
+  const next4am = new Date(now);
+  next4am.setHours(4, 0, 30, 0); // 04:00:30
+  if (next4am <= now) next4am.setDate(next4am.getDate() + 1); // already past 4AM today → schedule tomorrow
+  const msTo4am = next4am - now;
   setTimeout(() => {
     checkAndMarkRestDay();
     renderDash();
     scheduleMidnightCheck();
-  }, msToMidnight);
+  }, msTo4am);
 }
 scheduleMidnightCheck();
 
