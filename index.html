@@ -3805,5 +3805,19 @@ function installPWA() {
   if (window._pwaPrompt) { window._pwaPrompt.prompt(); }
 }
 </script>
+
+<!-- SWAP EXERCISE MODAL -->
+<div class="modal-overlay" id="swap-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">استبدال التمرين 🔄</div>
+    <div style="font-family:var(--font-condensed);font-size:11px;color:var(--text-muted);margin-bottom:10px">
+      بدائل لعضلة: <span id="swap-muscle" style="color:var(--gold)"></span>
+    </div>
+    <div id="swap-list"></div>
+    <button class="btn btn-outline btn-full" style="margin-top:12px" onclick="closeModal('swap-modal')">إلغاء</button>
+  </div>
+</div>
+
 </body>
 </html>
