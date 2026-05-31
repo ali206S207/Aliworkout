@@ -12,32 +12,27 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 :root {
-  --red:        #e8222a;
-  --red-dim:    #9a1018;
-  --red-glow:   rgba(232,34,42,0.18);
-  --gold:       #c9a84c;
-  --gold-dim:   #8a6e28;
-  --gold-glow:  rgba(201,168,76,0.18);
-  --bg:         #080808;
-  --bg2:        #101010;
-  --bg3:        #181818;
-  --bg4:        #222222;
-  --text:       #f0ece4;
-  --text-dim:   #b8b0a0;
-  --text-muted: #5a5650;
-  --border:     #282420;
-  --border-gold: rgba(201,168,76,0.25);
-  --border-red:  rgba(232,34,42,0.25);
-  --green:      #30d158;
-  --radius:     14px;
-  --radius-sm:  10px;
-  --radius-lg:  22px;
-  --radius-full:100px;
-  --elevation-1: 0 1px 3px rgba(0,0,0,0.5);
-  --elevation-2: 0 4px 16px rgba(0,0,0,0.6);
-  --elevation-3: 0 8px 32px rgba(0,0,0,0.7);
-  --font-main:      'Cairo', sans-serif;
-  --font-display:   'Oswald', sans-serif;
+  --gold: #e8222a;
+  --gold-dim: #9a1018;
+  --bg: #000000;
+  --bg2: #0f0d13;
+  --bg3: #1c1b1f;
+  --bg4: #2b2930;
+  --text: #e6e1e5;
+  --text-dim: #cac4d0;
+  --text-muted: #79747e;
+  --red: #e8222a;
+  --green: #30d158;
+  --border: #2b2930;
+  --radius: 16px;
+  --radius-sm: 12px;
+  --radius-lg: 28px;
+  --radius-full: 100px;
+  --elevation-1: 0 1px 3px rgba(0,0,0,0.4);
+  --elevation-2: 0 4px 16px rgba(0,0,0,0.5);
+  --elevation-3: 0 8px 32px rgba(0,0,0,0.6);
+  --font-main: 'Cairo', sans-serif;
+  --font-display: 'Oswald', sans-serif;
   --font-condensed: 'Barlow Condensed', sans-serif;
 }
 
@@ -117,7 +112,7 @@ body::before {
 
 .nav-btn.active {
   color: var(--gold);
-  background: var(--gold-glow);
+  background: rgba(232,34,42,0.1);
 }
 
 .nav-btn.active::after {
@@ -130,10 +125,9 @@ body::before {
   height: 2px;
   background: var(--gold);
   border-radius: 2px;
-  box-shadow: 0 0 6px var(--gold);
 }
 
-.nav-btn svg { width: 20px; height: 20px; stroke-width: 1.8; }
+.nav-btn svg { width: 24px; height: 24px; stroke-width: 1.8; }
 
 /* ===== PAGES ===== */
 .page { display: none; padding: 16px; }
@@ -169,7 +163,6 @@ body::before {
 
 .card-accent {
   border-left: 3px solid var(--gold);
-  background: linear-gradient(135deg, rgba(201,168,76,0.04) 0%, var(--bg2) 60%);
 }
 
 /* ===== DASHBOARD ===== */
@@ -195,7 +188,7 @@ body::before {
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 2px;
-  background: linear-gradient(90deg, var(--red), var(--gold));
+  background: var(--gold);
   border-radius: 2px 2px 0 0;
 }
 
@@ -264,7 +257,6 @@ body::before {
   color: var(--gold);
   text-transform: uppercase;
   letter-spacing: 1px;
-  text-shadow: 0 0 20px rgba(201,168,76,0.4);
 }
 
 .hero-sub {
@@ -297,9 +289,9 @@ body::before {
   gap: 2px;
 }
 
-.week-day.done { background: var(--gold); color: #000; border-color: var(--gold); box-shadow: 0 0 8px rgba(201,168,76,0.4); }
-.week-day.rest { background: rgba(80,70,60,0.3); color: var(--text-muted); border-color: #333; }
-.week-day.today { border-color: var(--red); color: var(--red); background: var(--red-glow); }
+.week-day.done { background: var(--gold); color: #000; border-color: var(--gold); }
+.week-day.rest { background: rgba(100,100,120,0.3); color: var(--text-muted); border-color: #444; }
+.week-day.today { border-color: var(--gold); color: var(--gold); background:rgba(232,34,42,0.15); }
 
 .section-title {
   font-family: var(--font-condensed);
@@ -348,9 +340,9 @@ body::before {
 }
 
 .ppl-tab.active {
-  background: var(--red);
+  background: var(--gold);
   color: #fff;
-  box-shadow: 0 2px 12px rgba(232,34,42,0.35);
+  box-shadow: 0 2px 12px rgba(232,34,42,0.4);
 }
 
 .ppl-tab:active { transform: scale(0.97); }
@@ -465,13 +457,11 @@ body::before {
 .btn:active { transform: scale(0.95); }
 
 .btn-gold {
-  background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+  background: var(--gold);
   color: #000;
-  font-weight: 700;
-  box-shadow: 0 2px 12px rgba(201,168,76,0.3);
 }
 
-.btn-gold:hover { filter: brightness(1.1); box-shadow: 0 4px 20px rgba(201,168,76,0.45); }
+.btn-gold:hover { filter: brightness(1.1); }
 
 .btn-outline {
   background: none;
@@ -496,7 +486,7 @@ body::before {
 
 /* ===== START WORKOUT ===== */
 .start-workout-btn {
-  background: linear-gradient(135deg, #8a0e14, var(--red));
+  background: linear-gradient(135deg, #b01018, #e8222a);
   color: #fff;
   font-family: var(--font-display);
   font-size: 18px;
@@ -512,7 +502,7 @@ body::before {
   position: relative;
   overflow: hidden;
   transition: transform .15s, box-shadow .15s;
-  box-shadow: 0 4px 24px rgba(232,34,42,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+  box-shadow: 0 4px 20px rgba(232,34,42,0.3);
 }
 
 .start-workout-btn:active {
@@ -532,20 +522,6 @@ body::before {
 @keyframes shimmer {
   to { transform: translateX(100%); }
 }
-
-@keyframes goldPulse {
-  0%   { box-shadow: 0 0 0 0 rgba(201,168,76,0.5); }
-  70%  { box-shadow: 0 0 0 10px rgba(201,168,76,0); }
-  100% { box-shadow: 0 0 0 0 rgba(201,168,76,0); }
-}
-
-@keyframes redPulse {
-  0%   { box-shadow: 0 0 0 0 rgba(232,34,42,0.5); }
-  70%  { box-shadow: 0 0 0 10px rgba(232,34,42,0); }
-  100% { box-shadow: 0 0 0 0 rgba(232,34,42,0); }
-}
-
-.pr-flash { animation: goldPulse 0.6s ease-out; }
 
 /* ===== ACTIVE WORKOUT ===== */
 #active-workout {
@@ -569,13 +545,12 @@ body::before {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: var(--bg2);
+  background: rgba(8,8,8,0.95);
   border-bottom: 1px solid var(--border-gold);
   padding: 10px 16px;
   margin: -16px -16px 0;
   backdrop-filter: blur(12px);
 }
-
 #ftb-dot {
   width: 8px; height: 8px;
   border-radius: 50%;
@@ -584,12 +559,10 @@ body::before {
   animation: ftbPulse 1.5s ease-in-out infinite;
   flex-shrink: 0;
 }
-
 @keyframes ftbPulse {
   0%,100% { opacity:1; transform:scale(1); }
-  50%      { opacity:0.5; transform:scale(0.8); }
+  50%      { opacity:0.4; transform:scale(0.75); }
 }
-
 #ftb-label {
   font-family: var(--font-condensed);
   font-size: 11px;
@@ -598,7 +571,6 @@ body::before {
   text-transform: uppercase;
   flex: 1;
 }
-
 #ftb-time {
   font-family: var(--font-display);
   font-size: 28px;
@@ -608,30 +580,27 @@ body::before {
   line-height: 1;
   text-shadow: 0 0 16px rgba(201,168,76,0.4);
 }
-
 #ftb-stop {
   background: rgba(232,34,42,0.12);
   border: 1px solid rgba(232,34,42,0.3);
   color: var(--red);
   border-radius: 8px;
   width: 34px; height: 34px;
-  font-size: 13px;
+  font-size: 14px;
   cursor: pointer;
   font-weight: 700;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
-  transition: background 0.2s;
 }
-#ftb-stop:active { background: rgba(232,34,42,0.25); }
+#ftb-stop:active { background: rgba(232,34,42,0.3); }
 
-/* ===== ACTIVE WORKOUT HEADER ===== */
+/* ===== AW HEADER ===== */
 #aw-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 14px 0 4px;
 }
-
 #aw-title {
   font-family: var(--font-display);
   font-size: 20px;
@@ -640,7 +609,6 @@ body::before {
   letter-spacing: 1px;
   color: var(--gold);
 }
-
 #aw-day {
   font-family: var(--font-condensed);
   font-size: 11px;
@@ -649,7 +617,6 @@ body::before {
   letter-spacing: 1px;
   margin-top: 2px;
 }
-
 .btn-finish-early {
   background: rgba(48,209,88,0.1);
   border: 1px solid rgba(48,209,88,0.3);
@@ -662,27 +629,26 @@ body::before {
   cursor: pointer;
   text-transform: uppercase;
   letter-spacing: 1px;
-  transition: background 0.2s;
 }
 .btn-finish-early:active { background: rgba(48,209,88,0.2); }
 
-/* ===== EXERCISE SWAP BUTTON ===== */
+/* ===== SWAP BUTTON ===== */
 .swap-ex-btn {
   background: rgba(201,168,76,0.1);
   border: 1px solid rgba(201,168,76,0.25);
   color: var(--gold);
   border-radius: 6px;
-  padding: 4px 10px;
+  padding: 6px 12px;
   font-family: var(--font-condensed);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 1px;
   cursor: pointer;
   text-transform: uppercase;
-  transition: background 0.15s;
   display: flex; align-items: center; gap: 4px;
+  flex-shrink: 0;
 }
-.swap-ex-btn:active { background: rgba(201,168,76,0.2); }
+.swap-ex-btn:active { background: rgba(201,168,76,0.22); }
 
 /* ===== SWAP MODAL ===== */
 #swap-modal {
@@ -696,7 +662,6 @@ body::before {
   justify-content: center;
 }
 #swap-modal.open { display: flex; }
-
 #swap-modal-inner {
   background: var(--bg2);
   border: 1px solid var(--border-gold);
@@ -709,108 +674,34 @@ body::before {
   overflow: hidden;
   animation: slideUpModal 0.28s cubic-bezier(0.34,1.1,0.64,1);
 }
-
 @keyframes slideUpModal {
-  from { transform: translateY(100%); opacity: 0; }
-  to   { transform: translateY(0); opacity: 1; }
+  from { transform: translateY(100%); opacity:0; }
+  to   { transform: translateY(0);    opacity:1; }
 }
-
-#swap-modal-header {
-  padding: 16px 16px 12px;
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-}
-
-#swap-modal-title {
-  font-family: var(--font-display);
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--gold);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-#swap-modal-sub {
-  font-size: 11px;
-  color: var(--text-muted);
-  font-family: var(--font-condensed);
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  margin-top: 3px;
-}
-
+#swap-modal-header { padding: 16px 16px 10px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+#swap-modal-title { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
+#swap-modal-sub { font-size: 11px; color: var(--text-muted); font-family: var(--font-condensed); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
 #swap-modal-search {
-  width: 100%;
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  color: var(--text);
-  font-family: var(--font-main);
-  font-size: 14px;
-  padding: 10px 14px;
-  margin-top: 10px;
-  outline: none;
-  box-sizing: border-box;
-  transition: border-color 0.2s;
+  width: 100%; box-sizing: border-box;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 10px; color: var(--text);
+  font-family: var(--font-main); font-size: 14px;
+  padding: 10px 14px; margin-top: 10px; outline: none;
 }
 #swap-modal-search:focus { border-color: var(--gold); }
-
-#swap-modal-list {
-  overflow-y: auto;
-  flex: 1;
-  padding: 8px;
-}
-
+#swap-modal-list { overflow-y: auto; flex: 1; padding: 4px 8px; }
 .swap-option {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 14px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: background 0.15s;
-  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 10px; border-radius: var(--radius-sm);
+  cursor: pointer; border-bottom: 1px solid var(--border);
 }
 .swap-option:last-child { border-bottom: none; }
-.swap-option:hover, .swap-option:active { background: var(--bg3); }
-
-.swap-option-name {
-  font-family: var(--font-condensed);
-  font-size: 14px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--text);
-}
-.swap-option-name-ar {
-  font-size: 12px;
-  color: var(--text-muted);
-  margin-top: 2px;
-}
-.swap-option-tag {
-  font-family: var(--font-condensed);
-  font-size: 10px;
-  letter-spacing: 1px;
-  padding: 3px 8px;
-  border-radius: 20px;
-  text-transform: uppercase;
-  background: var(--bg3);
-  color: var(--text-muted);
-  border: 1px solid var(--border);
-  flex-shrink: 0;
-}
-.swap-option-tag.same-muscle {
-  background: rgba(201,168,76,0.12);
-  color: var(--gold);
-  border-color: rgba(201,168,76,0.3);
-}
-
-#swap-modal-close {
-  width: calc(100% - 32px);
-  margin: 8px 16px 16px;
-  flex-shrink: 0;
-}
-
+.swap-option:active { background: var(--bg3); }
+.swap-option-name { font-family: var(--font-condensed); font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text); }
+.swap-option-name-ar { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+.swap-option-tag { font-family: var(--font-condensed); font-size: 10px; letter-spacing: 1px; padding: 3px 8px; border-radius: 20px; text-transform: uppercase; background: var(--bg3); color: var(--text-muted); border: 1px solid var(--border); flex-shrink: 0; }
+.swap-option-tag.same-muscle { background: rgba(201,168,76,0.12); color: var(--gold); border-color: rgba(201,168,76,0.3); }
+#swap-modal-close { width: calc(100% - 32px); margin: 8px 16px 16px; flex-shrink: 0; }
 
 .active-exercise-card {
   background: var(--bg2);
@@ -891,7 +782,7 @@ body::before {
 
 .set-input::-webkit-outer-spin-button,
 .set-input::-webkit-inner-spin-button { -webkit-appearance: none; }
-.set-input:focus { border-color: var(--red); outline: none; box-shadow: 0 0 0 2px var(--red-glow); }
+.set-input:focus { border-color: var(--gold); outline: none; }
 
 .set-done-btn {
   width: 40px;
@@ -915,7 +806,6 @@ body::before {
   background: var(--green);
   border-color: var(--green);
   color: #000;
-  box-shadow: 0 0 10px rgba(48,209,88,0.3);
 }
 
 .set-num {
@@ -1741,29 +1631,10 @@ body::before {
 .loading-bar-fill {
   height: 100%;
   width: 0%;
-  background: var(--red);
+  background: #e8222a;
   border-radius: 1px;
   transition: width 0.3s ease;
-  box-shadow: 0 0 8px var(--red);
-}
-
-/* ===== SPLIT CARDS (SETTINGS) ===== */
-.split-card {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px;
-  margin-bottom: 12px;
-  transition: border-color 0.2s, background 0.2s;
-}
-.split-card:hover:not(.split-card-active) {
-  border-color: var(--border-red);
-  background: rgba(232,34,42,0.03);
-}
-.split-card-active {
-  border-color: var(--gold);
-  background: linear-gradient(135deg, rgba(201,168,76,0.06) 0%, var(--bg2) 60%);
-  box-shadow: 0 0 20px rgba(201,168,76,0.1);
+  box-shadow: 0 0 8px #e8222a;
 }
 
 </style>
@@ -2044,26 +1915,24 @@ self.addEventListener('notificationclick', e => {
   <!-- FLOATING TIMER BAR -->
   <div id="floating-timer-bar">
     <div id="ftb-dot"></div>
-    <div id="ftb-label">تمريني</div>
+    <div id="ftb-label">جاري التمرين</div>
     <div id="ftb-time">00:00</div>
-    <button onclick="stopWorkout()" id="ftb-stop">✕</button>
+    <button id="ftb-stop" onclick="stopWorkout()">✕</button>
   </div>
 
   <!-- HEADER -->
   <div id="aw-header">
-    <div id="aw-title-wrap">
+    <div>
       <div id="aw-title"></div>
       <div id="aw-day"></div>
     </div>
-    <button class="btn-finish-early" onclick="finishWorkout()">إنهاء</button>
+    <button class="btn-finish-early" onclick="finishWorkout()">إنهاء ✓</button>
   </div>
 
-  <div style="height:16px"></div>
+  <div style="height:12px"></div>
   <div id="aw-exercises"></div>
-
   <button class="btn btn-green btn-full" style="margin-top:16px;font-family:var(--font-display);font-size:18px;padding:16px;letter-spacing:2px" onclick="finishWorkout()">✓ إنهاء التمرين</button>
 </div>
-
 
 <!-- SWAP EXERCISE MODAL -->
 <div id="swap-modal">
@@ -2071,12 +1940,13 @@ self.addEventListener('notificationclick', e => {
     <div id="swap-modal-header">
       <div id="swap-modal-title">استبدال تمرين</div>
       <div id="swap-modal-sub">اختار البديل</div>
-      <input id="swap-modal-search" type="text" placeholder="ابحث..." oninput="renderSwapList()" />
+      <input id="swap-modal-search" type="text" placeholder="ابحث باسم التمرين أو العضلة..." oninput="renderSwapList()" />
     </div>
     <div id="swap-modal-list"></div>
     <button class="btn btn-outline" id="swap-modal-close" onclick="closeSwapModal()">إلغاء</button>
   </div>
 </div>
+
 
 <!-- CUSTOM NUMPAD -->
 <div id="custom-numpad">
@@ -2627,31 +2497,27 @@ function renderSwapList() {
   const query = document.getElementById('swap-modal-search').value.toLowerCase();
   const currentIds = activeWorkout.exercises.map(e => e.id);
 
-  // Sort: same muscle first, then rest
   const filtered = EXERCISES_DB
     .filter(e => e.id !== ex.id && !currentIds.includes(e.id))
-    .filter(e => !query || e.name.toLowerCase().includes(query) || (e.nameAr && e.nameAr.includes(query)) || e.muscle.toLowerCase().includes(query))
-    .sort((a, b) => {
-      const aSame = a.muscle === ex.muscle ? 0 : 1;
-      const bSame = b.muscle === ex.muscle ? 0 : 1;
-      return aSame - bSame;
-    });
+    .filter(e => !query ||
+      e.name.toLowerCase().includes(query) ||
+      (e.nameAr && e.nameAr.includes(query)) ||
+      e.muscle.toLowerCase().includes(query))
+    .sort((a, b) => (a.muscle === ex.muscle ? 0 : 1) - (b.muscle === ex.muscle ? 0 : 1));
 
   const list = document.getElementById('swap-modal-list');
   if (!filtered.length) {
     list.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-muted);font-family:var(--font-condensed);letter-spacing:1px">مفيش نتائج</div>';
     return;
   }
-
   list.innerHTML = filtered.map(e => {
-    const sameMuscle = e.muscle === ex.muscle;
-    return `
-    <div class="swap-option" onclick="doSwapExercise('${e.id}')">
+    const same = e.muscle === ex.muscle;
+    return `<div class="swap-option" onclick="doSwapExercise('${e.id}')">
       <div>
         <div class="swap-option-name">${e.name}</div>
         <div class="swap-option-name-ar">${e.nameAr || ''}</div>
       </div>
-      <span class="swap-option-tag ${sameMuscle ? 'same-muscle' : ''}">${e.muscle}</span>
+      <span class="swap-option-tag ${same ? 'same-muscle' : ''}">${e.muscle}</span>
     </div>`;
   }).join('');
 }
@@ -2660,16 +2526,14 @@ function doSwapExercise(newExId) {
   if (swapTargetEi === null) return;
   const newEx = EXERCISES_DB.find(e => e.id === newExId);
   if (!newEx) return;
-
-  const oldEx = activeWorkout.exercises[swapTargetEi];
-  // Keep existing sets data, just swap the exercise identity
+  const old = activeWorkout.exercises[swapTargetEi];
   activeWorkout.exercises[swapTargetEi] = {
     ...newEx,
-    sets: oldEx.sets,
-    restTime: oldEx.restTime || 90,
-    note: oldEx.note || ''
+    name: newEx.nameAr || newEx.name,
+    sets: old.sets,
+    restTime: old.restTime || 90,
+    note: old.note || ''
   };
-
   state.activeWorkout = activeWorkout;
   saveState();
   closeSwapModal();
@@ -2761,6 +2625,7 @@ function startWorkout(ppl, di) {
   activeWorkout = {
     ppl, di,
     type: day.day,
+    day: day.day,
     exercises: exercises.map(ex => ({
       id: ex.id,
       name: ex.nameAr || ex.name,
@@ -2794,7 +2659,21 @@ function renderActiveExercises() {
             <div class="active-ex-muscle">${ex.muscle}</div>
             ${(()=>{const pr=state.prs[ex.id]; return pr?`<span style="color:var(--gold);font-family:var(--font-condensed);font-size:11px;text-transform:uppercase;letter-spacing:0.5px">🏆 PR: ${pr.weight}kg×${pr.reps}</span>`:''})()}
           </div>
-          ${(()=>{const last=getLastSession(ex.id); return last?`<div style="font-family:var(--font-condensed);font-size:11px;color:var(--text-muted);margin-top:2px">آخر جلسة: ${last}</div>`:''})()}
+          ${(()=>{
+            const last = getLastSession(ex.id);
+            const delta = getWeightDelta(ex.id);
+            let html = '';
+            if (last) html += `<div style="font-family:var(--font-condensed);font-size:11px;color:var(--text-muted);margin-top:2px">آخر ${activeWorkout.day||''}: ${last}</div>`;
+            if (delta && delta.delta !== null) {
+              const up = delta.delta > 0;
+              const same = delta.delta === 0;
+              const color = up ? 'var(--green)' : same ? 'var(--text-muted)' : 'var(--red)';
+              const arrow = up ? '▲' : same ? '—' : '▼';
+              const sign = up ? '+' : '';
+              html += `<div style="font-family:var(--font-condensed);font-size:12px;color:${color};margin-top:3px;font-weight:700;letter-spacing:0.5px">${arrow} ${sign}${delta.delta}kg مقارنة بآخر ${activeWorkout.day||''}</div>`;
+            }
+            return html;
+          })()}
         </div>
         <div style="text-align:right;flex-shrink:0">
           <div style="font-family:var(--font-condensed);font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px">راحة</div>
@@ -2803,17 +2682,17 @@ function renderActiveExercises() {
           </select>
         </div>
       </div>
-        <div id="sets-${ei}" style="margin-top:8px">
-          ${ex.sets.map((s, si) => renderSetRow(ei, si, s)).join('')}
+      <div id="sets-${ei}" style="margin-top:8px">
+        ${ex.sets.map((s, si) => renderSetRow(ei, si, s)).join('')}
+      </div>
+      <div class="add-set-row">
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-outline btn-full" style="font-size:11px;padding:8px" onclick="addSet(${ei})">+ إضافة سيت</button>
+          <button class="swap-ex-btn" onclick="openSwapModal(${ei})">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
+            استبدال
+          </button>
         </div>
-        <div class="add-set-row">
-          <div style="display:flex;gap:8px">
-            <button class="btn btn-outline btn-full" style="font-size:11px;padding:8px" onclick="addSet(${ei})">+ إضافة سيت</button>
-            <button class="swap-ex-btn" onclick="openSwapModal(${ei})">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
-              استبدال
-            </button>
-          </div>
         <textarea id="note-${ei}" placeholder="ملاحظة على التمرين..." oninput="updateNote(${ei},this.value)" style="width:100%;margin-top:8px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-main);font-size:13px;padding:8px;resize:none;height:60px;outline:none">${'${ex.note||""}'}</textarea>
       </div>
     </div>
@@ -2986,7 +2865,9 @@ function finishWorkout() {
   window._pendingLog = {
     date: dateStr(new Date(state.workoutStartTime || Date.now())),
     type: activeWorkout.type,
+    day: activeWorkout.day || activeWorkout.type,
     ppl: activeWorkout.ppl,
+    workoutNum: state.log.length + 1,
     duration: formatTime(elapsed),
     totalSets,
     volume,
@@ -3527,6 +3408,42 @@ function getLastSession(exId) {
     }
   }
   return null;
+}
+
+// مقارنة الوزن مقارنة بآخر تمرين من نفس نوع اليوم
+function getWeightDelta(exId) {
+  if (!activeWorkout) return null;
+  const currentType = activeWorkout.day; // e.g. "Push A"
+
+  // ابحث عن آخر لوج من نفس النوع
+  let prevLog = null;
+  for (let i = state.log.length - 1; i >= 0; i--) {
+    if (state.log[i].day === currentType) {
+      prevLog = state.log[i];
+      break;
+    }
+  }
+  if (!prevLog) return null;
+
+  const prevEx = (prevLog.exercises || []).find(e => e.id === exId);
+  if (!prevEx) return null;
+
+  const prevSets = (prevEx.sets || []).filter(s => s.done && s.weight);
+  if (!prevSets.length) return null;
+
+  // أعلى وزن في الجلسة السابقة
+  const prevMax = Math.max(...prevSets.map(s => parseFloat(s.weight) || 0));
+
+  // أعلى وزن دخله في التمرين الحالي (السيتات اللي اتعملت)
+  const curEx = activeWorkout.exercises.find(e => e.id === exId);
+  if (!curEx) return null;
+  const curDone = (curEx.sets || []).filter(s => s.done && s.weight);
+  if (!curDone.length) return { prev: prevMax, cur: null, delta: null, workoutNum: prevLog.workoutNum };
+
+  const curMax = Math.max(...curDone.map(s => parseFloat(s.weight) || 0));
+  const delta = curMax - prevMax;
+
+  return { prev: prevMax, cur: curMax, delta, workoutNum: prevLog.workoutNum };
 }
 
 function updateNote(ei, val) {
