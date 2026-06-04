@@ -1829,6 +1829,17 @@ self.addEventListener('notificationclick', e => {
       <div id="gyms-active-card" style="margin-bottom:16px"></div>
       <div class="section-title">كل الجيمات</div>
       <div id="gyms-list"></div>
+      <div class="section-title" style="margin-top:18px">نقل البيانات</div>
+      <div class="card">
+        <div style="font-family:var(--font-condensed);font-size:13px;color:var(--text-dim);line-height:1.7;margin-bottom:12px">
+          صدر ملف JSON فيه كل الجيمات، السجلات، الاوزان، الـ PRs، والتمارين المخصصة، واستورده في نسخة APK.
+        </div>
+        <button class="btn btn-gold btn-full" style="margin-bottom:8px;padding:13px;font-family:var(--font-display);font-size:14px;letter-spacing:1px" onclick="exportTamreeniData()">تنزيل ملف JSON</button>
+        <label class="btn btn-outline btn-full" style="display:flex;align-items:center;justify-content:center;padding:13px;font-size:13px;cursor:pointer">
+          استيراد JSON للـ APK
+          <input type="file" accept="application/json,.json" onchange="importTamreeniData(event)" style="display:none">
+        </label>
+      </div>
       <button class="btn btn-outline btn-full" style="margin-top:8px" onclick="openAddGymModal()">+ إضافة جيم جديد</button>
     </div>
 
@@ -2187,6 +2198,137 @@ function migrateState(s) {
 
 function saveState() {
   localStorage.setItem('tamreeni_state_' + activeGymId, JSON.stringify(state));
+}
+
+function tamreeniStorageKeys() {
+  const keys = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (
+      key === 'custom_exercises' ||
+      key === 'trainer_state' ||
+      key === 'tamreeni_gyms' ||
+      key === 'tamreeni_active_gym' ||
+      key.startsWith('tamreeni_state_')
+    ) {
+      keys.push(key);
+    }
+  }
+  return keys.sort();
+}
+
+function parseJsonSafe(value, fallback) {
+  try { return value ? JSON.parse(value) : fallback; }
+  catch(e) { return fallback; }
+}
+
+function buildTamreeniBackup() {
+  saveState();
+  saveGyms();
+
+  const storage = {};
+  tamreeniStorageKeys().forEach(key => {
+    storage[key] = localStorage.getItem(key);
+  });
+
+  const states = {};
+  Object.keys(storage).forEach(key => {
+    if (key.startsWith('tamreeni_state_')) {
+      states[key.replace('tamreeni_state_', '')] = parseJsonSafe(storage[key], null);
+    }
+  });
+
+  return {
+    app: 'tamreeni-trainer',
+    schema: 'tamreeni-backup-v1',
+    exportedAt: new Date().toISOString(),
+    activeGymId,
+    gyms: parseJsonSafe(storage.tamreeni_gyms, gyms),
+    states,
+    customExercises: parseJsonSafe(storage.custom_exercises, []),
+    localStorage: storage
+  };
+}
+
+function exportTamreeniData() {
+  try {
+    const backup = buildTamreeniBackup();
+    const json = JSON.stringify(backup, null, 2);
+    const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `tamreeni-backup-${dateStr(new Date())}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 500);
+    showToast('تم تنزيل ملف JSON لنقل البيانات');
+  } catch(e) {
+    alert('حصل خطأ أثناء تصدير البيانات');
+  }
+}
+
+function importTamreeniData(event) {
+  const input = event.target;
+  const file = input.files && input.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const backup = JSON.parse(reader.result);
+      restoreTamreeniBackup(backup);
+    } catch(e) {
+      alert('ملف JSON غير صالح');
+    } finally {
+      input.value = '';
+    }
+  };
+  reader.readAsText(file);
+}
+
+function restoreTamreeniBackup(backup) {
+  const storage = backup && backup.localStorage ? backup.localStorage : {};
+  if (!backup || (!backup.localStorage && backup.schema !== 'tamreeni-backup-v1')) {
+    throw new Error('Invalid backup');
+  }
+  if (!confirm('استيراد الملف هيستبدل بيانات التطبيق الحالية. تكمل؟')) return;
+
+  tamreeniStorageKeys().forEach(key => localStorage.removeItem(key));
+
+  if (backup.localStorage) {
+    Object.keys(storage).forEach(key => {
+      if (typeof storage[key] === 'string') localStorage.setItem(key, storage[key]);
+    });
+  } else {
+    if (backup.gyms) localStorage.setItem('tamreeni_gyms', JSON.stringify(backup.gyms));
+    if (backup.activeGymId) localStorage.setItem('tamreeni_active_gym', backup.activeGymId);
+    if (backup.customExercises) localStorage.setItem('custom_exercises', JSON.stringify(backup.customExercises));
+    Object.entries(backup.states || {}).forEach(([gymId, gymState]) => {
+      localStorage.setItem('tamreeni_state_' + gymId, JSON.stringify(gymState));
+    });
+  }
+
+  loadGymsSystem();
+  state = loadGymState(activeGymId);
+  activeWorkout = state.activeWorkout || null;
+  workoutStartTime = state.workoutStartTime || null;
+  currentPPL = 'push';
+
+  for (let i = EXERCISES_DB.length - 1; i >= 0; i--) {
+    if (EXERCISES_DB[i].custom) EXERCISES_DB.splice(i, 1);
+  }
+  loadCustomExercises();
+
+  renderDash();
+  renderPPL();
+  renderLibrary();
+  renderLog();
+  renderProgress();
+  renderGymsSettings();
+  navigate('gyms');
+  showToast('تم استيراد بيانات JSON بنجاح');
 }
 
 function switchGym(gymId) {
