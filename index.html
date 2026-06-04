@@ -1834,7 +1834,9 @@ self.addEventListener('notificationclick', e => {
         <div style="font-family:var(--font-condensed);font-size:13px;color:var(--text-dim);line-height:1.7;margin-bottom:12px">
           صدر ملف JSON فيه كل الجيمات، السجلات، الاوزان، الـ PRs، والتمارين المخصصة، واستورده في نسخة APK.
         </div>
-        <button class="btn btn-gold btn-full" style="margin-bottom:8px;padding:13px;font-family:var(--font-display);font-size:14px;letter-spacing:1px" onclick="exportTamreeniData()">تنزيل ملف JSON</button>
+        <button class="btn btn-gold btn-full" style="margin-bottom:8px;padding:13px;font-family:var(--font-display);font-size:14px;letter-spacing:1px" onclick="exportTamreeniReport()">تنزيل تقرير HTML مقروء</button>
+        <button class="btn btn-outline btn-full" style="margin-bottom:8px;padding:13px;font-size:13px" onclick="exportTamreeniExcel()">تنزيل ملف Excel للسجلات</button>
+        <button class="btn btn-outline btn-full" style="margin-bottom:8px;padding:13px;font-size:13px" onclick="exportTamreeniData()">تنزيل ملف JSON</button>
         <label class="btn btn-outline btn-full" style="display:flex;align-items:center;justify-content:center;padding:13px;font-size:13px;cursor:pointer">
           استيراد JSON للـ APK
           <input type="file" accept="application/json,.json" onchange="importTamreeniData(event)" style="display:none">
@@ -2266,6 +2268,271 @@ function exportTamreeniData() {
     showToast('تم تنزيل ملف JSON لنقل البيانات');
   } catch(e) {
     alert('حصل خطأ أثناء تصدير البيانات');
+  }
+}
+
+function tamreeniEscape(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function tamreeniDownloadFile(content, filename, type) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 500);
+}
+
+function tamreeniFindExercise(id, backup) {
+  return EXERCISES_DB.find(ex => ex.id === id) ||
+    (backup.customExercises || []).find(ex => ex.id === id) ||
+    null;
+}
+
+function tamreeniExerciseName(id, backup) {
+  const ex = tamreeniFindExercise(id, backup);
+  return ex ? (ex.nameAr || ex.name || id) : id;
+}
+
+function tamreeniStateForGym(backup, gymId) {
+  return backup.states && backup.states[gymId] ? migrateState(backup.states[gymId]) : freshGymState();
+}
+
+function tamreeniMetricCards(backup) {
+  const gymsCount = (backup.gyms || []).length;
+  const customCount = (backup.customExercises || []).length;
+  let logsCount = 0;
+  let totalSets = 0;
+  let totalVolume = 0;
+  let bodyWeights = 0;
+  Object.values(backup.states || {}).forEach(s => {
+    const logs = s.log || [];
+    logsCount += logs.length;
+    totalSets += logs.reduce((sum, log) => sum + (log.totalSets || 0), 0);
+    totalVolume += logs.reduce((sum, log) => sum + (log.volume || 0), 0);
+    bodyWeights += (s.bodyWeights || []).length;
+  });
+  return [
+    ['الجيمات', gymsCount],
+    ['التمارين المسجلة', logsCount],
+    ['السيتات', totalSets],
+    ['الحجم الكلي kg', Math.round(totalVolume)],
+    ['قياسات الوزن', bodyWeights],
+    ['تمارين مخصصة', customCount],
+  ];
+}
+
+function tamreeniHtmlTable(headers, rows, emptyText) {
+  if (!rows.length) return `<p class="empty">${tamreeniEscape(emptyText || 'لا توجد بيانات')}</p>`;
+  return `
+    <table>
+      <thead><tr>${headers.map(h => `<th>${tamreeniEscape(h)}</th>`).join('')}</tr></thead>
+      <tbody>${rows.map(row => `<tr>${row.map(cell => `<td>${tamreeniEscape(cell)}</td>`).join('')}</tr>`).join('')}</tbody>
+    </table>
+  `;
+}
+
+function tamreeniBuildReportHtml(backup) {
+  const metrics = tamreeniMetricCards(backup);
+  const gymsHtml = (backup.gyms || []).map(gym => {
+    const s = tamreeniStateForGym(backup, gym.id);
+    const logs = (s.log || []).slice().reverse();
+    const prs = Object.entries(s.prs || {});
+    const scheduleRows = [];
+    Object.entries(s.schedule || {}).forEach(([ppl, days]) => {
+      (days || []).forEach(day => {
+        scheduleRows.push([
+          ppl.toUpperCase(),
+          day.day || '',
+          (day.exercises || []).map(id => tamreeniExerciseName(id, backup)).join(', ')
+        ]);
+      });
+    });
+
+    const logRows = logs.map(log => [
+      log.date || '',
+      log.type || 'WORKOUT',
+      log.duration || '',
+      log.totalSets || 0,
+      Math.round(log.volume || 0),
+      (log.exercises || []).length
+    ]);
+
+    const logDetails = logs.map(log => {
+      const exercisesHtml = (log.exercises || []).map(ex => {
+        const setRows = (ex.sets || []).map((set, i) => [
+          i + 1,
+          set.weight || '',
+          set.reps || '',
+          set.done ? 'تم' : 'متخطي',
+          set.type || 'normal'
+        ]);
+        return `
+          <div class="exercise">
+            <h4>${tamreeniEscape(tamreeniExerciseName(ex.id, backup))}</h4>
+            ${tamreeniHtmlTable(['Set', 'Weight', 'Reps', 'Done', 'Type'], setRows, 'لا توجد سيتات')}
+          </div>
+        `;
+      }).join('');
+      return `
+        <article class="log-card">
+          <h3>${tamreeniEscape(log.date || '')} - ${tamreeniEscape(log.type || 'WORKOUT')}</h3>
+          <div class="mini">مدة: ${tamreeniEscape(log.duration || '')} | سيتات: ${tamreeniEscape(log.totalSets || 0)} | حجم: ${tamreeniEscape(Math.round(log.volume || 0))} kg</div>
+          ${exercisesHtml || '<p class="empty">لا توجد تفاصيل تمارين</p>'}
+        </article>
+      `;
+    }).join('');
+
+    return `
+      <section>
+        <h2>${tamreeniEscape(gym.name || gym.id)} ${gym.id === backup.activeGymId ? '<span>الجيم الحالي</span>' : ''}</h2>
+        <div class="grid">
+          <div class="box"><strong>${logs.length}</strong><small>تمرين</small></div>
+          <div class="box"><strong>${(s.bodyWeights || []).length}</strong><small>قياس وزن</small></div>
+          <div class="box"><strong>${prs.length}</strong><small>PR</small></div>
+          <div class="box"><strong>${Math.round((s.log || []).reduce((sum, log) => sum + (log.volume || 0), 0))}</strong><small>kg حجم</small></div>
+        </div>
+
+        <h3>سجل التمارين</h3>
+        ${tamreeniHtmlTable(['التاريخ', 'النوع', 'المدة', 'السيتات', 'الحجم kg', 'عدد التمارين'], logRows, 'لا توجد سجلات تمرين')}
+
+        <h3>تفاصيل كل تمرين</h3>
+        ${logDetails || '<p class="empty">لا توجد تفاصيل تمرين</p>'}
+
+        <h3>وزن الجسم</h3>
+        ${tamreeniHtmlTable(['التاريخ', 'الوزن kg'], (s.bodyWeights || []).map(w => [w.date || '', w.weight || '']), 'لا توجد قياسات وزن')}
+
+        <h3>الأرقام القياسية PR</h3>
+        ${tamreeniHtmlTable(['التمرين', 'الوزن kg', 'التاريخ'], prs.map(([name, pr]) => [name, pr.weight || '', pr.date || '']), 'لا توجد PRs')}
+
+        <h3>جدول التمارين</h3>
+        ${tamreeniHtmlTable(['PPL', 'اليوم', 'التمارين'], scheduleRows, 'لا يوجد جدول')}
+      </section>
+    `;
+  }).join('');
+
+  const customRows = (backup.customExercises || []).map(ex => [
+    ex.nameAr || '',
+    ex.name || '',
+    ex.muscle || '',
+    ex.type || '',
+    ex.equipment || ''
+  ]);
+
+  return `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>تقرير Tamreeni</title>
+<style>
+body{margin:0;background:#f4f4f5;color:#171717;font-family:Arial,Tahoma,sans-serif;line-height:1.7}
+main{max-width:1100px;margin:auto;padding:24px}
+header{background:#111;color:#fff;padding:28px;border-bottom:5px solid #e8222a}
+h1,h2,h3,h4{margin:0 0 12px}
+h1{font-size:30px} h2{margin-top:26px;border-bottom:2px solid #e8222a;padding-bottom:8px} h2 span{font-size:12px;background:#e8222a;color:#fff;border-radius:4px;padding:3px 8px;margin-right:8px}
+.meta{color:#d4d4d8}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:16px 0}
+.box{background:#fff;border:1px solid #ddd;border-radius:8px;padding:14px;text-align:center}.box strong{display:block;font-size:24px;color:#e8222a}.box small{color:#666}
+section,.log-card{background:#fff;border:1px solid #ddd;border-radius:8px;padding:18px;margin:16px 0}
+.log-card{background:#fafafa}.exercise{margin:12px 0;padding:12px;border:1px solid #e5e5e5;border-radius:8px;background:#fff}
+table{width:100%;border-collapse:collapse;margin:10px 0 18px;background:#fff}th,td{border:1px solid #ddd;padding:8px;text-align:right;vertical-align:top}th{background:#171717;color:#fff}
+.empty{color:#777;background:#fafafa;border:1px dashed #ccc;padding:12px;border-radius:8px}.mini{color:#555;margin-bottom:10px}
+@media print{body{background:#fff}section,.log-card,.box{break-inside:avoid}}
+</style>
+</head>
+<body>
+<header><main><h1>تقرير Tamreeni</h1><div class="meta">تم التصدير: ${tamreeniEscape(new Date(backup.exportedAt).toLocaleString('ar-EG'))}</div></main></header>
+<main>
+<section>
+  <h2>ملخص البيانات</h2>
+  <div class="grid">${metrics.map(([label, value]) => `<div class="box"><strong>${tamreeniEscape(value)}</strong><small>${tamreeniEscape(label)}</small></div>`).join('')}</div>
+</section>
+${gymsHtml || '<section><p class="empty">لا توجد جيمات محفوظة</p></section>'}
+<section>
+  <h2>التمارين المخصصة</h2>
+  ${tamreeniHtmlTable(['الاسم العربي', 'الاسم الإنجليزي', 'العضلة', 'النوع', 'المعدة'], customRows, 'لا توجد تمارين مخصصة')}
+</section>
+</main>
+</body>
+</html>`;
+}
+
+function exportTamreeniReport() {
+  try {
+    const backup = buildTamreeniBackup();
+    const html = tamreeniBuildReportHtml(backup);
+    tamreeniDownloadFile(html, `tamreeni-report-${dateStr(new Date())}.html`, 'text/html;charset=utf-8');
+    showToast('تم تنزيل تقرير HTML مقروء');
+  } catch(e) {
+    alert('حصل خطأ أثناء تصدير التقرير');
+  }
+}
+
+function exportTamreeniExcel() {
+  try {
+    const backup = buildTamreeniBackup();
+    const rows = [];
+    (backup.gyms || []).forEach(gym => {
+      const s = tamreeniStateForGym(backup, gym.id);
+      (s.log || []).forEach(log => {
+        (log.exercises || []).forEach(ex => {
+          (ex.sets || []).forEach((set, i) => {
+            rows.push([
+              gym.name || gym.id,
+              log.date || '',
+              log.type || 'WORKOUT',
+              log.duration || '',
+              log.totalSets || 0,
+              Math.round(log.volume || 0),
+              tamreeniExerciseName(ex.id, backup),
+              i + 1,
+              set.weight || '',
+              set.reps || '',
+              set.done ? 'Done' : 'Skipped',
+              set.type || 'normal'
+            ]);
+          });
+        });
+      });
+    });
+
+    const weightRows = [];
+    (backup.gyms || []).forEach(gym => {
+      const s = tamreeniStateForGym(backup, gym.id);
+      (s.bodyWeights || []).forEach(w => weightRows.push([gym.name || gym.id, w.date || '', w.weight || '']));
+    });
+
+    const prRows = [];
+    (backup.gyms || []).forEach(gym => {
+      const s = tamreeniStateForGym(backup, gym.id);
+      Object.entries(s.prs || {}).forEach(([name, pr]) => prRows.push([gym.name || gym.id, name, pr.weight || '', pr.date || '']));
+    });
+
+    const excelHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>
+      <h1>Tamreeni Export</h1>
+      <h2>Workout Sets</h2>
+      ${tamreeniHtmlTable(['Gym','Date','Workout','Duration','Total Sets','Volume kg','Exercise','Set','Weight','Reps','Done','Type'], rows, 'No workout sets')}
+      <h2>Body Weight</h2>
+      ${tamreeniHtmlTable(['Gym','Date','Weight kg'], weightRows, 'No body weights')}
+      <h2>PRs</h2>
+      ${tamreeniHtmlTable(['Gym','Exercise','Weight kg','Date'], prRows, 'No PRs')}
+      <h2>Custom Exercises</h2>
+      ${tamreeniHtmlTable(['Arabic Name','English Name','Muscle','Type','Equipment'], (backup.customExercises || []).map(ex => [ex.nameAr || '', ex.name || '', ex.muscle || '', ex.type || '', ex.equipment || '']), 'No custom exercises')}
+    </body></html>`;
+
+    tamreeniDownloadFile('\ufeff' + excelHtml, `tamreeni-records-${dateStr(new Date())}.xls`, 'application/vnd.ms-excel;charset=utf-8');
+    showToast('تم تنزيل ملف Excel للسجلات');
+  } catch(e) {
+    alert('حصل خطأ أثناء تصدير Excel');
   }
 }
 
