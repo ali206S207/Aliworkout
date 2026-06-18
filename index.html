@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<meta name="theme-color" content="#1c1c1e">
+<meta name="theme-color" content="#0a0a0f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>TRAINER — Built In Silence</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,1574 +11,1007 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
+/* ─── DESIGN TOKENS ─── */
 :root {
-  --gold: #e8222a;
-  --gold-dim: #9a1018;
-  --bg: #000000;
-  --bg2: #0f0d13;
-  --bg3: #1c1b1f;
-  --bg4: #2b2930;
-  --text: #e6e1e5;
-  --text-dim: #cac4d0;
-  --text-muted: #79747e;
   --red: #e8222a;
-  --green: #30d158;
-  --border: #2b2930;
+  --red-dim: #7a1014;
+  --red-glow: rgba(232,34,42,0.25);
+  --gold: #f0a500;
+  --gold-dim: #7a5200;
+  --bg: #0a0a0f;
+  --bg2: #12121a;
+  --bg3: #1a1a24;
+  --bg4: #222230;
+  --bg5: #2a2a38;
+  --text: #f0f0f5;
+  --text-dim: #b0b0c0;
+  --text-muted: #606078;
+  --green: #22d35a;
+  --blue: #4d9fff;
+  --border: rgba(255,255,255,0.07);
+  --border-bright: rgba(255,255,255,0.14);
   --radius: 16px;
-  --radius-sm: 12px;
-  --radius-lg: 28px;
-  --radius-full: 100px;
-  --elevation-1: 0 1px 3px rgba(0,0,0,0.4);
-  --elevation-2: 0 4px 16px rgba(0,0,0,0.5);
-  --elevation-3: 0 8px 32px rgba(0,0,0,0.6);
+  --radius-sm: 10px;
+  --radius-lg: 24px;
   --font-main: 'Cairo', sans-serif;
   --font-display: 'Oswald', sans-serif;
   --font-condensed: 'Barlow Condensed', sans-serif;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-
-html, body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-main);
-  height: 100%;
-  overflow: hidden;
-  user-select: none;
-}
-
-/* ===== NOISE TEXTURE ===== */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-  pointer-events: none;
-  z-index: 9999;
-  opacity: 0.4;
-}
-
-/* ===== LAYOUT ===== */
-#app {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  height: 100dvh;
-  overflow: hidden;
-}
-
-#content {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
-  padding-bottom: 80px;
-}
-
-/* ===== BOTTOM NAV ===== */
-#nav {
-  display: flex;
-  background: var(--bg2);
-  border-top: 1px solid var(--border);
-  padding: 6px 8px env(safe-area-inset-bottom, 8px);
-  z-index: 100;
-  flex-shrink: 0;
-  gap: 4px;
-}
-
-.nav-btn {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 4px 5px;
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all .2s;
-  font-size: 9px;
-  font-family: var(--font-condensed);
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  border-radius: 10px;
-  position: relative;
-}
-
-.nav-btn:active { transform: scale(0.93); }
-
-.nav-btn.active {
-  color: var(--gold);
-  background: rgba(232,34,42,0.1);
-}
-
-.nav-btn.active::after {
-  content: '';
-  position: absolute;
-  bottom: 3px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 18px;
-  height: 2px;
-  background: var(--gold);
-  border-radius: 2px;
-}
-
-.nav-btn svg { width: 24px; height: 24px; stroke-width: 1.8; }
-
-/* ===== PAGES ===== */
-.page { display: none; padding: 16px; }
-.page.active { display: block; }
-
-/* ===== HEADER ===== */
-.page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
-
-.page-title {
-  font-family: var(--font-display);
-  font-size: 26px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-}
-
-.gold { color: var(--gold); }
-
-/* ===== CARDS ===== */
-.card {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px;
-  margin-bottom: 12px;
-  transition: border-color .2s;
-}
-
-.card-accent {
-  border-left: 3px solid var(--gold);
-}
-
-/* ===== DASHBOARD ===== */
-.stats-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.stat-card {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 18px 12px 14px;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.stat-card::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 2px;
-  background: var(--gold);
-  border-radius: 2px 2px 0 0;
-}
-
-.stat-num {
-  font-family: var(--font-display);
-  font-size: 48px;
-  font-weight: 700;
-  color: var(--text);
-  line-height: 1;
-  letter-spacing: -1px;
-}
-
-.stat-label {
-  font-size: 10px;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-top: 4px;
-  font-family: var(--font-condensed);
-}
-
-.hero-banner {
-  background: url("img-hero-banner.png") center 20% / cover no-repeat;
-  border-radius: var(--radius);
-  margin-bottom: 16px;
-  position: relative;
-  overflow: hidden;
-  min-height: 260px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-}
-
-.hero-banner::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to bottom,
-    rgba(0,0,0,0.05) 0%,
-    rgba(0,0,0,0.2) 40%,
-    rgba(0,0,0,0.92) 100%
-  );
-}
-
-.hero-banner > * { position: relative; z-index: 1; }
-
-.hero-banner::after {
-  content: 'BUILT IN SILENCE';
-  position: absolute;
-  bottom: -10px;
-  right: -10px;
-  font-family: var(--font-display);
-  font-size: 52px;
-  font-weight: 700;
-  color: var(--gold);
-  opacity: 0.05;
-  white-space: nowrap;
-  letter-spacing: 2px;
-}
-
-.hero-title {
-  font-family: var(--font-display);
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--gold);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.hero-sub {
-  font-size: 12px;
-  color: var(--text-dim);
-  margin-top: 4px;
-}
-
-.week-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 6px;
-  margin-top: 12px;
-}
-
-.week-day {
-  aspect-ratio: 1;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-condensed);
-  font-size: 9px;
-  font-weight: 700;
-  text-transform: uppercase;
-  background: var(--bg3);
-  color: var(--text-muted);
-  border: 1px solid var(--border);
-  flex-direction: column;
-  gap: 2px;
-}
-
-.week-day.done { background: var(--gold); color: #000; border-color: var(--gold); }
-.week-day.rest { background: rgba(100,100,120,0.3); color: var(--text-muted); border-color: #444; }
-.week-day.today { border-color: var(--gold); color: var(--gold); background:rgba(232,34,42,0.15); }
-
-.section-title {
-  font-family: var(--font-condensed);
-  font-size: 11px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--text-dim);
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.section-title::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--border);
-}
-
-/* ===== PPL WORKOUT PAGE ===== */
-.ppl-tabs {
-  display: flex;
-  background: var(--bg3);
-  border-radius: 14px;
-  padding: 4px;
-  margin-bottom: 16px;
-  gap: 3px;
-  border: 1px solid var(--border);
-}
-
-.ppl-tab {
-  flex: 1;
-  padding: 11px 4px;
-  background: none;
-  border: none;
-  border-radius: 11px;
-  color: var(--text-muted);
-  font-family: var(--font-display);
-  font-size: 13px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  cursor: pointer;
-  transition: all .2s;
-}
-
-.ppl-tab.active {
-  background: var(--gold);
-  color: #fff;
-  box-shadow: 0 2px 12px rgba(232,34,42,0.4);
-}
-
-.ppl-tab:active { transform: scale(0.97); }
-
-.workout-day-card {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  margin-bottom: 12px;
-  overflow: hidden;
-}
-
-.workout-day-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 16px;
-  cursor: pointer;
-  border-bottom: 1px solid var(--border);
-}
-
-.workout-day-title {
-  font-family: var(--font-display);
-  font-size: 16px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.day-badge {
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 3px 10px;
-  font-family: var(--font-condensed);
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.workout-exercise-list {
-  padding: 12px;
-}
-
-.exercise-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 12px;
-  background: var(--bg3);
-  border-radius: 8px;
-  margin-bottom: 6px;
-  cursor: grab;
-  border: 1px solid transparent;
-  transition: border-color .2s;
-  position: relative;
-}
-
-.exercise-item:active { border-color: var(--gold); cursor: grabbing; }
-
-.exercise-item-name {
-  font-family: var(--font-condensed);
-  font-size: 14px;
-  font-weight: 600;
-  flex: 1;
-}
-
-.exercise-item-meta {
-  font-size: 11px;
-  color: var(--text-dim);
-  font-family: var(--font-condensed);
-  margin-right: 8px;
-}
-
-.icon-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--text-muted);
-  padding: 4px;
-  border-radius: 4px;
-  transition: color .2s;
-  display: flex;
-  align-items: center;
-}
-
-.icon-btn:hover { color: var(--red); }
-.icon-btn.add { color: var(--text-dim); }
-.icon-btn.add:hover { color: var(--gold); }
-
-.add-exercise-row {
-  display: flex;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.btn {
-  padding: 10px 22px;
-  border-radius: 100px;
-  border: none;
-  cursor: pointer;
-  font-family: var(--font-condensed);
-  font-size: 13px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  transition: box-shadow 0.2s, transform 0.12s, background 0.15s;
-  -webkit-tap-highlight-color: transparent;
-}
-.btn:active { transform: scale(0.95); }
-
-.btn-gold {
-  background: var(--gold);
-  color: #000;
-}
-
-.btn-gold:hover { filter: brightness(1.1); }
-
-.btn-outline {
-  background: none;
-  border: 1px solid var(--border);
-  color: var(--text-dim);
-}
-
-.btn-outline:hover { border-color: var(--gold); color: var(--gold); }
-
-.btn-danger {
-  background: rgba(224, 48, 48, 0.15);
-  color: var(--red);
-  border: 1px solid rgba(224, 48, 48, 0.3);
-}
-
-.btn-green {
-  background: var(--green);
-  color: #000;
-}
-
-.btn-full { width: 100%; }
-
-/* ===== START WORKOUT ===== */
-.start-workout-btn {
-  background: linear-gradient(135deg, #b01018, #e8222a);
-  color: #fff;
-  font-family: var(--font-display);
-  font-size: 18px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  border: none;
-  border-radius: var(--radius);
-  padding: 18px;
-  width: 100%;
-  cursor: pointer;
-  margin-top: 8px;
-  position: relative;
-  overflow: hidden;
-  transition: transform .15s, box-shadow .15s;
-  box-shadow: 0 4px 20px rgba(232,34,42,0.3);
-}
-
-.start-workout-btn:active {
-  transform: scale(0.97);
-  box-shadow: 0 2px 8px rgba(232,34,42,0.2);
-}
-
-.start-workout-btn::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-  transform: translateX(-100%);
-  animation: shimmer 2s infinite;
-}
-
-@keyframes shimmer {
-  to { transform: translateX(100%); }
-}
-
-/* ===== ACTIVE WORKOUT ===== */
-#active-workout {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: var(--bg);
-  z-index: 1000;
-  overflow-y: auto;
-  padding: 16px;
-  padding-bottom: 100px;
-}
-
-#active-workout.open { display: block; }
-
-.workout-timer-display {
-  text-align: center;
-  margin: 12px 0 4px;
-  font-family: var(--font-display);
-  font-size: 52px;
-  font-weight: 700;
-  color: var(--text);
-  letter-spacing: 3px;
-  line-height: 1;
-}
-
-.workout-timer-label {
-  font-family: var(--font-condensed);
-  font-size: 11px;
-  color: var(--text-muted);
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  text-align: center;
-  margin-top: 4px;
-}
-
-.active-exercise-card {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  margin-bottom: 12px;
-  overflow: hidden;
-}
-
-.active-exercise-header {
-  padding: 12px 16px;
-  background: var(--bg3);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.active-ex-name {
-  font-family: var(--font-condensed);
-  font-size: 16px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.active-ex-muscle {
-  font-size: 11px;
-  color: var(--gold);
-  font-family: var(--font-condensed);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.sets-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.sets-table th {
-  font-family: var(--font-condensed);
-  font-size: 10px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  padding: 8px 10px 6px;
-  text-align: center;
-  border-bottom: 1px solid var(--border);
-}
-
-.sets-table td {
-  padding: 6px 4px;
-  text-align: center;
-  vertical-align: middle;
-}
-
-.sets-table tbody tr {
-  border-bottom: 1px solid var(--border);
-  transition: background .15s;
-}
-
-.sets-table tbody tr:last-child { border-bottom: none; }
-.sets-table tbody tr:active { background: rgba(232,34,42,0.05); }
-
-.set-input {
-  width: 64px;
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text);
-  font-family: var(--font-display);
-  font-size: 18px;
-  font-weight: 700;
-  text-align: center;
-  padding: 8px 4px;
-  -moz-appearance: textfield;
-}
-
-.set-input::-webkit-outer-spin-button,
-.set-input::-webkit-inner-spin-button { -webkit-appearance: none; }
-.set-input:focus { border-color: var(--gold); outline: none; }
-
-.set-done-btn {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 2px solid var(--border);
-  background: none;
-  color: var(--text-muted);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all .15s;
-  margin: 0 auto;
-  font-size: 18px;
-}
-
-.set-done-btn:active { transform: scale(0.88); }
-
-.set-done-btn.done {
-  background: var(--green);
-  border-color: var(--green);
-  color: #000;
-}
-
-.set-num {
-  font-family: var(--font-display);
-  font-size: 16px;
-  color: var(--text-muted);
-  width: 24px;
-  text-align: center;
-}
-
-.add-set-row {
-  padding: 8px 12px;
-  border-top: 1px solid var(--border);
-}
-
-/* ===== REST TIMER MODAL ===== */
-#rest-modal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: #000;
-  z-index: 2000;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 0;
-  overflow: hidden;
-}
-
-#rest-modal.open { display: flex; }
-
-.rest-top-label {
-  font-family: var(--font-display);
-  font-size: 12px;
-  letter-spacing: 7px;
-  color: var(--gold);
-  text-transform: uppercase;
-  margin-bottom: 6px;
-}
-
-.rest-sub-label {
-  font-family: var(--font-condensed);
-  font-size: 13px;
-  color: var(--text-muted);
-  letter-spacing: 1px;
-  margin-bottom: 40px;
-}
-
-.rest-main-row {
-  display: flex;
-  align-items: center;
-  gap: 32px;
-  margin-bottom: 48px;
-}
-
-.rest-bar-wrap {
-  width: 14px;
-  height: 220px;
-  background: #111;
-  border-radius: 7px;
-  position: relative;
-  overflow: hidden;
-}
-
-.rest-bar-fill {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 60%;
-  background: var(--gold);
-  border-radius: 7px;
-  transition: height 1s linear;
-  box-shadow: 0 0 16px var(--gold);
-}
-
-.rest-num-block {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.rest-big-num {
-  font-family: var(--font-display);
-  font-size: 110px;
-  font-weight: 700;
-  color: #fff;
-  line-height: 1;
-  letter-spacing: -4px;
-}
-
-.rest-sec-label {
-  font-family: var(--font-condensed);
-  font-size: 16px;
-  color: var(--text-muted);
-  letter-spacing: 4px;
-  margin-top: 4px;
-}
-
-.rest-btns {
-  display: flex;
-  gap: 12px;
-  margin-top: 24px;
-}
-
-.rest-adjust-btn {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  color: var(--text);
-  border-radius: 8px;
-  padding: 10px 16px;
-  font-family: var(--font-condensed);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.rest-skip-btn {
-  background: var(--gold);
-  border: none;
-  color: #000;
-  border-radius: 8px;
-  padding: 10px 24px;
-  font-family: var(--font-display);
-  font-size: 15px;
-  font-weight: 700;
-  text-transform: uppercase;
-  cursor: pointer;
-}
-
-/* ===== LIBRARY ===== */
-.search-input {
-  width: 100%;
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 12px 16px;
-  color: var(--text);
-  font-family: var(--font-main);
-  font-size: 14px;
-  margin-bottom: 12px;
-}
-
-.search-input:focus { border-color: var(--gold); outline: none; }
-.search-input::placeholder { color: var(--text-muted); }
-
-.filter-row {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  margin-bottom: 16px;
-  padding-bottom: 4px;
-  scrollbar-width: none;
-}
-
-.filter-row::-webkit-scrollbar { display: none; }
-
-.filter-chip {
-  flex-shrink: 0;
-  padding: 6px 14px;
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  font-family: var(--font-condensed);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-dim);
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all .2s;
-}
-
-.filter-chip.active { background: var(--gold); border-color: var(--gold); color: #000; }
-
-.lib-exercise-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 14px;
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  margin-bottom: 8px;
-  transition: border-color .2s;
-}
-
-.lib-exercise-item:active { border-color: var(--gold); }
-
-.lib-ex-info { flex: 1; }
-
-.lib-ex-name {
-  font-family: var(--font-condensed);
-  font-size: 15px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.lib-ex-tags {
-  display: flex;
-  gap: 6px;
-  margin-top: 4px;
-  flex-wrap: wrap;
-}
-
-.tag {
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 1px 6px;
-  font-size: 9px;
-  font-family: var(--font-condensed);
-  font-weight: 600;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.tag.muscle { border-color: var(--gold-dim); color: var(--gold); }
-
-.add-to-day-btn {
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  color: var(--gold);
-  border-radius: 8px;
-  padding: 8px 12px;
-  font-family: var(--font-condensed);
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all .2s;
-}
-
-.add-to-day-btn:active { background: var(--gold); color: #000; }
-
-/* ===== LOG PAGE ===== */
-.log-item {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px;
-  margin-bottom: 10px;
-}
-
-.log-item-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-
-.log-date {
-  font-family: var(--font-condensed);
-  font-size: 11px;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.log-type {
-  background: var(--gold);
-  color: #000;
-  font-family: var(--font-display);
-  font-size: 11px;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 4px;
-  text-transform: uppercase;
-}
-
-.log-stats-row {
-  display: flex;
-  gap: 16px;
-}
-
-.log-stat {
-  font-family: var(--font-condensed);
-  font-size: 13px;
-  color: var(--text-dim);
-}
-
-.log-stat span {
-  color: var(--text);
-  font-weight: 700;
-}
-
-/* ===== SELECT MODAL ===== */
-.modal-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.85);
-  z-index: 3000;
-  align-items: flex-end;
-  justify-content: center;
-}
-
-.modal-overlay.open { display: flex; }
-
-.modal-sheet {
-  background: var(--bg2);
-  border-radius: 20px 20px 0 0;
-  border: 1px solid var(--border);
-  width: 100%;
-  max-width: 600px;
-  padding: 16px;
-  padding-bottom: env(safe-area-inset-bottom, 16px);
-  max-height: 60vh;
-  overflow-y: auto;
-}
-
-.modal-handle {
-  width: 40px;
-  height: 4px;
-  background: var(--border);
-  border-radius: 2px;
-  margin: 0 auto 16px;
-}
-
-.modal-title {
-  font-family: var(--font-display);
-  font-size: 16px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: var(--gold);
-  margin-bottom: 12px;
-}
-
-.modal-option {
-  padding: 12px;
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  margin-bottom: 8px;
-  cursor: pointer;
-  font-family: var(--font-condensed);
-  font-size: 14px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  transition: all .2s;
-}
-
-.modal-option:active { border-color: var(--gold); color: var(--gold); }
-
-/* ===== WORKOUT COMPLETE MODAL ===== */
-#complete-modal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.95);
-  z-index: 4000;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  padding: 24px;
-}
-
-#complete-modal.open { display: flex; }
-
-.complete-icon {
-  font-size: 64px;
-  margin-bottom: 16px;
-}
-
-.complete-title {
-  font-family: var(--font-display);
-  font-size: 36px;
-  font-weight: 700;
-  color: var(--gold);
-  text-transform: uppercase;
-  letter-spacing: 3px;
-  text-align: center;
-  margin-bottom: 8px;
-}
-
-.complete-sub {
-  font-family: var(--font-condensed);
-  font-size: 14px;
-  color: var(--text-dim);
-  text-align: center;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  margin-bottom: 32px;
-}
-
-.complete-stats {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 32px;
-  width: 100%;
-  max-width: 400px;
-}
-
-.complete-stat {
-  background: var(--bg2);
-  border: 1px solid var(--gold-dim);
-  border-radius: var(--radius);
-  padding: 16px 8px;
-  text-align: center;
-}
-
-.complete-stat-num {
-  font-family: var(--font-display);
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--gold);
-}
-
-.complete-stat-label {
-  font-family: var(--font-condensed);
-  font-size: 10px;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.complete-btns {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  width: 100%;
-  max-width: 360px;
-}
-
-/* ===== SCROLLBAR ===== */
-::-webkit-scrollbar { width: 3px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-/* ===== ANIMATIONS ===== */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.page.active { animation: fadeIn .2s ease; }
-
-.drag-over { border-color: var(--gold) !important; background: rgba(232,160,32,0.05) !important; }
-
-/* ===== EMPTY STATE ===== */
-.empty-state {
-  text-align: center;
-  padding: 48px 24px;
-  color: var(--text-muted);
-}
-
-.empty-state-icon {
-  font-size: 64px;
-  margin-bottom: 16px;
-  display: block;
-  filter: grayscale(0.3);
-}
-
-.empty-state-title {
-  font-family: var(--font-display);
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 6px;
-}
-
-.empty-state-text { font-family: var(--font-condensed); font-size: 14px; letter-spacing: 1px; text-transform: uppercase; }
-
-/* Volume bar */
-.volume-bar-wrap { background: var(--bg3); border-radius: 4px; height: 6px; margin-top: 4px; overflow: hidden; }
-.volume-bar { height: 100%; background: var(--gold); border-radius: 4px; transition: width .5s ease; }
-
-
-@keyframes slideInSet {
-  from { opacity: 0; transform: translateX(-18px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-
-.set-card {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 14px;
-  border-radius: 16px;
-  margin-bottom: 8px;
-  border: none;
-  background: #2b2930;
-  transition: background 0.25s;
-  animation: slideInSet 0.28s ease both;
-}
-
-.set-card.done-card {
-  background: rgba(232,34,42,0.12);
-}
-
-.set-card-num {
-  font-family: var(--font-display);
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--text-muted);
-  width: 22px;
-  text-align: center;
-  flex-shrink: 0;
-}
-
-.set-card.done-card .set-card-num {
-  color: var(--gold);
-}
-
-.set-card-input {
-  flex: 1;
-  background: #1c1b1f;
-  border: none;
-  border-radius: 12px;
-  color: var(--text);
-  font-family: var(--font-display);
-  font-size: 18px;
-  font-weight: 700;
-  text-align: center;
-  padding: 10px 4px;
-  min-width: 0;
-  outline: none;
-  transition: background 0.15s;
-}
-.set-card-input:focus { background: #111; }
-.set-card-input::placeholder { color: var(--text-muted); font-size: 13px; }
-
-.set-card-sep {
-  font-family: var(--font-condensed);
-  font-size: 13px;
-  color: var(--text-muted);
-  flex-shrink: 0;
-}
-
-.set-card-type-btn {
-  width: 36px; height: 36px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--bg3);
-  color: var(--text-muted);
-  font-size: 9px;
-  font-family: var(--font-condensed);
-  font-weight: 700;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-.set-card-done-btn {
-  width: 42px; height: 42px;
-  border-radius: 10px;
-  border: 2px solid var(--border);
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-  flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center;
-  transition: all 0.2s;
-}
-
-.set-card-done-btn.done {
-  background: var(--gold);
-  border-color: var(--gold);
-  color: #000;
-  transform: scale(1.05);
-}
-
-
-.between-set-timer {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 12px;
-  margin: 2px 0;
-  opacity: 0.45;
-  transition: opacity 0.3s;
-}
-.between-set-timer.active {
-  opacity: 1;
-}
-.between-set-timer-bar-wrap {
-  flex: 1;
-  height: 3px;
-  background: #1a1a1a;
-  border-radius: 2px;
-  overflow: hidden;
-}
-.between-set-timer-fill {
-  height: 100%;
-  width: 0%;
-  background: var(--gold);
-  border-radius: 2px;
-  transition: width 1s linear;
-  box-shadow: 0 0 6px var(--gold);
-}
-.between-set-timer.active .between-set-timer-fill {
-  /* width set by JS */
-}
-.between-set-timer-label {
-  font-family: var(--font-display);
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text-muted);
-  min-width: 36px;
-  text-align: right;
-  letter-spacing: 0.5px;
-}
-.between-set-timer.active .between-set-timer-label {
-  color: var(--gold);
-}
-
-
-/* ── Material 3 Numpad ── */
-#custom-numpad {
-  display: none;
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
-  background: #1c1b1f;
-  border-radius: 28px 28px 0 0;
-  z-index: 9999;
-  padding: 12px 16px 24px;
-  box-shadow: 0 -8px 32px rgba(0,0,0,0.5);
-}
-#custom-numpad.open { display: block; }
-
-/* drag handle */
-#custom-numpad::before {
-  content: '';
-  display: block;
-  width: 40px; height: 4px;
-  background: #49454f;
-  border-radius: 2px;
-  margin: 0 auto 12px;
-}
-
-.numpad-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-  padding: 0 4px;
-}
-.numpad-field-label {
-  font-family: var(--font-main);
-  font-size: 12px;
-  color: #cac4d0;
-  letter-spacing: 0.5px;
-}
-.numpad-display {
-  font-family: var(--font-display);
-  font-size: 32px;
-  font-weight: 400;
-  color: #e6e1e5;
-  min-width: 100px;
-  text-align: center;
-  background: #2b2930;
-  border-radius: 16px;
-  padding: 6px 20px;
-  border: none;
-  letter-spacing: 1px;
-}
-.numpad-close {
-  background: #2b2930;
-  border: none;
-  color: #cac4d0;
-  border-radius: 20px;
-  padding: 8px 16px;
-  font-family: var(--font-main);
-  font-size: 13px;
-  cursor: pointer;
-}
-
-.numpad-step-row {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 10px;
-  direction: ltr;
-}
-.numpad-step-btn {
-  flex: 1;
-  background: #2b2930;
-  border: none;
-  border-radius: 12px;
-  color: #e8222a;
-  font-family: var(--font-display);
-  font-size: 13px;
-  font-weight: 700;
-  padding: 10px 0;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition: background 0.15s;
-}
-.numpad-step-btn:active { background: #3a3540; transform: scale(0.96); }
-
-.numpad-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  direction: ltr;
-}
-.numpad-btn {
-  background: #2b2930;
-  border: none;
-  border-radius: 20px;
-  color: #e6e1e5;
-  font-family: var(--font-display);
-  font-size: 24px;
-  font-weight: 500;
-  padding: 16px 0;
-  cursor: pointer;
-  transition: background 0.12s, transform 0.08s;
-  text-align: center;
-  width: 100%;
-  -webkit-tap-highlight-color: transparent;
-  user-select: none;
-  position: relative;
-  overflow: hidden;
-}
-.numpad-btn:active {
-  background: #3a3540;
-  transform: scale(0.94);
-}
-/* ripple on tap */
-.numpad-btn::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle, rgba(232,34,42,0.18) 0%, transparent 70%);
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-.numpad-btn:active::after { opacity: 1; }
-
-.numpad-btn.btn-red {
-  background: #2b2930;
-  color: #e8222a;
-}
-.numpad-btn.btn-red:active { background: #3a1520; }
-
-.numpad-btn.btn-confirm {
-  background: #e8222a;
-  color: #fff;
-  font-size: 16px;
-  font-weight: 700;
-  grid-column: span 2;
-  border-radius: 20px;
-  letter-spacing: 1px;
-  box-shadow: 0 2px 12px rgba(232,34,42,0.4);
-}
-.numpad-btn.btn-confirm:active {
-  background: #c01820;
-  box-shadow: 0 1px 4px rgba(232,34,42,0.3);
-  transform: scale(0.97);
-}
-
-
-#loading-screen {
-  position: fixed;
-  inset: 0;
-  background: #000;
-  z-index: 99999;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  transition: opacity 0.5s, transform 0.5s;
-}
-#loading-screen.hide {
-  opacity: 0;
-  transform: scale(1.05);
-  pointer-events: none;
-}
-
-.loading-logo-wrap {
-  position: relative;
-  width: 100px;
-  height: 100px;
-  margin-bottom: 8px;
-}
-.loading-logo-ring {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 2px solid transparent;
-  border-top-color: #e8222a;
-  border-right-color: #e8222a;
-  animation: spinRing 1.2s linear infinite;
-}
-@keyframes spinRing {
-  to { transform: rotate(360deg); }
-}
-.loading-logo-inner {
-  position: absolute;
-  inset: 8px;
-  border-radius: 50%;
-  background: #111;
-  background-size: cover;
-  background-position: center top;
-  overflow: hidden;
-}
-.loading-title {
-  font-family: var(--font-display);
-  font-size: 28px;
-  font-weight: 700;
-  letter-spacing: 6px;
-  color: #fff;
-}
-.loading-sub {
-  font-family: var(--font-condensed);
-  font-size: 12px;
-  letter-spacing: 4px;
-  color: #444;
-}
-.loading-bar-wrap {
-  width: 160px;
-  height: 2px;
-  background: #111;
-  border-radius: 1px;
-  margin-top: 16px;
-  overflow: hidden;
-}
-.loading-bar-fill {
-  height: 100%;
-  width: 0%;
-  background: #e8222a;
-  border-radius: 1px;
-  transition: width 0.3s ease;
-  box-shadow: 0 0 8px #e8222a;
-}
-
-/* ===== GYM CARDS ===== */
-.gym-card {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px;
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  cursor: pointer;
-  transition: border-color 0.2s, background 0.2s;
-  position: relative;
-  overflow: hidden;
-}
-.gym-card::before {
-  content: '';
-  position: absolute;
-  right: 0; top: 0; bottom: 0;
-  width: 4px;
-  border-radius: 0 var(--radius) var(--radius) 0;
-}
-.gym-card-active {
-  border-color: var(--gym-color, var(--gold));
-  background: linear-gradient(135deg, rgba(0,0,0,0) 60%, rgba(0,0,0,0.1));
-}
-.gym-card:active:not(.gym-card-active) { background: var(--bg3); }
-.gym-icon {
-  width: 44px; height: 44px;
-  border-radius: 12px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 22px;
-  flex-shrink: 0;
-}
-.gym-info { flex: 1; min-width: 0; }
-.gym-name {
-  font-family: var(--font-display);
-  font-size: 16px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: var(--text);
-}
-.gym-stats {
-  font-family: var(--font-condensed);
-  font-size: 11px;
-  color: var(--text-muted);
-  letter-spacing: 0.5px;
-  margin-top: 3px;
-}
-.gym-badge-active {
-  font-size: 10px;
-  letter-spacing: 1.5px;
-  font-family: var(--font-condensed);
-  padding: 4px 10px;
-  border-radius: 20px;
-  border: 1px solid var(--gym-color, var(--gold));
-  color: var(--gym-color, var(--gold));
-  background: rgba(0,0,0,0.2);
-  flex-shrink: 0;
-}
-.color-swatch {
-  width: 32px; height: 32px;
-  border-radius: 50%;
-  cursor: pointer;
-  border: 3px solid transparent;
-  transition: border-color 0.15s, transform 0.15s;
-}
-.color-swatch.selected { border-color: #fff; transform: scale(1.15); }
-
-/* Modal box (used by gym modals) */
-.modal-box {
-  background: var(--bg2);
-  border-radius: 20px;
-  border: 1px solid var(--border);
-  width: 90%;
-  max-width: 420px;
-  padding: 20px;
-  margin-bottom: env(safe-area-inset-bottom, 16px);
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+
+html,body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font-main);
+  height:100%;
+  overflow:hidden;
+  user-select:none;
+}
+
+/* grain texture */
+body::after{
+  content:'';
+  position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:99998;opacity:0.5;
+}
+
+/* ─── LAYOUT ─── */
+#app{display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden}
+
+#content{
+  flex:1;overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  scroll-behavior:smooth;
+  padding-bottom:88px;
+}
+
+/* Custom scrollbar */
+#content::-webkit-scrollbar{width:2px}
+#content::-webkit-scrollbar-track{background:transparent}
+#content::-webkit-scrollbar-thumb{background:var(--border-bright);border-radius:2px}
+
+/* ─── BOTTOM NAV ─── */
+#nav{
+  display:flex;
+  background:var(--bg2);
+  border-top:1px solid var(--border);
+  padding:6px 4px env(safe-area-inset-bottom,8px);
+  z-index:200;flex-shrink:0;gap:2px;
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+}
+
+.nav-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:7px 2px 5px;background:none;border:none;
+  color:var(--text-muted);cursor:pointer;
+  font-size:9px;font-family:var(--font-condensed);font-weight:600;
+  letter-spacing:0.5px;text-transform:uppercase;
+  border-radius:12px;transition:all .2s;position:relative;
+}
+.nav-btn:active{transform:scale(0.9)}
+.nav-btn svg{width:22px;height:22px;stroke-width:1.8}
+
+.nav-btn.active{color:var(--red)}
+.nav-btn.active svg{stroke:var(--red)}
+.nav-btn.active::before{
+  content:'';
+  position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:28px;height:2px;background:var(--red);border-radius:0 0 2px 2px;
+}
+
+/* ─── PAGES ─── */
+.page{display:none;padding:16px}
+.page.active{display:block;animation:pageIn .25s cubic-bezier(0.4,0,0.2,1)}
+
+@keyframes pageIn{
+  from{opacity:0;transform:translateY(8px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+/* ─── PAGE HEADER ─── */
+.page-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:20px;
+  padding-bottom:12px;
+  border-bottom:1px solid var(--border);
+}
+
+.page-title{
+  font-family:var(--font-display);
+  font-size:22px;font-weight:700;
+  text-transform:uppercase;letter-spacing:1px;
+}
+
+.gold{color:var(--red)}
+
+/* ─── CARDS ─── */
+.card{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:16px;
+  margin-bottom:12px;
+}
+
+.card-accent{border-color:var(--red-dim)}
+
+/* ─── STAT CARDS ─── */
+.stats-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-bottom:16px;
+}
+
+.stat-card{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:14px 12px;
+  position:relative;overflow:hidden;
+}
+
+.stat-card::before{
+  content:'';
+  position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--red),transparent);
+}
+
+.stat-num{
+  font-family:var(--font-display);
+  font-size:36px;font-weight:700;
+  line-height:1;color:var(--text);
+  letter-spacing:-1px;
+}
+
+.stat-label{
+  font-size:10px;color:var(--text-muted);
+  text-transform:uppercase;letter-spacing:1px;
+  margin-top:4px;font-family:var(--font-condensed);
+}
+
+/* ─── HERO BANNER ─── */
+.hero-banner{
+  background:url("img-hero-banner.png") center 20%/cover no-repeat;
+  border-radius:var(--radius);
+  margin-bottom:16px;
+  position:relative;overflow:hidden;
+  min-height:240px;
+  display:flex;flex-direction:column;justify-content:flex-end;
+  border:1px solid var(--border);
+}
+
+.hero-banner::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(to bottom,rgba(10,10,15,0.1) 0%,rgba(10,10,15,0.3) 40%,rgba(10,10,15,0.95) 100%);
+}
+
+.hero-banner>*{position:relative;z-index:1}
+
+/* Watermark */
+.hero-banner::after{
+  content:'BUILT IN SILENCE';
+  position:absolute;bottom:-8px;right:-10px;
+  font-family:var(--font-display);font-size:48px;font-weight:700;
+  color:var(--red);opacity:0.04;white-space:nowrap;letter-spacing:2px;
+}
+
+.week-grid{
+  display:grid;grid-template-columns:repeat(7,1fr);
+  gap:5px;margin-top:10px;
+}
+
+.week-day{
+  aspect-ratio:1;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-condensed);font-size:9px;font-weight:700;
+  text-transform:uppercase;
+  background:rgba(255,255,255,0.06);color:var(--text-muted);
+  border:1px solid rgba(255,255,255,0.06);
+  flex-direction:column;gap:2px;
+}
+
+.week-day.done{background:var(--red);color:#fff;border-color:var(--red)}
+.week-day.rest{background:rgba(255,255,255,0.04);color:var(--text-muted)}
+.week-day.today{border-color:var(--red);color:var(--red);background:rgba(232,34,42,0.12)}
+
+/* ─── SECTION TITLE ─── */
+.section-title{
+  font-family:var(--font-condensed);
+  font-size:11px;letter-spacing:2px;
+  text-transform:uppercase;color:var(--text-muted);
+  margin-bottom:10px;
+  display:flex;align-items:center;gap:8px;
+}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ─── PPL TABS ─── */
+.ppl-tabs{
+  display:flex;gap:0;
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:4px;margin-bottom:16px;
+  overflow:hidden;
+}
+
+.ppl-tab{
+  flex:1;padding:12px 4px;
+  background:none;border:none;
+  border-radius:12px;
+  color:var(--text-muted);
+  font-family:var(--font-display);font-size:13px;font-weight:600;
+  text-transform:uppercase;letter-spacing:1px;
+  cursor:pointer;transition:all .2s;
+}
+
+.ppl-tab.active{
+  background:var(--red);color:#fff;
+  box-shadow:0 4px 16px rgba(232,34,42,0.35);
+}
+
+.ppl-tab:active{transform:scale(0.96)}
+
+/* ─── WORKOUT DAY CARD ─── */
+.workout-day-card{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  margin-bottom:12px;
+  overflow:hidden;
+  transition:border-color .2s;
+}
+.workout-day-card:hover{border-color:var(--border-bright)}
+
+.workout-day-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px;
+  background:linear-gradient(135deg,var(--bg3),var(--bg2));
+  border-bottom:1px solid var(--border);
+}
+
+.workout-day-title{
+  font-family:var(--font-display);
+  font-size:16px;font-weight:700;
+  text-transform:uppercase;letter-spacing:1px;
+}
+
+.day-badge{
+  background:var(--bg4);border:1px solid var(--border);
+  border-radius:6px;padding:3px 10px;
+  font-family:var(--font-condensed);font-size:11px;
+  font-weight:600;color:var(--text-muted);
+  text-transform:uppercase;letter-spacing:1px;
+}
+
+.workout-exercise-list{padding:10px 12px}
+
+.exercise-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 12px;
+  background:var(--bg3);
+  border-radius:10px;
+  margin-bottom:6px;
+  cursor:grab;
+  border:1px solid transparent;
+  transition:all .2s;position:relative;
+}
+.exercise-item:active{border-color:var(--red);cursor:grabbing;background:var(--bg4)}
+.exercise-item.drag-over{border-color:var(--red)!important;background:rgba(232,34,42,0.07)!important}
+
+.exercise-item-name{
+  font-family:var(--font-condensed);
+  font-size:14px;font-weight:600;flex:1;
+}
+
+.exercise-item-meta{
+  font-size:11px;color:var(--text-muted);
+  font-family:var(--font-condensed);margin-right:8px;
+}
+
+.icon-btn{
+  background:none;border:none;cursor:pointer;
+  color:var(--text-muted);padding:4px;border-radius:6px;
+  transition:color .2s;display:flex;align-items:center;
+}
+.icon-btn:hover{color:var(--red)}
+
+/* ─── BUTTONS ─── */
+.btn{
+  padding:10px 20px;border-radius:100px;border:none;
+  cursor:pointer;font-family:var(--font-condensed);
+  font-size:13px;font-weight:700;text-transform:uppercase;
+  letter-spacing:0.5px;
+  transition:all .15s;-webkit-tap-highlight-color:transparent;
+}
+.btn:active{transform:scale(0.95)}
+
+.btn-gold{
+  background:linear-gradient(135deg,#c01820,#e8222a);
+  color:#fff;box-shadow:0 4px 16px rgba(232,34,42,0.3);
+}
+.btn-gold:active{box-shadow:0 2px 8px rgba(232,34,42,0.2)}
+
+.btn-outline{
+  background:none;border:1px solid var(--border-bright);color:var(--text-dim);
+}
+.btn-outline:hover{border-color:var(--red);color:var(--red)}
+
+.btn-danger{background:rgba(232,34,42,0.12);color:var(--red);border:1px solid rgba(232,34,42,0.25)}
+
+.btn-green{background:var(--green);color:#000}
+
+.btn-full{width:100%;display:block;text-align:center}
+
+/* START WORKOUT BUTTON */
+.start-workout-btn{
+  background:linear-gradient(135deg,#b01018,#e8222a);
+  color:#fff;font-family:var(--font-display);
+  font-size:17px;font-weight:700;text-transform:uppercase;letter-spacing:2px;
+  border:none;border-radius:14px;padding:16px;width:100%;
+  cursor:pointer;position:relative;overflow:hidden;
+  box-shadow:0 6px 24px rgba(232,34,42,0.35);
+  transition:transform .15s,box-shadow .15s;
+}
+.start-workout-btn:active{transform:scale(0.97);box-shadow:0 2px 8px rgba(232,34,42,0.2)}
+.start-workout-btn::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.12),transparent);
+  transform:translateX(-100%);animation:shimmer 2s infinite;
+}
+@keyframes shimmer{to{transform:translateX(100%)}}
+
+/* ─── ACTIVE WORKOUT OVERLAY ─── */
+#active-workout{
+  display:none;position:fixed;inset:0;
+  background:var(--bg);z-index:1000;
+  overflow-y:auto;overflow-x:hidden;
+  padding:16px;padding-bottom:120px;
+}
+#active-workout.open{display:block}
+
+/* Sticky floating timer bar */
+#aw-sticky-timer{
+  position:sticky;top:0;z-index:100;
+  margin:-16px -16px 16px;
+  background:rgba(10,10,15,0.96);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  padding:10px 16px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+
+#aw-timer{
+  font-family:var(--font-display);
+  font-size:38px;font-weight:700;color:var(--text);
+  letter-spacing:2px;line-height:1;
+  /* pulsing glow when active */
+  animation:timerGlow 3s ease-in-out infinite;
+}
+
+@keyframes timerGlow{
+  0%,100%{text-shadow:0 0 0 transparent}
+  50%{text-shadow:0 0 20px rgba(232,34,42,0.4)}
 }
+
+.aw-timer-label{
+  font-family:var(--font-condensed);font-size:9px;
+  letter-spacing:2px;text-transform:uppercase;
+  color:var(--text-muted);margin-top:1px;
+}
+
+.aw-sticky-right{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+
+.active-exercise-card{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  margin-bottom:12px;overflow:hidden;
+}
+
+.active-exercise-header{
+  padding:12px 16px;
+  background:linear-gradient(135deg,var(--bg3),var(--bg2));
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+
+.active-ex-name{
+  font-family:var(--font-condensed);
+  font-size:16px;font-weight:700;
+  text-transform:uppercase;letter-spacing:1px;
+}
+
+.active-ex-muscle{
+  font-size:11px;color:var(--gold);
+  font-family:var(--font-condensed);
+  text-transform:uppercase;letter-spacing:1px;
+}
+
+/* ─── SET CARDS ─── */
+@keyframes slideInSet{
+  from{opacity:0;transform:translateX(-14px)}
+  to{opacity:1;transform:translateX(0)}
+}
+
+.set-card{
+  display:flex;align-items:center;gap:7px;
+  padding:10px 12px;
+  border-radius:14px;margin-bottom:7px;
+  background:var(--bg3);
+  border:1px solid var(--border);
+  transition:all 0.25s;
+  animation:slideInSet 0.25s ease both;
+}
+
+.set-card.done-card{
+  background:rgba(232,34,42,0.1);
+  border-color:rgba(232,34,42,0.25);
+}
+
+.set-card-num{
+  font-family:var(--font-display);font-size:17px;font-weight:700;
+  color:var(--text-muted);width:20px;text-align:center;flex-shrink:0;
+}
+.set-card.done-card .set-card-num{color:var(--red)}
+
+.set-card-input{
+  flex:1;background:var(--bg4);border:1px solid var(--border);
+  border-radius:10px;color:var(--text);
+  font-family:var(--font-display);font-size:18px;font-weight:700;
+  text-align:center;padding:9px 4px;min-width:0;outline:none;
+  transition:border-color .15s,background .15s;
+}
+.set-card-input:focus{border-color:var(--red);background:var(--bg5)}
+.set-card-input::placeholder{color:var(--text-muted);font-size:13px}
+
+.set-card-sep{
+  font-family:var(--font-condensed);font-size:13px;
+  color:var(--text-muted);flex-shrink:0;
+}
+
+.set-card-type-btn{
+  width:34px;height:34px;border-radius:8px;
+  border:1px solid var(--border);background:var(--bg4);
+  color:var(--text-muted);font-size:9px;
+  font-family:var(--font-condensed);font-weight:700;
+  cursor:pointer;flex-shrink:0;transition:all .15s;
+}
+.set-card-type-btn:active{background:var(--red);color:#fff;border-color:var(--red)}
+
+.set-card-done-btn{
+  width:40px;height:40px;border-radius:10px;
+  border:2px solid var(--border-bright);background:transparent;
+  color:var(--text-muted);cursor:pointer;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s;
+}
+.set-card-done-btn.done{
+  background:var(--red);border-color:var(--red);color:#fff;
+  transform:scale(1.05);box-shadow:0 4px 12px rgba(232,34,42,0.4);
+}
+
+/* DELETE set button */
+.set-card-del-btn{
+  width:28px;height:28px;border-radius:7px;
+  border:none;background:rgba(232,34,42,0.1);
+  color:var(--red);cursor:pointer;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  opacity:0.6;transition:all .15s;
+}
+.set-card-del-btn:active{opacity:1;background:rgba(232,34,42,0.25);transform:scale(0.9)}
+
+/* ─── BETWEEN SET TIMER ─── */
+.between-set-timer{
+  display:flex;align-items:center;gap:10px;
+  padding:6px 12px;margin:2px 0;
+  opacity:0.4;transition:opacity .3s;
+}
+.between-set-timer.active{opacity:1}
+.between-set-timer-bar-wrap{
+  flex:1;height:3px;background:var(--bg4);
+  border-radius:2px;overflow:hidden;
+}
+.between-set-timer-fill{
+  height:100%;width:0%;
+  background:linear-gradient(90deg,var(--red-dim),var(--red));
+  border-radius:2px;transition:width 1s linear;
+  box-shadow:0 0 8px var(--red);
+}
+.between-set-timer-label{
+  font-family:var(--font-display);font-size:13px;font-weight:700;
+  color:var(--text-muted);min-width:36px;text-align:right;
+}
+.between-set-timer.active .between-set-timer-label{color:var(--red)}
+
+.add-set-row{padding:8px 12px;border-top:1px solid var(--border)}
+
+/* ─── REST TIMER MODAL ─── */
+#rest-modal{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,0.97);z-index:2000;
+  align-items:center;justify-content:center;
+  flex-direction:column;gap:0;overflow:hidden;
+}
+#rest-modal.open{display:flex}
+
+.rest-top-label{
+  font-family:var(--font-display);font-size:11px;
+  letter-spacing:8px;color:var(--red);
+  text-transform:uppercase;margin-bottom:6px;
+}
+.rest-sub-label{
+  font-family:var(--font-condensed);font-size:13px;
+  color:var(--text-muted);letter-spacing:1px;margin-bottom:40px;
+}
+.rest-main-row{display:flex;align-items:center;gap:32px;margin-bottom:48px}
+.rest-bar-wrap{
+  width:14px;height:220px;background:#111;
+  border-radius:7px;position:relative;overflow:hidden;
+}
+.rest-bar-fill{
+  position:absolute;bottom:0;left:0;width:100%;height:60%;
+  background:linear-gradient(to top,var(--red-dim),var(--red));
+  border-radius:7px;transition:height 1s linear;
+  box-shadow:0 0 20px var(--red);
+}
+.rest-num-block{display:flex;flex-direction:column;align-items:flex-start}
+.rest-big-num{
+  font-family:var(--font-display);font-size:110px;font-weight:700;
+  color:#fff;line-height:1;letter-spacing:-4px;
+}
+.rest-sec-label{
+  font-family:var(--font-condensed);font-size:16px;
+  color:var(--text-muted);letter-spacing:4px;margin-top:4px;
+}
+.rest-btns{display:flex;gap:12px;margin-top:24px}
+.rest-adjust-btn{
+  background:var(--bg2);border:1px solid var(--border);
+  color:var(--text);border-radius:10px;
+  padding:10px 18px;font-family:var(--font-condensed);
+  font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;
+}
+.rest-adjust-btn:active{background:var(--bg3);transform:scale(0.96)}
+.rest-skip-btn{
+  background:var(--red);border:none;color:#fff;
+  border-radius:10px;padding:10px 28px;
+  font-family:var(--font-display);font-size:15px;font-weight:700;
+  text-transform:uppercase;cursor:pointer;
+  box-shadow:0 4px 16px rgba(232,34,42,0.35);
+}
+
+/* ─── LIBRARY ─── */
+.search-input{
+  width:100%;background:var(--bg2);
+  border:1px solid var(--border);border-radius:12px;
+  padding:12px 16px;color:var(--text);
+  font-family:var(--font-main);font-size:14px;
+  margin-bottom:12px;outline:none;
+  transition:border-color .2s;
+}
+.search-input:focus{border-color:var(--red)}
+.search-input::placeholder{color:var(--text-muted)}
+
+.filter-row{
+  display:flex;gap:8px;overflow-x:auto;
+  margin-bottom:14px;padding-bottom:4px;
+  scrollbar-width:none;
+}
+.filter-row::-webkit-scrollbar{display:none}
+
+.filter-chip{
+  flex-shrink:0;padding:6px 14px;
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:20px;font-family:var(--font-condensed);
+  font-size:12px;font-weight:600;color:var(--text-muted);
+  cursor:pointer;white-space:nowrap;transition:all .2s;
+}
+.filter-chip.active{background:var(--red);border-color:var(--red);color:#fff}
+
+.lib-exercise-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 14px;background:var(--bg2);
+  border:1px solid var(--border);border-radius:12px;
+  margin-bottom:8px;transition:border-color .2s;
+}
+.lib-exercise-item:active{border-color:var(--red)}
+
+.lib-ex-name{
+  font-family:var(--font-condensed);font-size:15px;
+  font-weight:700;text-transform:uppercase;letter-spacing:0.5px;
+}
+
+.lib-ex-tags{display:flex;gap:6px;margin-top:4px;flex-wrap:wrap}
+
+.tag{
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:4px;padding:1px 6px;
+  font-size:9px;font-family:var(--font-condensed);
+  font-weight:600;color:var(--text-muted);
+  text-transform:uppercase;letter-spacing:0.5px;
+}
+.tag.muscle{border-color:var(--gold-dim);color:var(--gold)}
+
+.add-to-day-btn{
+  background:var(--bg3);border:1px solid var(--border);
+  color:var(--red);border-radius:8px;padding:8px 14px;
+  font-family:var(--font-condensed);font-size:12px;font-weight:700;
+  cursor:pointer;white-space:nowrap;transition:all .2s;
+}
+.add-to-day-btn:active{background:var(--red);color:#fff;border-color:var(--red)}
+
+/* ─── LOG PAGE ─── */
+.log-item{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--radius);padding:14px;margin-bottom:10px;
+  position:relative;overflow:hidden;
+}
+.log-item::before{
+  content:'';position:absolute;right:0;top:0;bottom:0;
+  width:3px;background:linear-gradient(to bottom,var(--red),var(--red-dim));
+}
+
+.log-item-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:8px;
+}
+.log-date{
+  font-family:var(--font-condensed);font-size:11px;
+  color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;
+}
+.log-type{
+  background:linear-gradient(135deg,#b01018,#e8222a);color:#fff;
+  font-family:var(--font-display);font-size:11px;font-weight:700;
+  padding:3px 10px;border-radius:5px;text-transform:uppercase;
+}
+.log-stats-row{display:flex;gap:16px}
+.log-stat{font-family:var(--font-condensed);font-size:13px;color:var(--text-muted)}
+.log-stat span{color:var(--text);font-weight:700}
+
+/* ─── MODALS ─── */
+.modal-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,0.85);
+  z-index:3000;align-items:flex-end;justify-content:center;
+  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+}
+.modal-overlay.open{display:flex;animation:overlayIn .2s ease}
+@keyframes overlayIn{from{opacity:0}to{opacity:1}}
+
+.modal-sheet{
+  background:var(--bg2);
+  border-radius:24px 24px 0 0;
+  border:1px solid var(--border-bright);border-bottom:none;
+  width:100%;max-width:600px;padding:16px;
+  padding-bottom:env(safe-area-inset-bottom,16px);
+  max-height:80vh;overflow-y:auto;
+  animation:sheetIn .25s cubic-bezier(0.4,0,0.2,1);
+}
+@keyframes sheetIn{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+.modal-handle{
+  width:36px;height:4px;background:var(--border-bright);
+  border-radius:2px;margin:0 auto 16px;
+}
+.modal-title{
+  font-family:var(--font-display);font-size:16px;font-weight:700;
+  text-transform:uppercase;letter-spacing:1px;color:var(--red);
+  margin-bottom:12px;
+}
+.modal-option{
+  padding:12px;background:var(--bg3);
+  border:1px solid var(--border);border-radius:10px;
+  margin-bottom:8px;cursor:pointer;
+  font-family:var(--font-condensed);font-size:14px;font-weight:600;
+  text-transform:uppercase;letter-spacing:0.5px;transition:all .15s;
+}
+.modal-option:active{border-color:var(--red);color:var(--red);background:rgba(232,34,42,0.07)}
+
+/* ─── WORKOUT COMPLETE ─── */
+#complete-modal{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,0.97);z-index:4000;
+  align-items:center;justify-content:center;
+  flex-direction:column;padding:24px;
+}
+#complete-modal.open{display:flex}
+
+.complete-icon{font-size:56px;margin-bottom:16px}
+.complete-title{
+  font-family:var(--font-display);font-size:40px;font-weight:700;
+  color:var(--red);text-transform:uppercase;letter-spacing:4px;
+  text-align:center;margin-bottom:8px;
+}
+.complete-sub{
+  font-family:var(--font-condensed);font-size:13px;color:var(--text-muted);
+  text-align:center;letter-spacing:2px;text-transform:uppercase;margin-bottom:28px;
+}
+.complete-stats{
+  display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;
+  margin-bottom:28px;width:100%;max-width:380px;
+}
+.complete-stat{
+  background:var(--bg2);border:1px solid var(--border-bright);
+  border-radius:14px;padding:14px 8px;text-align:center;
+}
+.complete-stat-num{
+  font-family:var(--font-display);font-size:26px;font-weight:700;color:var(--red);
+}
+.complete-stat-label{
+  font-family:var(--font-condensed);font-size:10px;
+  color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;
+}
+.complete-btns{display:flex;flex-direction:column;gap:10px;width:100%;max-width:360px}
+
+/* ─── MATERIAL NUMPAD ─── */
+#custom-numpad{
+  display:none;position:fixed;bottom:0;left:0;right:0;
+  background:var(--bg2);border-radius:24px 24px 0 0;
+  z-index:9999;padding:12px 16px 24px;
+  box-shadow:0 -8px 40px rgba(0,0,0,0.6);
+  border-top:1px solid var(--border-bright);
+}
+#custom-numpad.open{display:block;animation:sheetIn .2s ease}
+
+#custom-numpad::before{
+  content:'';display:block;width:40px;height:4px;
+  background:var(--border-bright);border-radius:2px;margin:0 auto 12px;
+}
+
+.numpad-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:12px;padding:0 4px;
+}
+.numpad-field-label{font-family:var(--font-main);font-size:12px;color:var(--text-muted)}
+.numpad-display{
+  font-family:var(--font-display);font-size:30px;font-weight:400;
+  color:var(--text);min-width:100px;text-align:center;
+  background:var(--bg3);border-radius:14px;padding:6px 18px;letter-spacing:1px;
+}
+.numpad-close{
+  background:var(--bg3);border:none;color:var(--text-muted);
+  border-radius:20px;padding:8px 16px;font-family:var(--font-main);font-size:13px;cursor:pointer;
+}
+
+.numpad-step-row{display:flex;gap:8px;margin-bottom:10px;direction:ltr}
+.numpad-step-btn{
+  flex:1;background:var(--bg3);border:none;border-radius:10px;
+  color:var(--red);font-family:var(--font-display);font-size:13px;font-weight:700;
+  padding:10px 0;cursor:pointer;transition:all .12s;
+}
+.numpad-step-btn:active{background:var(--bg4);transform:scale(0.95)}
+
+.numpad-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;direction:ltr}
+.numpad-btn{
+  background:var(--bg3);border:none;border-radius:18px;
+  color:var(--text);font-family:var(--font-display);font-size:24px;font-weight:500;
+  padding:16px 0;cursor:pointer;transition:all .1s;text-align:center;width:100%;
+  -webkit-tap-highlight-color:transparent;user-select:none;position:relative;overflow:hidden;
+}
+.numpad-btn:active{background:var(--bg5);transform:scale(0.93)}
+
+.numpad-btn.btn-red{background:var(--bg3);color:var(--red)}
+.numpad-btn.btn-red:active{background:rgba(232,34,42,0.15)}
+.numpad-btn.btn-confirm{
+  background:linear-gradient(135deg,#b01018,#e8222a);color:#fff;
+  font-size:15px;font-weight:700;grid-column:span 2;border-radius:18px;
+  letter-spacing:1px;box-shadow:0 4px 16px rgba(232,34,42,0.35);
+}
+.numpad-btn.btn-confirm:active{transform:scale(0.97)}
+
+/* ─── LOADING SCREEN ─── */
+#loading-screen{
+  position:fixed;inset:0;background:#000;z-index:99999;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+  transition:opacity .5s,transform .5s;
+}
+#loading-screen.hide{opacity:0;transform:scale(1.04);pointer-events:none}
+
+.loading-logo-wrap{position:relative;width:100px;height:100px;margin-bottom:8px}
+.loading-logo-ring{
+  position:absolute;inset:0;border-radius:50%;
+  border:2px solid transparent;
+  border-top-color:var(--red);border-right-color:var(--red);
+  animation:spinRing 1.2s linear infinite;
+}
+@keyframes spinRing{to{transform:rotate(360deg)}}
+.loading-logo-inner{
+  position:absolute;inset:8px;border-radius:50%;
+  background:#111;background-size:cover;background-position:center top;overflow:hidden;
+}
+.loading-title{
+  font-family:var(--font-display);font-size:28px;font-weight:700;
+  letter-spacing:6px;color:#fff;
+}
+.loading-sub{font-family:var(--font-condensed);font-size:12px;letter-spacing:4px;color:#333}
+.loading-bar-wrap{width:160px;height:2px;background:#111;border-radius:1px;margin-top:16px;overflow:hidden}
+.loading-bar-fill{
+  height:100%;width:0%;background:var(--red);border-radius:1px;
+  transition:width .3s ease;box-shadow:0 0 10px var(--red);
+}
+
+/* ─── GYM CARDS ─── */
+.gym-card{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--radius);padding:16px;margin-bottom:10px;
+  display:flex;align-items:center;gap:14px;cursor:pointer;
+  transition:border-color .2s,background .2s;position:relative;overflow:hidden;
+}
+.gym-card::before{
+  content:'';position:absolute;right:0;top:0;bottom:0;
+  width:3px;border-radius:0 var(--radius) var(--radius) 0;
+}
+.gym-card-active{border-color:var(--gym-color,var(--red))}
+.gym-card:active:not(.gym-card-active){background:var(--bg3)}
+.gym-icon{
+  width:44px;height:44px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;
+}
+.gym-info{flex:1;min-width:0}
+.gym-name{
+  font-family:var(--font-display);font-size:16px;font-weight:700;
+  text-transform:uppercase;letter-spacing:1px;
+}
+.gym-stats{font-family:var(--font-condensed);font-size:11px;color:var(--text-muted);letter-spacing:0.5px;margin-top:3px}
+.gym-badge-active{
+  font-size:10px;letter-spacing:1.5px;font-family:var(--font-condensed);
+  padding:4px 10px;border-radius:20px;
+  border:1px solid var(--gym-color,var(--red));
+  color:var(--gym-color,var(--red));background:rgba(0,0,0,0.2);flex-shrink:0;
+}
+.color-swatch{
+  width:32px;height:32px;border-radius:50%;cursor:pointer;
+  border:3px solid transparent;transition:all .15s;
+}
+.color-swatch.selected{border-color:#fff;transform:scale(1.18)}
+.modal-box{
+  background:var(--bg2);border-radius:24px;border:1px solid var(--border-bright);
+  width:90%;max-width:420px;padding:20px;
+  margin-bottom:env(safe-area-inset-bottom,16px);
+}
+
+/* ─── EMPTY STATE ─── */
+.empty-state{text-align:center;padding:48px 24px;color:var(--text-muted)}
+.empty-state-icon{font-size:56px;margin-bottom:16px;display:block;opacity:0.6}
+.empty-state-title{
+  font-family:var(--font-display);font-size:18px;font-weight:700;
+  color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;
+}
+.empty-state-text{font-family:var(--font-condensed);font-size:13px;letter-spacing:1px;text-transform:uppercase}
+
+/* ─── VOLUME BAR ─── */
+.volume-bar-wrap{background:var(--bg3);border-radius:4px;height:6px;margin-top:4px;overflow:hidden}
+.volume-bar{height:100%;background:linear-gradient(90deg,var(--red-dim),var(--red));border-radius:4px;transition:width .5s ease}
+
+/* ─── MISC ─── */
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+.drag-over{border-color:var(--red)!important;background:rgba(232,34,42,0.07)!important}
+
+::-webkit-scrollbar{width:2px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border-bright);border-radius:2px}
+
+.inline-rest-bar{
+  display:none;margin:8px 0;
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:10px;padding:10px 14px;
+  display:none;align-items:center;gap:12px;
+}
+.inline-rest-bar.active{display:flex}
+
+/* PWA install bar */
+#pwa-install-bar{display:none;margin-bottom:12px}
+
+
+/* ─── PROGRAMS PAGE ─── */
+.program-card{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--radius);margin-bottom:14px;
+  overflow:hidden;transition:border-color .2s;
+  position:relative;
+}
+.program-card.active-program{
+  border-color:var(--red);
+  box-shadow:0 0 0 1px var(--red-dim);
+}
+.program-card-header{
+  display:flex;align-items:center;gap:14px;
+  padding:16px;
+  background:linear-gradient(135deg,var(--bg3),var(--bg2));
+  border-bottom:1px solid var(--border);
+  cursor:pointer;
+}
+.program-icon{
+  width:48px;height:48px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:26px;flex-shrink:0;
+}
+.program-info{flex:1;min-width:0}
+.program-name{
+  font-family:var(--font-display);font-size:17px;font-weight:700;
+  text-transform:uppercase;letter-spacing:1px;color:var(--text);
+}
+.program-meta{
+  font-family:var(--font-condensed);font-size:11px;
+  color:var(--text-muted);letter-spacing:0.5px;margin-top:3px;
+}
+.program-active-badge{
+  background:var(--red);color:#fff;
+  font-family:var(--font-display);font-size:10px;font-weight:700;
+  padding:4px 10px;border-radius:6px;
+  letter-spacing:1px;text-transform:uppercase;flex-shrink:0;
+}
+.program-days-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;
+  padding:12px;
+}
+.program-day-chip{
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:10px;padding:10px 12px;
+  font-family:var(--font-condensed);font-size:12px;font-weight:700;
+  text-transform:uppercase;letter-spacing:0.5px;
+  color:var(--text-dim);line-height:1.4;
+}
+.program-day-chip-label{
+  font-size:10px;color:var(--text-muted);
+  font-weight:400;margin-bottom:2px;letter-spacing:1px;
+}
+.program-select-btn{
+  width:calc(100% - 24px);margin:0 12px 12px;
+  background:linear-gradient(135deg,#b01018,#e8222a);
+  color:#fff;border:none;border-radius:10px;padding:12px;
+  font-family:var(--font-display);font-size:15px;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;cursor:pointer;
+  transition:all .15s;
+}
+.program-select-btn:active{transform:scale(0.97)}
+.program-select-btn.selected-btn{
+  background:var(--bg3);color:var(--text-muted);border:1px solid var(--border);
+  cursor:default;
+}
+
+/* Arnold×PPL split visual */
+.split-week-row{
+  display:flex;gap:4px;padding:0 12px 12px;
+  overflow-x:auto;scrollbar-width:none;
+}
+.split-week-row::-webkit-scrollbar{display:none}
+.split-day-pill{
+  flex-shrink:0;
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:8px;padding:6px 10px;
+  font-family:var(--font-condensed);font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:0.5px;text-align:center;
+  min-width:54px;
+}
+.split-day-pill.phase-a{border-color:var(--red-dim);color:var(--red)}
+.split-day-pill.phase-b{border-color:var(--gold-dim);color:var(--gold)}
+.split-day-pill.phase-rest{border-color:var(--border);color:var(--text-muted)}
+.split-day-num{font-size:8px;color:var(--text-muted);margin-bottom:2px}
+
+/* workout page program switcher */
+.program-switcher{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:12px;padding:10px 14px;margin-bottom:14px;
+  cursor:pointer;
+}
+.program-switcher-label{
+  font-family:var(--font-condensed);font-size:10px;
+  text-transform:uppercase;letter-spacing:2px;color:var(--text-muted);
+}
+.program-switcher-name{
+  font-family:var(--font-display);font-size:15px;font-weight:700;
+  text-transform:uppercase;letter-spacing:1px;color:var(--text);
+}
+
 </style>
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="TRAINER">
-<meta name="mobile-web-app-capable" content="yes">
-<link rel="apple-touch-icon" id="apple-icon" href="">
-<link rel="manifest" id="pwa-manifest" href="">
+
 <script>
 // Generate icons & manifest dynamically from embedded logo
 (function() {
@@ -1674,24 +1107,25 @@ self.addEventListener('notificationclick', e => {
   }
 })();
 </script>
-</head>
-<body>
 
+<!-- LOADING SCREEN -->
 <div id="loading-screen">
   <div class="loading-logo-wrap">
     <div class="loading-logo-ring"></div>
     <div class="loading-logo-inner" id="loading-avatar"></div>
   </div>
-  <div class="loading-title">TRAINER <span style="color:#e8222a">PRO</span></div>
-  <div class="loading-sub">FOCUS · BUILD · DISCIPLINE</div>
+  <div class="loading-title">TRAINER</div>
+  <div class="loading-sub">BUILT IN SILENCE</div>
   <div class="loading-bar-wrap">
     <div class="loading-bar-fill" id="loading-bar"></div>
   </div>
 </div>
 
-<div id="app" style="opacity:0;transition:opacity 0.4s">
+<div id="app" style="opacity:0;transition:opacity .4s">
+
   <div id="content">
-    <!-- DASHBOARD -->
+
+    <!-- DASH PAGE -->
     <div id="page-dash" class="page active">
       <div class="hero-banner">
         <div style="padding:20px">
@@ -1701,7 +1135,7 @@ self.addEventListener('notificationclick', e => {
                 <span id="hero-gym-dot" style="width:7px;height:7px;border-radius:50%;background:var(--red);display:inline-block"></span>
                 <span id="hero-gym-name">TEFA GYM</span>
               </div>
-              <div style="font-family:var(--font-display);font-size:32px;font-weight:700;line-height:1;color:#fff">تمريني</div>
+              <div style="font-family:var(--font-display);font-size:34px;font-weight:700;line-height:1;color:#fff">تمريني</div>
             </div>
             <div style="text-align:right">
               <div style="font-family:var(--font-condensed);font-size:10px;letter-spacing:2px;color:rgba(255,255,255,0.4);margin-bottom:2px">TODAY</div>
@@ -1709,17 +1143,18 @@ self.addEventListener('notificationclick', e => {
             </div>
           </div>
           <div class="week-grid" id="week-grid"></div>
-          <div style="margin-top:12px;font-family:var(--font-condensed);font-size:10px;letter-spacing:3px;color:rgba(255,255,255,0.3)">BUILT IN SILENCE — LET RESULTS DO THE TALKING</div>
+          <div style="margin-top:10px;font-family:var(--font-condensed);font-size:10px;letter-spacing:3px;color:rgba(255,255,255,0.25)">BUILT IN SILENCE — LET RESULTS DO THE TALKING</div>
         </div>
       </div>
 
-      <div id="pwa-install-bar" style="display:none;margin-bottom:12px">
-  <button onclick="installPWA()" style="width:100%;background:linear-gradient(135deg,#b01018,#e8222a);border:none;border-radius:10px;padding:13px;color:#fff;font-family:var(--font-display);font-size:15px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v13M7 11l5 5 5-5"/><path d="M3 18h18v3H3z"/></svg>
-    تثبيت التطبيق على الجهاز
-  </button>
-</div>
-<div class="stats-grid">
+      <div id="pwa-install-bar">
+        <button onclick="installPWA()" style="width:100%;background:linear-gradient(135deg,#b01018,#e8222a);border:none;border-radius:12px;padding:14px;color:#fff;font-family:var(--font-display);font-size:15px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v13M7 11l5 5 5-5"/><path d="M3 18h18v3H3z"/></svg>
+          تثبيت التطبيق على الجهاز
+        </button>
+      </div>
+
+      <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-num" id="stat-total">0</div>
           <div class="stat-label">إجمالي التمارين</div>
@@ -1732,20 +1167,21 @@ self.addEventListener('notificationclick', e => {
           <div class="stat-num" id="stat-streak">0</div>
           <div class="stat-label">أيام متتالية 🔥</div>
         </div>
-        <div class="stat-card" style="background:linear-gradient(135deg,rgba(232,34,42,0.12),rgba(0,0,0,0.4))">
+        <div class="stat-card" style="border-color:rgba(240,165,0,0.2)">
           <div style="font-size:18px;margin-bottom:2px">🏆</div>
-          <div class="stat-num" id="stat-best-pr" style="font-size:28px;color:var(--gold)">—</div>
+          <div class="stat-num" id="stat-best-pr" style="font-size:26px;color:var(--gold)">—</div>
           <div class="stat-label">أفضل PR الأسبوع</div>
           <div style="font-size:10px;color:var(--text-muted);margin-top:2px" id="stat-best-pr-name"></div>
         </div>
       </div>
 
       <div style="display:flex;gap:10px;margin-bottom:16px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none">
-  <img src="img-photo-strip-1.png" style="height:160px;border-radius:10px;object-fit:cover;flex-shrink:0;border:2px solid var(--border)" alt="trainer">
-  <img src="img-photo-strip-2.png" style="height:160px;border-radius:10px;object-fit:cover;flex-shrink:0;border:2px solid var(--border)" alt="gym">
-  <img src="img-photo-strip-3.png" style="height:160px;border-radius:10px;object-fit:cover;flex-shrink:0;border:2px solid var(--border)" alt="gym2">
-</div>
-<div class="section-title">آخر التمارين</div>
+        <img src="img-photo-strip-1.png" style="height:160px;border-radius:12px;object-fit:cover;flex-shrink:0;border:1px solid var(--border)" alt="trainer">
+        <img src="img-photo-strip-2.png" style="height:160px;border-radius:12px;object-fit:cover;flex-shrink:0;border:1px solid var(--border)" alt="gym">
+        <img src="img-photo-strip-3.png" style="height:160px;border-radius:12px;object-fit:cover;flex-shrink:0;border:1px solid var(--border)" alt="gym2">
+      </div>
+
+      <div class="section-title">آخر التمارين</div>
       <div id="dash-recent"></div>
 
       <div class="section-title" style="margin-top:16px">حجم التدريب الأسبوعي</div>
@@ -1762,16 +1198,29 @@ self.addEventListener('notificationclick', e => {
     <!-- WORKOUT PAGE -->
     <div id="page-workout" class="page">
       <div class="page-header">
-        <div class="page-title">تمارين <span class="gold">PPL</span></div>
+        <div class="page-title">تمارين <span class="gold" id="workout-title-label">PPL</span></div>
       </div>
-
-      <div class="ppl-tabs" id="ppl-tabs">
-        <button class="ppl-tab active" onclick="switchPPL('push')">PUSH</button>
-        <button class="ppl-tab" onclick="switchPPL('pull')">PULL</button>
-        <button class="ppl-tab" onclick="switchPPL('legs')">LEGS</button>
+      <div class="program-switcher" onclick="navigate('programs')">
+        <div>
+          <div class="program-switcher-label">النظام الحالي</div>
+          <div class="program-switcher-name" id="active-program-name">PPL — Push Pull Legs</div>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
-
+      <div class="ppl-tabs" id="ppl-tabs"></div>
       <div id="ppl-content"></div>
+    </div>
+
+
+    <!-- PROGRAMS PAGE -->
+    <div id="page-programs" class="page">
+      <div class="page-header">
+        <div class="page-title">أنظمة <span class="gold">التدريب</span></div>
+      </div>
+      <div style="font-family:var(--font-condensed);font-size:12px;letter-spacing:1px;color:var(--text-muted);margin-bottom:14px;text-transform:uppercase">
+        اختر نظامك — يتغير تلقائياً في صفحة التمارين
+      </div>
+      <div id="programs-list"></div>
     </div>
 
     <!-- LIBRARY PAGE -->
@@ -1803,21 +1252,16 @@ self.addEventListener('notificationclick', e => {
         <div class="page-title">تقدم <span class="gold">وأرقام</span></div>
         <button class="btn btn-gold" style="padding:8px 14px;font-size:12px" onclick="openWeightModal()">+ وزن</button>
       </div>
-
       <div class="section-title">وزن الجسم</div>
       <div class="card" id="bodyweight-chart-wrap">
         <canvas id="bw-chart" height="120"></canvas>
         <div id="bw-empty" style="text-align:center;padding:20px;color:var(--text-muted);font-family:var(--font-condensed);font-size:13px;display:none">سجل وزنك لرؤية التقدم</div>
       </div>
       <div id="bw-stats-row" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px"></div>
-
       <div class="section-title">أرقامك القياسية (PR)</div>
       <div id="pr-list"></div>
-
       <div class="section-title" style="margin-top:16px">حجم التدريب الشهري</div>
-      <div class="card">
-        <canvas id="vol-chart" height="120"></canvas>
-      </div>
+      <div class="card"><canvas id="vol-chart" height="120"></canvas></div>
     </div>
 
     <!-- GYMS PAGE -->
@@ -1831,9 +1275,7 @@ self.addEventListener('notificationclick', e => {
       <div id="gyms-list"></div>
       <div class="section-title" style="margin-top:18px">نقل البيانات</div>
       <div class="card">
-        <div style="font-family:var(--font-condensed);font-size:13px;color:var(--text-dim);line-height:1.7;margin-bottom:12px">
-          صدر ملف JSON فيه كل الجيمات، السجلات، الاوزان، الـ PRs، والتمارين المخصصة، واستورده في نسخة APK.
-        </div>
+        <div style="font-family:var(--font-condensed);font-size:13px;color:var(--text-dim);line-height:1.7;margin-bottom:12px">صدر ملف JSON فيه كل الجيمات، السجلات، الاوزان، الـ PRs، والتمارين المخصصة.</div>
         <button class="btn btn-gold btn-full" style="margin-bottom:8px;padding:13px;font-family:var(--font-display);font-size:14px;letter-spacing:1px" onclick="exportTamreeniReport()">تنزيل تقرير HTML مقروء</button>
         <button class="btn btn-outline btn-full" style="margin-bottom:8px;padding:13px;font-size:13px" onclick="exportTamreeniExcel()">تنزيل ملف Excel للسجلات</button>
         <button class="btn btn-outline btn-full" style="margin-bottom:8px;padding:13px;font-size:13px" onclick="exportTamreeniData()">تنزيل ملف JSON</button>
@@ -1846,34 +1288,40 @@ self.addEventListener('notificationclick', e => {
     </div>
 
   </div><!-- end #content -->
+
+  <!-- BOTTOM NAV -->
   <nav id="nav">
     <button class="nav-btn active" onclick="navigate('dash')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
       داشبورد
     </button>
     <button class="nav-btn" onclick="navigate('workout')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6.5 6.5h11M6.5 17.5h11M4 12h2m12 0h2M6 9.5V14.5M18 9.5V14.5"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6.5 6.5h11M6.5 17.5h11M4 12h2m12 0h2M6 9.5V14.5M18 9.5V14.5"/></svg>
       تمارين
     </button>
     <button class="nav-btn" onclick="navigate('library')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
       مكتبة
     </button>
     <button class="nav-btn" onclick="navigate('progress')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
       تقدم
     </button>
     <button class="nav-btn" onclick="navigate('log')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
       سجل
     </button>
+    <button class="nav-btn" onclick="navigate('programs')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+      أنظمة
+    </button>
     <button class="nav-btn" onclick="navigate('gyms')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       الجيم
     </button>
   </nav>
 
-</div><!-- end #app -->
+</div>
 
 <!-- ADD GYM MODAL -->
 <div class="modal-overlay" id="add-gym-modal" style="align-items:center">
@@ -2022,6 +1470,119 @@ self.addEventListener('notificationclick', e => {
   </div>
 </div>
 
+
+<!-- ACTIVE WORKOUT OVERLAY -->
+<div id="active-workout">
+  <!-- STICKY FLOATING TIMER -->
+  <div id="aw-sticky-timer">
+    <div>
+      <div id="aw-title" style="font-family:var(--font-display);font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--red)"></div>
+      <div id="aw-day" style="font-family:var(--font-condensed);font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px"></div>
+    </div>
+    <div style="text-align:center">
+      <div id="aw-timer">00:00:00</div>
+      <div class="aw-timer-label">وقت التمرين</div>
+    </div>
+    <div class="aw-sticky-right">
+      <button onclick="stopWorkout()" style="background:rgba(232,34,42,0.15);border:1px solid rgba(232,34,42,0.3);color:var(--red);border-radius:8px;padding:7px 12px;font-family:var(--font-display);font-size:12px;font-weight:700;cursor:pointer;text-transform:uppercase">إيقاف</button>
+      <img src="img-photo-strip-4.png" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:1.5px solid var(--red);margin-top:4px" alt="">
+    </div>
+  </div>
+
+  <div id="aw-exercises"></div>
+
+  <button class="btn btn-gold btn-full" style="margin-top:16px;font-family:var(--font-display);font-size:18px;padding:16px;letter-spacing:2px;border-radius:14px" onclick="finishWorkout()">✓ إنهاء التمرين</button>
+</div>
+
+<!-- CUSTOM NUMPAD -->
+<div id="custom-numpad">
+  <div class="numpad-header">
+    <div class="numpad-field-label" id="numpad-label">وزن</div>
+    <div class="numpad-display" id="numpad-display">—</div>
+    <button class="numpad-close" onclick="closeNumpad()">✕ إغلاق</button>
+  </div>
+  <div class="numpad-step-row" id="numpad-step-row">
+    <button class="numpad-step-btn" onclick="numpadStep(-5)">−5</button>
+    <button class="numpad-step-btn" onclick="numpadStep(-2.5)">−2.5</button>
+    <button class="numpad-step-btn" onclick="numpadStep(-1)">−1</button>
+    <button class="numpad-step-btn" onclick="numpadStep(1)">+1</button>
+    <button class="numpad-step-btn" onclick="numpadStep(2.5)">+2.5</button>
+    <button class="numpad-step-btn" onclick="numpadStep(5)">+5</button>
+  </div>
+  <div class="numpad-grid">
+    <button class="numpad-btn" onclick="numpadKey('1')">1</button>
+    <button class="numpad-btn" onclick="numpadKey('2')">2</button>
+    <button class="numpad-btn" onclick="numpadKey('3')">3</button>
+    <button class="numpad-btn" onclick="numpadKey('4')">4</button>
+    <button class="numpad-btn" onclick="numpadKey('5')">5</button>
+    <button class="numpad-btn" onclick="numpadKey('6')">6</button>
+    <button class="numpad-btn" onclick="numpadKey('7')">7</button>
+    <button class="numpad-btn" onclick="numpadKey('8')">8</button>
+    <button class="numpad-btn" onclick="numpadKey('9')">9</button>
+    <button class="numpad-btn btn-red" onclick="numpadKey('.')">.</button>
+    <button class="numpad-btn" onclick="numpadKey('0')">0</button>
+    <button class="numpad-btn btn-red" onclick="numpadBackspace()">⌫</button>
+    <button class="numpad-btn btn-confirm" onclick="confirmNumpad()">✓ تأكيد</button>
+    <button class="numpad-btn btn-red" onclick="numpadClear()">C</button>
+  </div>
+</div>
+
+<!-- REST TIMER MODAL -->
+<div id="rest-modal">
+  <div class="rest-top-label">REST TIME</div>
+  <div class="rest-sub-label">استرح — الجسم بيتعمر دلوقتي</div>
+  <div class="rest-main-row">
+    <div class="rest-bar-wrap">
+      <div class="rest-bar-fill" id="rest-bar-fill"></div>
+    </div>
+    <div class="rest-num-block">
+      <div id="rest-time-text" class="rest-big-num">90</div>
+      <div class="rest-sec-label">ثانية</div>
+    </div>
+  </div>
+  <div class="rest-btns">
+    <button class="rest-adjust-btn" onclick="adjustRest(-15)">−15s</button>
+    <button class="rest-skip-btn" onclick="skipRest()">تخطى</button>
+    <button class="rest-adjust-btn" onclick="adjustRest(15)">+15s</button>
+  </div>
+</div>
+
+<!-- SELECT DAY MODAL -->
+<div class="modal-overlay" id="add-to-day-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">أضف إلى يوم</div>
+    <div id="day-options"></div>
+    <button class="btn btn-outline btn-full" style="margin-top:8px" onclick="closeModal('add-to-day-modal')">إلغاء</button>
+  </div>
+</div>
+
+<!-- WORKOUT COMPLETE MODAL -->
+<div id="complete-modal">
+  <div class="complete-icon">🏆</div>
+  <div class="complete-title">تمام!</div>
+  <div class="complete-sub" id="complete-sub">تمرين رائع — استمر هكذا</div>
+  <div class="complete-stats">
+    <div class="complete-stat">
+      <div class="complete-stat-num" id="cs-time">—</div>
+      <div class="complete-stat-label">مدة</div>
+    </div>
+    <div class="complete-stat">
+      <div class="complete-stat-num" id="cs-sets">—</div>
+      <div class="complete-stat-label">سيت</div>
+    </div>
+    <div class="complete-stat">
+      <div class="complete-stat-num" id="cs-vol">—</div>
+      <div class="complete-stat-label">حجم kg</div>
+    </div>
+  </div>
+  <div class="complete-btns">
+    <button class="btn btn-gold btn-full" style="font-family:var(--font-display);font-size:16px;padding:16px;letter-spacing:2px;border-radius:14px" onclick="saveAndAnalyze()">🤖 حفظ + تحليل AI</button>
+    <button class="btn btn-outline btn-full" style="padding:14px" onclick="saveAndDownloadPDF()">💾 حفظ + PDF</button>
+    <button class="btn btn-outline btn-full" style="padding:12px;font-size:13px" onclick="saveOnly()">حفظ فقط</button>
+  </div>
+</div>
+
 <script>
 // ============================================================
 // DATA
@@ -2095,7 +1656,316 @@ const EXERCISES_DB = [
 ];
 
 // DEFAULT PPL SCHEDULE
-const DEFAULT_SCHEDULE = {
+// ============================================================
+// TRAINING PROGRAMS SYSTEM
+// ============================================================
+
+const TRAINING_PROGRAMS = [
+  {
+    id: 'ppl',
+    name: 'PPL — Push Pull Legs',
+    nameShort: 'PPL',
+    icon: '⚡',
+    desc: '6 أيام أسبوعياً — الأكثر انتشاراً للبناء والحجم',
+    frequency: '6 أيام / أسبوع',
+    level: 'متوسط — متقدم',
+    tabs: [
+      { key: 'push', label: 'PUSH' },
+      { key: 'pull', label: 'PULL' },
+      { key: 'legs', label: 'LEGS' },
+    ],
+    weekPreview: [
+      { day: 'Push', phase: 'a' },
+      { day: 'Pull', phase: 'a' },
+      { day: 'Legs', phase: 'a' },
+      { day: 'Push', phase: 'b' },
+      { day: 'Pull', phase: 'b' },
+      { day: 'Legs', phase: 'b' },
+      { day: 'Rest', phase: '' },
+    ],
+    schedule: {
+      push: [
+        { day: 'Push A', exercises: ['e1','e3','e11','e12','e18','e20'] },
+        { day: 'Push B', exercises: ['e2','e9','e10','e13','e19','e23'] },
+      ],
+      pull: [
+        { day: 'Pull A', exercises: ['e26','e27','e29','e34','e36','e31'] },
+        { day: 'Pull B', exercises: ['e25','e24','e28','e35','e37','e38'] },
+      ],
+      legs: [
+        { day: 'Legs A', exercises: ['e41','e43','e44','e45','e49','e53'] },
+        { day: 'Legs B', exercises: ['e42','e52','e46','e47','e48','e50'] },
+      ],
+    }
+  },
+  {
+    id: 'arnold_split',
+    name: 'Arnold Split',
+    nameShort: 'Arnold',
+    icon: '🏆',
+    desc: 'النظام الأسطوري لأرنولد شوارزنيجر — صدر+ظهر، ذراع+كتف، رجل',
+    frequency: '6 أيام / أسبوع',
+    level: 'متوسط — متقدم',
+    tabs: [
+      { key: 'chest_back', label: 'CHEST & BACK' },
+      { key: 'arms_shoulders', label: 'ARMS & SHOULDERS' },
+      { key: 'legs', label: 'LEGS' },
+    ],
+    weekPreview: [
+      { day: 'Chest+Back', phase: 'a' },
+      { day: 'Arms+Sho', phase: 'a' },
+      { day: 'Legs', phase: 'a' },
+      { day: 'Chest+Back', phase: 'b' },
+      { day: 'Arms+Sho', phase: 'b' },
+      { day: 'Legs', phase: 'b' },
+      { day: 'Rest', phase: '' },
+    ],
+    schedule: {
+      chest_back: [
+        { day: 'Chest & Back A', exercises: ['e1','e2','e3','e26','e27','e29'] },
+        { day: 'Chest & Back B', exercises: ['e9','e10','e11','e25','e24','e28'] },
+      ],
+      arms_shoulders: [
+        { day: 'Arms & Shoulders A', exercises: ['e12','e18','e34','e36','e31','e20'] },
+        { day: 'Arms & Shoulders B', exercises: ['e13','e19','e35','e37','e38','e23'] },
+      ],
+      legs: [
+        { day: 'Legs A', exercises: ['e41','e43','e44','e45','e49','e53'] },
+        { day: 'Legs B', exercises: ['e42','e52','e46','e47','e48','e50'] },
+      ],
+    }
+  },
+  {
+    id: 'pro_split',
+    name: 'Bro Split',
+    nameShort: 'Bro Split',
+    icon: '💪',
+    desc: 'عضلة واحدة يوم — الأسلوب الكلاسيكي للتضخيم',
+    frequency: '5 أيام / أسبوع',
+    level: 'مبتدئ — متوسط',
+    tabs: [
+      { key: 'chest', label: 'CHEST' },
+      { key: 'back', label: 'BACK' },
+      { key: 'shoulders', label: 'SHOULDERS' },
+      { key: 'arms', label: 'ARMS' },
+      { key: 'legs', label: 'LEGS' },
+    ],
+    weekPreview: [
+      { day: 'Chest', phase: 'a' },
+      { day: 'Back', phase: 'a' },
+      { day: 'Sho.', phase: 'a' },
+      { day: 'Arms', phase: 'b' },
+      { day: 'Legs', phase: 'b' },
+      { day: 'Rest', phase: '' },
+      { day: 'Rest', phase: '' },
+    ],
+    schedule: {
+      chest: [
+        { day: 'Chest Day', exercises: ['e1','e2','e9','e10','e3','e11'] },
+      ],
+      back: [
+        { day: 'Back Day', exercises: ['e26','e27','e24','e25','e29','e28'] },
+      ],
+      shoulders: [
+        { day: 'Shoulders Day', exercises: ['e12','e13','e18','e19','e20','e23'] },
+      ],
+      arms: [
+        { day: 'Arms Day', exercises: ['e34','e35','e36','e37','e38','e31'] },
+      ],
+      legs: [
+        { day: 'Legs Day', exercises: ['e41','e43','e44','e45','e49','e53'] },
+      ],
+    }
+  },
+  {
+    id: 'upper_lower',
+    name: 'Upper / Lower',
+    nameShort: 'Upper/Lower',
+    icon: '⚖️',
+    desc: '4 أيام — جسم علوي وسفلي، مثالي للقوة والحجم معاً',
+    frequency: '4 أيام / أسبوع',
+    level: 'مبتدئ — متوسط',
+    tabs: [
+      { key: 'upper', label: 'UPPER' },
+      { key: 'lower', label: 'LOWER' },
+    ],
+    weekPreview: [
+      { day: 'Upper A', phase: 'a' },
+      { day: 'Lower A', phase: 'a' },
+      { day: 'Rest', phase: '' },
+      { day: 'Upper B', phase: 'b' },
+      { day: 'Lower B', phase: 'b' },
+      { day: 'Rest', phase: '' },
+      { day: 'Rest', phase: '' },
+    ],
+    schedule: {
+      upper: [
+        { day: 'Upper A', exercises: ['e1','e26','e12','e34','e36','e31'] },
+        { day: 'Upper B', exercises: ['e2','e27','e13','e35','e37','e38'] },
+      ],
+      lower: [
+        { day: 'Lower A', exercises: ['e41','e43','e44','e45','e49','e53'] },
+        { day: 'Lower B', exercises: ['e42','e52','e46','e47','e48','e50'] },
+      ],
+    }
+  },
+  {
+    id: 'arnold_x_ppl',
+    name: 'Arnold × PPL',
+    nameShort: 'Arnold×PPL',
+    icon: '🔥',
+    desc: 'هجين أسبوعين — الأسبوع الأول PPL، الثاني Arnold Split',
+    frequency: '6 أيام / أسبوع',
+    level: 'متقدم',
+    tabs: [
+      { key: 'push', label: 'PUSH' },
+      { key: 'pull', label: 'PULL' },
+      { key: 'legs_ppl', label: 'LEGS' },
+      { key: 'chest_back', label: 'CHEST & BACK' },
+      { key: 'arms_shoulders', label: 'ARMS & SHO' },
+      { key: 'legs_arnold', label: 'LEGS II' },
+    ],
+    weekPreview: [
+      { day: 'Push', phase: 'a' },
+      { day: 'Pull', phase: 'a' },
+      { day: 'Legs', phase: 'a' },
+      { day: 'Ch+Bk', phase: 'b' },
+      { day: 'Ar+Sh', phase: 'b' },
+      { day: 'Legs', phase: 'b' },
+      { day: 'Rest', phase: '' },
+    ],
+    schedule: {
+      push: [
+        { day: 'Week 1 — Push', exercises: ['e1','e3','e11','e12','e18','e20'] },
+      ],
+      pull: [
+        { day: 'Week 1 — Pull', exercises: ['e26','e27','e29','e34','e36','e31'] },
+      ],
+      legs_ppl: [
+        { day: 'Week 1 — Legs', exercises: ['e41','e43','e44','e45','e49','e53'] },
+      ],
+      chest_back: [
+        { day: 'Week 2 — Chest & Back', exercises: ['e1','e2','e9','e26','e27','e24'] },
+      ],
+      arms_shoulders: [
+        { day: 'Week 2 — Arms & Shoulders', exercises: ['e34','e35','e12','e13','e18','e36'] },
+      ],
+      legs_arnold: [
+        { day: 'Week 2 — Legs', exercises: ['e42','e52','e46','e47','e48','e50'] },
+      ],
+    }
+  },
+];
+
+let activeProgramId = localStorage.getItem('tamreeni_active_program') || 'ppl';
+
+function getActiveProgram() {
+  return TRAINING_PROGRAMS.find(p => p.id === activeProgramId) || TRAINING_PROGRAMS[0];
+}
+
+function setActiveProgram(id) {
+  activeProgramId = id;
+  localStorage.setItem('tamreeni_active_program', id);
+  const prog = getActiveProgram();
+  currentPPL = prog.tabs[0].key;
+  if (typeof state !== 'undefined' && state) {
+    if (!state.programSchedules) state.programSchedules = {};
+    if (!state.programSchedules[id]) {
+      state.programSchedules[id] = JSON.parse(JSON.stringify(prog.schedule));
+    }
+    state.schedule = state.programSchedules[id];
+    saveState();
+  }
+  updateWorkoutPageForProgram();
+  renderPrograms();
+  showToast('✅ تم تفعيل نظام: ' + prog.nameShort);
+}
+
+function updateWorkoutPageForProgram() {
+  const prog = getActiveProgram();
+  // Update title
+  const titleEl = document.getElementById('workout-title-label');
+  if (titleEl) titleEl.textContent = prog.nameShort;
+  // Update program name display
+  const nameEl = document.getElementById('active-program-name');
+  if (nameEl) nameEl.textContent = prog.name;
+  // Rebuild tabs
+  const tabsEl = document.getElementById('ppl-tabs');
+  if (tabsEl) {
+    tabsEl.innerHTML = prog.tabs.map((t, i) =>
+      `<button class="ppl-tab ${i===0?'active':''}" onclick="switchPPL('${t.key}')">${t.label}</button>`
+    ).join('');
+  }
+  renderPPL();
+}
+
+function renderPrograms() {
+  const prog = getActiveProgram();
+  const container = document.getElementById('programs-list');
+  if (!container) return;
+  container.innerHTML = TRAINING_PROGRAMS.map(p => {
+    const isActive = p.id === activeProgramId;
+    const weekHtml = p.weekPreview.map((d, i) =>
+      `<div class="split-day-pill ${d.phase ? 'phase-'+d.phase : 'phase-rest'}">
+        <div class="split-day-num">D${i+1}</div>
+        ${d.day}
+      </div>`
+    ).join('');
+    const daysHtml = Object.entries(p.schedule).map(([key, days]) =>
+      days.map(d => `<div class="program-day-chip">
+        <div class="program-day-chip-label">${key.replace('_',' ').toUpperCase()}</div>
+        ${d.day}
+      </div>`).join('')
+    ).join('');
+    return `
+    <div class="program-card ${isActive ? 'active-program' : ''}">
+      <div class="program-card-header" onclick="toggleProgramExpand('${p.id}')">
+        <div class="program-icon" style="background:${isActive?'rgba(232,34,42,0.15)':'var(--bg4)'}">${p.icon}</div>
+        <div class="program-info">
+          <div class="program-name">${p.name}</div>
+          <div class="program-meta">${p.frequency} · ${p.level}</div>
+          <div class="program-meta" style="margin-top:2px;font-size:10px">${p.desc}</div>
+        </div>
+        ${isActive ? '<div class="program-active-badge">نشط</div>' : ''}
+      </div>
+      <div id="prog-expand-${p.id}" style="display:${isActive?'block':'none'}">
+        <div class="split-week-row">${weekHtml}</div>
+        <div class="program-days-grid">${daysHtml}</div>
+        <button class="program-select-btn ${isActive?'selected-btn':''}"
+          onclick="${isActive ? 'void(0)' : 'setActiveProgram(&quot;'+p.id+'&quot;)'}"
+        >${isActive ? '✓ النظام الحالي' : '▶ تفعيل هذا النظام'}</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleProgramExpand(id) {
+  const el = document.getElementById('prog-expand-' + id);
+  if (!el) return;
+  const isOpen = el.style.display !== 'none';
+  // Close all
+  TRAINING_PROGRAMS.forEach(p => {
+    const e = document.getElementById('prog-expand-' + p.id);
+    if (e) e.style.display = 'none';
+  });
+  if (!isOpen) el.style.display = 'block';
+}
+
+function initProgramSystem() {
+  const prog = getActiveProgram();
+  // Load saved schedule for active program or use default
+  if (!state.programSchedules) state.programSchedules = {};
+  if (!state.programSchedules[activeProgramId]) {
+    state.programSchedules[activeProgramId] = JSON.parse(JSON.stringify(prog.schedule));
+  }
+  state.schedule = state.programSchedules[activeProgramId];
+  saveState();
+  updateWorkoutPageForProgram();
+}
+
+// Patch saveState to save program schedules too
+
+DEFAULT_SCHEDULE = {
   push: [
     { day: 'Push A', exercises: ['e1','e3','e11','e12','e18','e20'] },
     { day: 'Push B', exercises: ['e2','e9','e10','e13','e19','e23'] },
@@ -2199,6 +2069,10 @@ function migrateState(s) {
 }
 
 function saveState() {
+  if (state && activeProgramId && state.schedule) {
+    if (!state.programSchedules) state.programSchedules = {};
+    state.programSchedules[activeProgramId] = JSON.parse(JSON.stringify(state.schedule));
+  }
   localStorage.setItem('tamreeni_state_' + activeGymId, JSON.stringify(state));
 }
 
@@ -2625,15 +2499,16 @@ function navigate(page) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   const pageEl = document.getElementById('page-' + page);
   if (pageEl) { pageEl.style.display = 'block'; pageEl.classList.add('active'); }
-  const navPages = ['dash','workout','library','progress','log','gyms'];
+  const navPages = ['dash','workout','library','progress','log','gyms','programs'];
   const idx = navPages.indexOf(page);
   if (idx !== -1) document.querySelectorAll('.nav-btn')[idx].classList.add('active');
   if (page === 'dash') renderDash();
-  if (page === 'workout') renderPPL();
+  if (page === 'workout') { updateWorkoutPageForProgram(); renderPPL(); }
   if (page === 'library') renderLibrary();
   if (page === 'log') renderLog();
   if (page === 'progress') renderProgress();
   if (page === 'gyms') renderGymsSettings();
+  if (page === 'programs') renderPrograms();
 }
 
 // ============================================================
@@ -2823,8 +2698,9 @@ function renderDash() {
 // ============================================================
 function switchPPL(type) {
   currentPPL = type;
-  document.querySelectorAll('.ppl-tab').forEach((t,i) => {
-    t.classList.toggle('active', ['push','pull','legs'][i] === type);
+  const prog = getActiveProgram();
+  document.querySelectorAll('.ppl-tab').forEach((t, i) => {
+    t.classList.toggle('active', prog.tabs[i] && prog.tabs[i].key === type);
   });
   renderPPL();
 }
@@ -3187,6 +3063,9 @@ function renderSetRow(ei, si, s) {
       <button class="set-card-done-btn ${s.done?'done':''}" onclick="toggleSetDone(${ei},${si})">
         ${isPR ? '🏆' : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>'}
       </button>
+      <button class="set-card-del-btn" onclick="deleteSet(${ei},${si})" title="حذف السيت">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+      </button>
     </div>
     <div id="bst-${ei}-${si}" class="between-set-timer ${s.done ? 'active' : ''}">
       <div class="between-set-timer-bar-wrap">
@@ -3194,6 +3073,15 @@ function renderSetRow(ei, si, s) {
       </div>
       <div class="between-set-timer-label" id="bst-label-${ei}-${si}">${restLabel}</div>
     </div>`;
+}
+
+
+function deleteSet(ei, si) {
+  if (activeWorkout.exercises[ei].sets.length <= 1) { showToast("لازم يكون فيه سيت واحد على الأقل"); return; }
+  activeWorkout.exercises[ei].sets.splice(si, 1);
+  state.activeWorkout = activeWorkout;
+  saveState();
+  renderActiveExercises();
 }
 
 function updateSet(ei, si, field, val) {
@@ -3848,6 +3736,7 @@ if (heroDate) {
   const d = new Date();
   heroDate.textContent = d.toLocaleDateString('ar-EG', { weekday:'short', month:'short', day:'numeric' });
 }
+initProgramSystem();
 renderDash();
 restoreActiveWorkout();
 if (window._hideLoadingScreen) window._hideLoadingScreen();
@@ -4424,12 +4313,11 @@ window.addEventListener('appinstalled', () => {
 </div>
 
 <style>
-.muscle-opt.selected, .type-opt.selected {
-  background: var(--gold) !important;
-  border-color: var(--gold) !important;
-  color: #fff !important;
-}
+.muscle-opt.selected, .type-opt.selected { background: var(--red) !important; border-color: var(--red) !important; color: #fff !important; }
 </style>
+
+</body>
+</html>
 
 </body>
 </html>
