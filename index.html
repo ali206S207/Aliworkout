@@ -369,30 +369,35 @@ body::after{
   display:none;position:fixed;inset:0;
   background:var(--bg);z-index:1000;
   overflow-y:auto;overflow-x:hidden;
-  padding:16px;padding-bottom:120px;
+  padding:0 0 180px 0;
 }
 #active-workout.open{display:block}
 
-/* Sticky floating timer bar */
+/* Sticky timer bar — stays at top of active-workout scroll */
 #aw-sticky-timer{
-  position:sticky;top:0;z-index:100;
-  margin:-16px -16px 16px;
-  background:rgba(10,10,15,0.96);
+  position:sticky;
+  top:0;
+  z-index:100;
+  background:rgba(10,10,15,0.98);
   backdrop-filter:blur(20px);
   -webkit-backdrop-filter:blur(20px);
-  border-bottom:1px solid var(--border);
-  padding:10px 16px;
+  border-bottom:1px solid rgba(232,34,42,0.2);
+  padding:12px 16px;
   display:flex;align-items:center;justify-content:space-between;
+  gap:12px;
 }
 
 #aw-timer{
   font-family:var(--font-display);
-  font-size:38px;font-weight:700;color:var(--text);
+  font-size:28px;font-weight:700;color:var(--text);
   letter-spacing:2px;line-height:1;
-  /* pulsing glow when active */
   animation:timerGlow 3s ease-in-out infinite;
 }
 
+@keyframes timerDot{
+  0%,100%{opacity:1;transform:scale(1)}
+  50%{opacity:0.3;transform:scale(0.7)}
+}
 @keyframes timerGlow{
   0%,100%{text-shadow:0 0 0 transparent}
   50%{text-shadow:0 0 20px rgba(232,34,42,0.4)}
@@ -1010,6 +1015,210 @@ body::after{
   text-transform:uppercase;letter-spacing:1px;color:var(--text);
 }
 
+
+/* ─── QUICK SESSION ─── */
+#session-modal{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,0.97);z-index:5000;
+  overflow-y:auto;overflow-x:hidden;
+  padding:16px;padding-bottom:40px;
+}
+#session-modal.open{display:block;animation:pageIn .25s ease}
+
+.session-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:20px;padding-bottom:12px;
+  border-bottom:1px solid var(--border);
+}
+.session-title{
+  font-family:var(--font-display);font-size:22px;font-weight:700;
+  text-transform:uppercase;letter-spacing:1px;
+}
+.session-close-btn{
+  background:var(--bg2);border:1px solid var(--border);
+  color:var(--text-muted);border-radius:8px;padding:8px 14px;
+  font-family:var(--font-display);font-size:12px;cursor:pointer;
+  transition:all .15s;
+}
+.session-close-btn:active{background:var(--bg3)}
+
+.session-day-card{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--radius);margin-bottom:10px;overflow:hidden;
+  transition:border-color .2s;
+}
+.session-day-card:active{border-color:var(--red)}
+
+.session-day-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px;
+  background:linear-gradient(135deg,var(--bg3),var(--bg2));
+}
+.session-day-name{
+  font-family:var(--font-display);font-size:16px;font-weight:700;
+  text-transform:uppercase;letter-spacing:1px;
+}
+.session-day-count{
+  font-family:var(--font-condensed);font-size:11px;
+  color:var(--text-muted);letter-spacing:1px;
+}
+.session-ex-list{padding:10px 12px;display:none}
+.session-ex-list.open{display:block}
+.session-ex-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 12px;background:var(--bg3);border:1px solid var(--border);
+  border-radius:10px;margin-bottom:6px;
+}
+.session-ex-name{
+  font-family:var(--font-condensed);font-size:14px;font-weight:700;
+  text-transform:uppercase;letter-spacing:0.5px;
+}
+.session-ex-last{
+  font-size:11px;color:var(--text-muted);font-family:var(--font-condensed);margin-top:2px;
+}
+.session-start-btn{
+  background:var(--red);border:none;color:#fff;
+  border-radius:8px;padding:8px 16px;
+  font-family:var(--font-display);font-size:13px;font-weight:700;
+  cursor:pointer;white-space:nowrap;
+}
+.session-start-btn:active{opacity:0.85;transform:scale(0.97)}
+
+
+/* ─── FLOATING REST BUBBLE (Strong-style) ─── */
+#rest-float-bubble{
+  display:none;
+  position:fixed;
+  bottom:96px;
+  left:16px;
+  z-index:1200;
+  background:rgba(10,10,15,0.97);
+  border:1.5px solid var(--red);
+  border-radius:20px;
+  padding:10px 16px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.7), 0 0 0 1px rgba(232,34,42,0.15);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  cursor:pointer;
+  animation:bubblePop .25s cubic-bezier(0.34,1.56,0.64,1);
+  min-width:100px;
+  align-items:center;
+  gap:10px;
+}
+#rest-float-bubble.visible{display:flex}
+
+@keyframes bubblePop{
+  from{transform:scale(0.6) translateY(10px);opacity:0}
+  to{transform:scale(1) translateY(0);opacity:1}
+}
+
+.rest-bubble-ring{
+  position:relative;
+  width:44px;height:44px;flex-shrink:0;
+}
+.rest-bubble-ring svg{
+  position:absolute;inset:0;
+  transform:rotate(-90deg);
+}
+.rest-bubble-ring-track{
+  fill:none;stroke:rgba(255,255,255,0.08);stroke-width:3;
+}
+.rest-bubble-ring-fill{
+  fill:none;stroke:var(--red);stroke-width:3;
+  stroke-linecap:round;
+  stroke-dasharray:120;
+  stroke-dashoffset:0;
+  transition:stroke-dashoffset 1s linear;
+}
+.rest-bubble-num{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-display);
+  font-size:15px;font-weight:700;color:var(--text);
+  letter-spacing:0;
+}
+.rest-bubble-label{
+  font-family:var(--font-condensed);
+  font-size:10px;font-weight:700;
+  text-transform:uppercase;letter-spacing:1.5px;
+  color:var(--text-muted);
+  line-height:1.2;
+}
+.rest-bubble-skip{
+  font-family:var(--font-display);
+  font-size:9px;font-weight:700;
+  text-transform:uppercase;letter-spacing:1px;
+  color:var(--red);margin-top:1px;
+}
+
+
+/* ─── PROGRAM DAY EDIT MODAL ─── */
+#prog-edit-modal{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,0.92);z-index:6000;
+  overflow-y:auto;padding:16px;padding-bottom:40px;
+}
+#prog-edit-modal.open{display:block;animation:pageIn .2s ease}
+
+.prog-edit-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:16px;padding-bottom:12px;
+  border-bottom:1px solid var(--border);
+  position:sticky;top:0;background:var(--bg);z-index:10;padding-top:4px;
+}
+.prog-edit-title{
+  font-family:var(--font-display);font-size:20px;font-weight:700;
+  text-transform:uppercase;letter-spacing:1px;
+}
+.prog-edit-ex-row{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;background:var(--bg2);
+  border:1px solid var(--border);border-radius:12px;
+  margin-bottom:8px;
+  transition:border-color .15s;
+}
+.prog-edit-ex-row:active{border-color:var(--red)}
+.prog-edit-drag{
+  cursor:grab;color:var(--text-muted);flex-shrink:0;padding:2px;
+}
+.prog-edit-ex-name{
+  flex:1;font-family:var(--font-condensed);font-size:14px;
+  font-weight:700;text-transform:uppercase;letter-spacing:0.5px;
+}
+.prog-edit-ex-muscle{
+  font-size:11px;color:var(--text-muted);
+  font-family:var(--font-condensed);
+}
+.prog-edit-remove{
+  background:rgba(232,34,42,0.1);border:none;
+  color:var(--red);border-radius:7px;padding:6px 10px;
+  cursor:pointer;flex-shrink:0;transition:all .15s;
+}
+.prog-edit-remove:active{background:rgba(232,34,42,0.25)}
+
+/* search in edit modal */
+.prog-edit-search{
+  width:100%;background:var(--bg2);border:1px solid var(--border);
+  border-radius:12px;padding:10px 14px;color:var(--text);
+  font-family:var(--font-main);font-size:14px;outline:none;
+  margin-bottom:10px;transition:border-color .2s;
+}
+.prog-edit-search:focus{border-color:var(--red)}
+.prog-edit-search::placeholder{color:var(--text-muted)}
+
+.prog-edit-lib-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 12px;background:var(--bg2);border:1px solid var(--border);
+  border-radius:10px;margin-bottom:6px;cursor:pointer;transition:all .15s;
+}
+.prog-edit-lib-item:active{border-color:var(--red);background:rgba(232,34,42,0.05)}
+.prog-edit-add-btn{
+  background:var(--red);border:none;color:#fff;
+  border-radius:6px;padding:5px 12px;
+  font-family:var(--font-display);font-size:12px;font-weight:700;
+  cursor:pointer;flex-shrink:0;
+}
+
 </style>
 
 <script>
@@ -1271,6 +1480,13 @@ self.addEventListener('notificationclick', e => {
       </div>
       <div class="section-title">الجيم الحالي</div>
       <div id="gyms-active-card" style="margin-bottom:16px"></div>
+
+      <!-- QUICK SESSION -->
+      <button onclick="openQuickSession()" style="width:100%;background:linear-gradient(135deg,#b01018,#e8222a);border:none;border-radius:14px;padding:16px;color:#fff;font-family:var(--font-display);font-size:17px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;margin-bottom:16px;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 6px 24px rgba(232,34,42,0.35)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        سيشن سريع
+      </button>
+
       <div class="section-title">كل الجيمات</div>
       <div id="gyms-list"></div>
       <div class="section-title" style="margin-top:18px">نقل البيانات</div>
@@ -1356,26 +1572,43 @@ self.addEventListener('notificationclick', e => {
 
 <!-- ACTIVE WORKOUT OVERLAY -->
 <div id="active-workout">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-    <div>
-      <div style="display:flex;align-items:center;gap:10px">
-  <img src="img-photo-strip-4.png" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid var(--gold)">
-  <div id="aw-title" style="font-family:var(--font-display);font-size:20px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gold)"></div>
-</div>
-      <div id="aw-day" style="font-family:var(--font-condensed);font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px"></div>
+  <!-- STICKY TIMER — FIRST CHILD OF SCROLL CONTAINER -->
+  <div id="aw-sticky-timer">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--red);animation:timerDot 1s ease-in-out infinite;flex-shrink:0"></div>
+      <div>
+        <div id="aw-title" style="font-family:var(--font-display);font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--red);line-height:1"></div>
+        <div id="aw-day" style="font-family:var(--font-condensed);font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px"></div>
+      </div>
     </div>
-    <button onclick="stopWorkout()" style="background:rgba(224,48,48,0.15);border:1px solid rgba(224,48,48,0.3);color:var(--red);border-radius:8px;padding:8px 14px;font-family:var(--font-display);font-size:13px;font-weight:700;cursor:pointer;text-transform:uppercase">إيقاف</button>
+    <div id="aw-timer" style="font-family:var(--font-display);font-size:32px;font-weight:700;color:var(--text);letter-spacing:2px;animation:timerGlow 3s ease-in-out infinite">00:00:00</div>
+    <button onclick="stopWorkout()" style="background:rgba(232,34,42,0.15);border:1px solid rgba(232,34,42,0.25);color:var(--red);border-radius:8px;padding:8px 14px;font-family:var(--font-display);font-size:12px;font-weight:700;cursor:pointer;text-transform:uppercase;white-space:nowrap;flex-shrink:0">⏹ إيقاف</button>
   </div>
 
-  <div class="workout-timer-display" id="aw-timer">00:00:00</div>
-  <div class="workout-timer-label">وقت التمرين</div>
-
-  <div style="height:16px"></div>
+  <div style="padding:16px">
+  <div style="height:8px"></div>
   <div id="aw-exercises"></div>
 
   <button class="btn btn-green btn-full" style="margin-top:16px;font-family:var(--font-display);font-size:18px;padding:16px;letter-spacing:2px" onclick="finishWorkout()">✓ إنهاء التمرين</button>
+  </div><!-- end inner padding -->
 </div>
 
+
+
+<!-- FLOATING REST BUBBLE -->
+<div id="rest-float-bubble" onclick="skipRest()">
+  <div class="rest-bubble-ring">
+    <svg viewBox="0 0 44 44" width="44" height="44">
+      <circle class="rest-bubble-ring-track" cx="22" cy="22" r="19"/>
+      <circle class="rest-bubble-ring-fill" id="bubble-ring-fill" cx="22" cy="22" r="19"/>
+    </svg>
+    <div class="rest-bubble-num" id="bubble-num">—</div>
+  </div>
+  <div>
+    <div class="rest-bubble-label">وقت الراحة</div>
+    <div class="rest-bubble-skip">اضغط للتخطي</div>
+  </div>
+</div>
 
 <!-- CUSTOM NUMPAD -->
 <div id="custom-numpad">
@@ -1473,21 +1706,7 @@ self.addEventListener('notificationclick', e => {
 
 <!-- ACTIVE WORKOUT OVERLAY -->
 <div id="active-workout">
-  <!-- STICKY FLOATING TIMER -->
-  <div id="aw-sticky-timer">
-    <div>
-      <div id="aw-title" style="font-family:var(--font-display);font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--red)"></div>
-      <div id="aw-day" style="font-family:var(--font-condensed);font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px"></div>
-    </div>
-    <div style="text-align:center">
-      <div id="aw-timer">00:00:00</div>
-      <div class="aw-timer-label">وقت التمرين</div>
-    </div>
-    <div class="aw-sticky-right">
-      <button onclick="stopWorkout()" style="background:rgba(232,34,42,0.15);border:1px solid rgba(232,34,42,0.3);color:var(--red);border-radius:8px;padding:7px 12px;font-family:var(--font-display);font-size:12px;font-weight:700;cursor:pointer;text-transform:uppercase">إيقاف</button>
-      <img src="img-photo-strip-4.png" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:1.5px solid var(--red);margin-top:4px" alt="">
-    </div>
-  </div>
+
 
   <div id="aw-exercises"></div>
 
@@ -1912,9 +2131,13 @@ function renderPrograms() {
       </div>`
     ).join('');
     const daysHtml = Object.entries(p.schedule).map(([key, days]) =>
-      days.map(d => `<div class="program-day-chip">
-        <div class="program-day-chip-label">${key.replace('_',' ').toUpperCase()}</div>
-        ${d.day}
+      days.map((d, di) => `<div class="program-day-chip" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <div>
+          <div class="program-day-chip-label">${key.replace(/_/g,' ').toUpperCase()}</div>
+          <div>${d.day}</div>
+          <div style="font-size:9px;color:var(--text-muted);margin-top:2px">${d.exercises.length} تمرين</div>
+        </div>
+        ${isActive ? `<button onclick="event.stopPropagation();openProgEdit('${p.id}','${key}',${di})" style="background:rgba(232,34,42,0.12);border:1px solid rgba(232,34,42,0.25);color:var(--red);border-radius:7px;padding:5px 10px;font-family:var(--font-condensed);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0">✏️ تعديل</button>` : ''}
       </div>`).join('')
     ).join('');
     return `
@@ -2065,6 +2288,7 @@ function migrateState(s) {
   if (!s.prs) s.prs = {};
   if (!s.restDays) s.restDays = [];
   if (!s.schedule) s.schedule = JSON.parse(JSON.stringify(DEFAULT_SCHEDULE));
+  if (!s.exRestTimes) s.exRestTimes = {}; // per-exercise rest time persistence
   return s;
 }
 
@@ -2336,6 +2560,44 @@ ${gymsHtml || '<section><p class="empty">لا توجد جيمات محفوظة</
   ${tamreeniHtmlTable(['الاسم العربي', 'الاسم الإنجليزي', 'العضلة', 'النوع', 'المعدة'], customRows, 'لا توجد تمارين مخصصة')}
 </section>
 </main>
+
+<!-- QUICK SESSION MODAL -->
+<div id="session-modal">
+  <div class="session-header">
+    <div>
+      <div class="session-title">سيشن <span style="color:var(--red)">سريع</span></div>
+      <div style="font-family:var(--font-condensed);font-size:11px;color:var(--text-muted);letter-spacing:1px;margin-top:2px">اختر يوم التمرين — مش هيتسجل على أي جيم</div>
+    </div>
+    <button class="session-close-btn" onclick="closeQuickSession()">✕ إغلاق</button>
+  </div>
+  <div style="margin-bottom:14px">
+    <div class="section-title">النظام الحالي: <span id="session-prog-name" style="color:var(--red)"></span></div>
+  </div>
+  <div id="session-days-list"></div>
+</div>
+
+
+<!-- PROGRAM DAY EDIT MODAL -->
+<div id="prog-edit-modal">
+  <div class="prog-edit-header">
+    <div>
+      <div class="prog-edit-title">تعديل <span style="color:var(--red)" id="pedit-title">اليوم</span></div>
+      <div style="font-family:var(--font-condensed);font-size:10px;color:var(--text-muted);letter-spacing:1px;margin-top:2px" id="pedit-sub"></div>
+    </div>
+    <button onclick="closeProgEdit()" style="background:var(--bg2);border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:8px 14px;font-family:var(--font-display);font-size:12px;cursor:pointer">✕ إغلاق</button>
+  </div>
+
+  <!-- Current exercises -->
+  <div style="margin-bottom:8px" class="section-title">التمارين الحالية <span id="pedit-count" style="color:var(--red)"></span></div>
+  <div id="pedit-ex-list" style="margin-bottom:20px"></div>
+
+  <!-- Add from library -->
+  <div style="margin-bottom:8px" class="section-title">إضافة من المكتبة</div>
+  <input type="text" class="prog-edit-search" placeholder="🔍 ابحث عن تمرين..." id="pedit-search" oninput="renderProgEditLib()">
+  <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px;scrollbar-width:none" id="pedit-muscle-filters"></div>
+  <div id="pedit-lib-list"></div>
+</div>
+
 </body>
 </html>`;
 }
@@ -2775,15 +3037,25 @@ function openAddToDay(ppl, di, exId = null) {
     pendingLibExercise = { exId };
     const modal = document.getElementById('add-to-day-modal');
     const opts = document.getElementById('day-options');
+    // Use active program tabs — not hardcoded push/pull/legs
+    const prog = getActiveProgram();
+    const schedule = (state.programSchedules && state.programSchedules[activeProgramId])
+      ? state.programSchedules[activeProgramId] : prog.schedule;
     let allDays = [];
-    ['push','pull','legs'].forEach(p => {
-      state.schedule[p].forEach((d, i) => {
-        allDays.push({ ppl: p, di: i, label: d.day });
+    prog.tabs.forEach(tab => {
+      const days = schedule[tab.key] || [];
+      days.forEach((d, i) => {
+        allDays.push({ ppl: tab.key, di: i, label: d.day, tabLabel: tab.label });
       });
     });
     opts.innerHTML = allDays.map(function(day) {
-      return '<div class="modal-option" onclick="addExerciseToDay(\'' + day.ppl + '\',' + day.di + ')">' + day.label + ' <span style="color:var(--text-muted);font-size:11px">(' + day.ppl.toUpperCase() + ')</span></div>';
+      return '<div class="modal-option" onclick="addExerciseToDay(\'' + day.ppl + '\',' + day.di + ')">' +
+        day.label +
+        ' <span style="color:var(--text-muted);font-size:11px">(' + day.tabLabel + ')</span></div>';
     }).join('');
+    if (allDays.length === 0) {
+      opts.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);font-family:var(--font-condensed);font-size:13px">لا يوجد أيام في النظام الحالي</div>';
+    }
     modal.classList.add('open');
   } else {
     pendingLibExercise = { ppl, di };
@@ -2794,12 +3066,22 @@ function openAddToDay(ppl, di, exId = null) {
 function addExerciseToDay(ppl, di) {
   if (!pendingLibExercise) return;
   const { exId } = pendingLibExercise;
-  if (!state.schedule[ppl][di].exercises.includes(exId)) {
-    state.schedule[ppl][di].exercises.push(exId);
+  // Always write into programSchedules for active program
+  if (!state.programSchedules) state.programSchedules = {};
+  if (!state.programSchedules[activeProgramId]) {
+    const prog = getActiveProgram();
+    state.programSchedules[activeProgramId] = JSON.parse(JSON.stringify(prog.schedule));
+  }
+  const sched = state.programSchedules[activeProgramId];
+  if (sched[ppl] && sched[ppl][di] && !sched[ppl][di].exercises.includes(exId)) {
+    sched[ppl][di].exercises.push(exId);
+    state.schedule = sched;
     saveState();
+    showToast('✅ تم إضافة التمرين');
   }
   closeModal('add-to-day-modal');
   pendingLibExercise = null;
+  renderPPL();
 }
 
 function closeModal(id) {
@@ -2993,7 +3275,8 @@ function startWorkout(ppl, di) {
       id: ex.id,
       name: ex.nameAr || ex.name,
       muscle: ex.muscle,
-      sets: getLastSetsForExercise(ex.id)
+      sets: getLastSetsForExercise(ex.id),
+      restTime: (state.exRestTimes && state.exRestTimes[ex.id]) || 90
     }))
   };
 
@@ -3014,15 +3297,26 @@ function renderActiveExercises() {
   if (!activeWorkout) return;
   const container = document.getElementById('aw-exercises');
   container.innerHTML = activeWorkout.exercises.map((ex, ei) => `
-    <div class="active-exercise-card">
+    <div class="active-exercise-card" id="awex-${ei}"
+      draggable="true"
+      ondragstart="awDragStart(event,${ei})"
+      ondragover="awDragOver(event,${ei})"
+      ondrop="awDrop(event,${ei})"
+      ondragend="awDragEnd()"
+      style="transition:opacity .2s,transform .2s">
       <div class="active-exercise-header">
-        <div style="flex:1">
-          <div class="active-ex-name">${ex.name}</div>
+        <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">
+          <div style="cursor:grab;padding:4px;color:var(--text-muted);touch-action:none" class="aw-drag-handle">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="5" r="1" fill="currentColor"/><circle cx="9" cy="12" r="1" fill="currentColor"/><circle cx="9" cy="19" r="1" fill="currentColor"/><circle cx="15" cy="5" r="1" fill="currentColor"/><circle cx="15" cy="12" r="1" fill="currentColor"/><circle cx="15" cy="19" r="1" fill="currentColor"/></svg>
+          </div>
+          <div style="flex:1;min-width:0">
+            <div class="active-ex-name">${ex.name}</div>
           <div style="display:flex;gap:10px;margin-top:2px">
             <div class="active-ex-muscle">${ex.muscle}</div>
             ${(()=>{const pr=state.prs[ex.id]; return pr?`<span style="color:var(--gold);font-family:var(--font-condensed);font-size:11px;text-transform:uppercase;letter-spacing:0.5px">🏆 PR: ${pr.weight}kg×${pr.reps}</span>`:''})()}
           </div>
           ${(()=>{const last=getLastSession(ex.id); return last?`<div style="font-family:var(--font-condensed);font-size:11px;color:var(--text-muted);margin-top:2px">آخر جلسة: ${last}</div>`:''})()}
+          </div>
         </div>
         <div style="text-align:right;flex-shrink:0">
           <div style="font-family:var(--font-condensed);font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px">راحة</div>
@@ -3076,12 +3370,239 @@ function renderSetRow(ei, si, s) {
 }
 
 
+
+// ─── ACTIVE WORKOUT DRAG REORDER ───
+let _awDragSrc = null;
+
+function awDragStart(e, ei) {
+  _awDragSrc = ei;
+  e.dataTransfer.effectAllowed = 'move';
+  const el = document.getElementById('awex-' + ei);
+  if (el) { setTimeout(() => { el.style.opacity = '0.4'; }, 0); }
+}
+
+function awDragOver(e, ei) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  // Visual highlight target
+  document.querySelectorAll('.active-exercise-card').forEach((el, i) => {
+    el.style.outline = (i === ei && i !== _awDragSrc) ? '2px solid var(--red)' : 'none';
+  });
+}
+
+function awDrop(e, ei) {
+  e.preventDefault();
+  if (_awDragSrc === null || _awDragSrc === ei) return;
+  // Reorder activeWorkout.exercises
+  const exs = activeWorkout.exercises;
+  const [moved] = exs.splice(_awDragSrc, 1);
+  exs.splice(ei, 0, moved);
+  state.activeWorkout = activeWorkout;
+  saveState();
+  renderActiveExercises();
+  showToast('✅ تم إعادة الترتيب');
+}
+
+function awDragEnd() {
+  _awDragSrc = null;
+  document.querySelectorAll('.active-exercise-card').forEach(el => {
+    el.style.opacity = '1';
+    el.style.outline = 'none';
+  });
+}
+
 function deleteSet(ei, si) {
   if (activeWorkout.exercises[ei].sets.length <= 1) { showToast("لازم يكون فيه سيت واحد على الأقل"); return; }
   activeWorkout.exercises[ei].sets.splice(si, 1);
   state.activeWorkout = activeWorkout;
   saveState();
   renderActiveExercises();
+}
+
+
+// ============================================================
+// QUICK SESSION SYSTEM
+// ============================================================
+
+let quickSessionActive = false; // flag: this is a quick session (no gym log)
+
+function openQuickSession() {
+  const prog = getActiveProgram();
+  const el = document.getElementById('session-prog-name');
+  if (el) el.textContent = prog.name;
+  renderSessionDays();
+  document.getElementById('session-modal').classList.add('open');
+}
+
+function closeQuickSession() {
+  document.getElementById('session-modal').classList.remove('open');
+}
+
+function renderSessionDays() {
+  const prog = getActiveProgram();
+  const schedule = (state.programSchedules && state.programSchedules[activeProgramId])
+    ? state.programSchedules[activeProgramId]
+    : prog.schedule;
+
+  const container = document.getElementById('session-days-list');
+  if (!container) return;
+
+  let html = '';
+  prog.tabs.forEach(tab => {
+    const days = schedule[tab.key] || [];
+    days.forEach((day, di) => {
+      const exercises = day.exercises
+        .map(id => EXERCISES_DB.find(e => e.id === id))
+        .filter(Boolean);
+
+      // Get last known data for each exercise (from any gym log)
+      const exItems = exercises.map(ex => {
+        const lastSets = getLastSetsForExercise(ex.id);
+        const hasHistory = lastSets && lastSets.length > 0 && lastSets[0].weight > 0;
+        return `
+        <div class="session-ex-item">
+          <div>
+            <div class="session-ex-name">${ex.nameAr || ex.name}</div>
+            <div class="session-ex-last">${ex.muscle} ${hasHistory ? '· آخر وزن: ' + lastSets[0].weight + 'kg' : '· جديد'}</div>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);font-family:var(--font-condensed)">${day.exercises.length > 0 ? ex.type || '' : ''}</div>
+        </div>`;
+      }).join('');
+
+      const dayId = `sess-${tab.key}-${di}`;
+      html += `
+      <div class="session-day-card">
+        <div class="session-day-header" onclick="toggleSessionDay('${dayId}')">
+          <div>
+            <div class="session-day-name">${tab.label} — ${day.day}</div>
+            <div class="session-day-count">${exercises.length} تمرين</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <button class="session-start-btn" onclick="event.stopPropagation();startQuickSession('${tab.key}',${di})">
+              ▶ ابدأ
+            </button>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="arr-${dayId}" style="transition:transform .2s"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </div>
+        <div class="session-ex-list" id="${dayId}">
+          ${exItems}
+        </div>
+      </div>`;
+    });
+  });
+
+  container.innerHTML = html;
+}
+
+function toggleSessionDay(id) {
+  const el = document.getElementById(id);
+  const arr = document.getElementById('arr-' + id);
+  if (!el) return;
+  const isOpen = el.classList.contains('open');
+  // close all
+  document.querySelectorAll('.session-ex-list').forEach(e => e.classList.remove('open'));
+  document.querySelectorAll('[id^="arr-"]').forEach(e => e.style.transform = '');
+  if (!isOpen) {
+    el.classList.add('open');
+    if (arr) arr.style.transform = 'rotate(180deg)';
+  }
+}
+
+function startQuickSession(ppl, di) {
+  // Close session modal
+  closeQuickSession();
+
+  // Mark as quick session
+  quickSessionActive = true;
+
+  // Get schedule from active program
+  const prog = getActiveProgram();
+  const schedule = (state.programSchedules && state.programSchedules[activeProgramId])
+    ? state.programSchedules[activeProgramId]
+    : prog.schedule;
+
+  const day = schedule[ppl][di];
+  const exercises = day.exercises
+    .map(id => EXERCISES_DB.find(e => e.id === id))
+    .filter(Boolean);
+
+  // Build workout with EMPTY sets (no carry-over from history)
+  activeWorkout = {
+    ppl, di,
+    type: day.day,
+    isQuickSession: true,
+    exercises: exercises.map(ex => ({
+      id: ex.id,
+      name: ex.nameAr || ex.name,
+      muscle: ex.muscle,
+      sets: [{ weight: '', reps: '', done: false, type: 'normal' }] // fresh empty set
+    }))
+  };
+
+  workoutStartTime = Date.now();
+  // Don't save to state.activeWorkout for quick sessions (no gym state pollution)
+
+  document.getElementById('active-workout').classList.add('open');
+  document.getElementById('aw-title').textContent = day.day;
+  document.getElementById('aw-day').textContent = prog.nameShort + ' · سيشن سريع';
+
+  if (workoutTimerInterval) clearInterval(workoutTimerInterval);
+  workoutTimerInterval = setInterval(() => {
+    if (!workoutStartTime) return;
+    const elapsed = Math.floor((Date.now() - workoutStartTime) / 1000);
+    const el = document.getElementById('aw-timer');
+    if (el) el.textContent = formatTime(elapsed);
+  }, 1000);
+
+  renderActiveExercises();
+}
+
+// Patch finishWorkout to handle quick session (no gym log save)
+const _origFinishWorkout = finishWorkout;
+function finishWorkout() {
+  if (activeWorkout && activeWorkout.isQuickSession) {
+    // Show complete modal but don't save to gym log
+    const elapsed = workoutStartTime ? Math.floor((Date.now() - workoutStartTime) / 1000) : 0;
+    let totalSets = 0;
+    let totalVol = 0;
+    activeWorkout.exercises.forEach(ex => {
+      ex.sets.forEach(s => {
+        if (s.done) {
+          totalSets++;
+          totalVol += (parseFloat(s.weight)||0) * (parseInt(s.reps)||0);
+        }
+      });
+    });
+    // Fill complete modal
+    const cs = document.getElementById('cs-time');
+    const csets = document.getElementById('cs-sets');
+    const cvol = document.getElementById('cs-vol');
+    if (cs) cs.textContent = formatTime(elapsed);
+    if (csets) csets.textContent = totalSets;
+    if (cvol) cvol.textContent = Math.round(totalVol);
+    const sub = document.getElementById('complete-sub');
+    if (sub) sub.textContent = 'سيشن سريع — لم يُحفظ على الجيم 🏃';
+    document.getElementById('active-workout').classList.remove('open');
+    clearInterval(workoutTimerInterval);
+    workoutTimerInterval = null;
+    workoutStartTime = null;
+    quickSessionActive = false;
+    activeWorkout = null;
+    document.getElementById('complete-modal').classList.add('open');
+    return;
+  }
+  _origFinishWorkout();
+}
+
+// Also patch saveOnly / saveAndAnalyze to handle quick session
+const _origSaveOnly = saveOnly;
+function saveOnly() {
+  if (quickSessionActive) {
+    document.getElementById('complete-modal').classList.remove('open');
+    showToast('✅ السيشن انتهى — مش محفوظ على الجيم');
+    return;
+  }
+  _origSaveOnly();
 }
 
 function updateSet(ei, si, field, val) {
@@ -3091,7 +3612,14 @@ function updateSet(ei, si, field, val) {
 }
 
 function setExRestTime(ei, val) {
-  activeWorkout.exercises[ei].restTime = parseInt(val);
+  const secs = parseInt(val);
+  activeWorkout.exercises[ei].restTime = secs;
+  // Persist per exercise ID
+  const exId = activeWorkout.exercises[ei].id;
+  if (exId) {
+    if (!state.exRestTimes) state.exRestTimes = {};
+    state.exRestTimes[exId] = secs;
+  }
   state.activeWorkout = activeWorkout;
   saveState();
 }
@@ -3151,6 +3679,7 @@ function toggleSetDone(ei, si) {
     // User un-checked — cancel timer and reset strip
     if (_bstInterval) { clearInterval(_bstInterval); _bstInterval = null; }
     _bstEndTime = null;
+    if (window._hideBubble) window._hideBubble();
     sendToSW({ type: 'CANCEL_REST' });
     const strip = document.getElementById(`bst-${ei}-${si}`);
     const fill  = document.getElementById(`bst-fill-${ei}-${si}`);
@@ -3305,11 +3834,17 @@ function startBetweenSetTimer(ei, si, seconds) {
   if (!strip) return;
   strip.classList.add('active');
 
+  // Track this bst element for floating bubble
+  if (window._restBubbleTrack) window._restBubbleTrack(strip, seconds);
+
   const tick = () => {
     const rem = Math.max(0, Math.round((_bstEndTime - Date.now()) / 1000));
     const pct = (_bstTotal > 0) ? (rem / _bstTotal) * 100 : 0;
     if (fill)  fill.style.width  = pct + '%';
     if (label) label.textContent = rem >= 60 ? Math.floor(rem/60)+':'+(rem%60<10?'0':'')+(rem%60) : rem+'s';
+
+    // Update floating bubble each tick
+    if (window._updateBubble) window._updateBubble();
 
     if (rem <= 0) {
       clearInterval(_bstInterval);
@@ -3390,6 +3925,7 @@ function adjustRest(delta) {
 function skipRest() {
   clearInterval(restTimerInterval);
   restEndTime = null;
+  if (window._hideBubble) window._hideBubble();
   sendToSW({ type: 'CANCEL_REST' });
   const bar = document.getElementById('inline-rest-bar');
   if (bar) bar.style.display = 'none';
@@ -4202,6 +4738,243 @@ function installPWA() {
 window.addEventListener('appinstalled', () => {
   document.getElementById('pwa-install-bar').style.display = 'none';
 });
+
+// ─── FLOATING REST BUBBLE LOGIC ───
+(function() {
+  let _bubbleObserver = null;
+
+  window._restBubbleTrack = function(bstEl, totalSecs) {
+    if (_bubbleObserver) { _bubbleObserver.disconnect(); _bubbleObserver = null; }
+    _hideBubble();
+    if (!bstEl) return;
+
+    _bubbleObserver = new IntersectionObserver(function(entries) {
+      const rem = _bstEndTime ? Math.max(0, Math.round((_bstEndTime - Date.now()) / 1000)) : 0;
+      if (!entries[0].isIntersecting && rem > 0) {
+        _showBubble();
+      } else {
+        _hideBubble();
+      }
+    }, { threshold: 0.3 });
+
+    _bubbleObserver.observe(bstEl);
+  };
+
+  window._hideBubble = function() {
+    const b = document.getElementById('rest-float-bubble');
+    if (b) b.classList.remove('visible');
+  };
+
+  window._showBubble = function() {
+    const b = document.getElementById('rest-float-bubble');
+    if (b) { b.classList.add('visible'); }
+  };
+
+  window._updateBubble = function() {
+    const b = document.getElementById('rest-float-bubble');
+    if (!b || !b.classList.contains('visible')) return;
+    if (!_bstEndTime) { _hideBubble(); return; }
+    const remaining = Math.max(0, Math.round((_bstEndTime - Date.now()) / 1000));
+    const numEl = document.getElementById('bubble-num');
+    const fillEl = document.getElementById('bubble-ring-fill');
+    if (numEl) numEl.textContent = remaining + 's';
+    if (fillEl) {
+      const circ = 2 * Math.PI * 19;
+      const pct = (_bstTotal > 0) ? remaining / _bstTotal : 0;
+      fillEl.style.strokeDasharray = circ;
+      fillEl.style.strokeDashoffset = circ * (1 - pct);
+    }
+    if (remaining <= 0) _hideBubble();
+  };
+})();
+
+
+// ─── PROGRAM DAY EDIT MODAL ───
+let _peditProgId = null, _peditKey = null, _peditDi = null;
+let _peditDragSrc = null;
+let _peditMuscle = 'All';
+
+function openProgEdit(progId, key, di) {
+  _peditProgId = progId;
+  _peditKey = key;
+  _peditDi = di;
+  _peditMuscle = 'All';
+
+  const prog = TRAINING_PROGRAMS.find(p => p.id === progId);
+  const schedule = (state.programSchedules && state.programSchedules[progId])
+    ? state.programSchedules[progId] : prog.schedule;
+  const day = schedule[key][di];
+
+  document.getElementById('pedit-title').textContent = day.day;
+  document.getElementById('pedit-sub').textContent = prog.name + ' · ' + key.replace(/_/g,' ').toUpperCase();
+
+  renderProgEditList();
+  renderProgEditMuscleFilters();
+  renderProgEditLib();
+  document.getElementById('pedit-search').value = '';
+  document.getElementById('prog-edit-modal').classList.add('open');
+}
+
+function closeProgEdit() {
+  document.getElementById('prog-edit-modal').classList.remove('open');
+  renderPrograms();
+  if (document.getElementById('page-workout').classList.contains('active')) renderPPL();
+}
+
+function _getpeditSchedule() {
+  const prog = TRAINING_PROGRAMS.find(p => p.id === _peditProgId);
+  if (!state.programSchedules) state.programSchedules = {};
+  if (!state.programSchedules[_peditProgId]) {
+    state.programSchedules[_peditProgId] = JSON.parse(JSON.stringify(prog.schedule));
+  }
+  return state.programSchedules[_peditProgId];
+}
+
+function renderProgEditList() {
+  const schedule = _getpeditSchedule();
+  const day = schedule[_peditKey][_peditDi];
+  const exs = day.exercises.map(id => EXERCISES_DB.find(e => e.id === id)).filter(Boolean);
+  const countEl = document.getElementById('pedit-count');
+  if (countEl) countEl.textContent = '(' + exs.length + ')';
+
+  const container = document.getElementById('pedit-ex-list');
+  if (!container) return;
+
+  if (exs.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-muted);font-family:var(--font-condensed);font-size:13px;text-transform:uppercase;letter-spacing:1px">لا يوجد تمارين — أضف من المكتبة</div>';
+    return;
+  }
+
+  container.innerHTML = exs.map((ex, i) => `
+    <div class="prog-edit-ex-row" id="perow-${i}"
+      draggable="true"
+      ondragstart="peDragStart(${i})"
+      ondragover="peDragOver(event,${i})"
+      ondrop="peDrop(event,${i})"
+      ondragend="peDragEnd()">
+      <div class="prog-edit-drag">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="9" cy="5" r="1.2" fill="currentColor"/><circle cx="9" cy="12" r="1.2" fill="currentColor"/>
+          <circle cx="9" cy="19" r="1.2" fill="currentColor"/><circle cx="15" cy="5" r="1.2" fill="currentColor"/>
+          <circle cx="15" cy="12" r="1.2" fill="currentColor"/><circle cx="15" cy="19" r="1.2" fill="currentColor"/>
+        </svg>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div class="prog-edit-ex-name">${ex.nameAr || ex.name}</div>
+        <div class="prog-edit-ex-muscle">${ex.muscle} · ${ex.type || ''}</div>
+      </div>
+      <button class="prog-edit-remove" onclick="peRemoveEx('${ex.id}')">✕</button>
+    </div>`).join('');
+}
+
+function peRemoveEx(exId) {
+  const schedule = _getpeditSchedule();
+  schedule[_peditKey][_peditDi].exercises =
+    schedule[_peditKey][_peditDi].exercises.filter(id => id !== exId);
+  // Also update active program schedule
+  if (_peditProgId === activeProgramId) {
+    state.schedule = schedule;
+  }
+  saveState();
+  renderProgEditList();
+  renderProgEditLib();
+}
+
+function peAddEx(exId) {
+  const schedule = _getpeditSchedule();
+  const exs = schedule[_peditKey][_peditDi].exercises;
+  if (exs.includes(exId)) { showToast('التمرين موجود بالفعل'); return; }
+  exs.push(exId);
+  if (_peditProgId === activeProgramId) state.schedule = schedule;
+  saveState();
+  renderProgEditList();
+  renderProgEditLib();
+}
+
+// Drag in edit modal
+function peDragStart(i) {
+  _peditDragSrc = i;
+  setTimeout(() => {
+    const el = document.getElementById('perow-' + i);
+    if (el) el.style.opacity = '0.4';
+  }, 0);
+}
+
+function peDragOver(e, i) {
+  e.preventDefault();
+  document.querySelectorAll('.prog-edit-ex-row').forEach((el, idx) => {
+    el.style.outline = (idx === i && idx !== _peditDragSrc) ? '2px solid var(--red)' : 'none';
+  });
+}
+
+function peDrop(e, i) {
+  e.preventDefault();
+  if (_peditDragSrc === null || _peditDragSrc === i) return;
+  const schedule = _getpeditSchedule();
+  const arr = schedule[_peditKey][_peditDi].exercises;
+  const [moved] = arr.splice(_peditDragSrc, 1);
+  arr.splice(i, 0, moved);
+  if (_peditProgId === activeProgramId) state.schedule = schedule;
+  saveState();
+  renderProgEditList();
+}
+
+function peDragEnd() {
+  _peditDragSrc = null;
+  document.querySelectorAll('.prog-edit-ex-row').forEach(el => {
+    el.style.opacity = '1'; el.style.outline = 'none';
+  });
+}
+
+function renderProgEditMuscleFilters() {
+  const muscles = ['All', ...new Set(EXERCISES_DB.map(e => e.muscle))];
+  const container = document.getElementById('pedit-muscle-filters');
+  if (!container) return;
+  container.innerHTML = muscles.map(m =>
+    `<button onclick="peSetMuscle('${m}')" style="flex-shrink:0;padding:5px 12px;border-radius:20px;border:1px solid ${m===_peditMuscle?'var(--red)':'var(--border)'};background:${m===_peditMuscle?'var(--red)':'var(--bg2)'};color:${m===_peditMuscle?'#fff':'var(--text-muted)'};font-family:var(--font-condensed);font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap">${m}</button>`
+  ).join('');
+}
+
+function peSetMuscle(m) {
+  _peditMuscle = m;
+  renderProgEditMuscleFilters();
+  renderProgEditLib();
+}
+
+function renderProgEditLib() {
+  const schedule = _getpeditSchedule();
+  const currentIds = schedule[_peditKey][_peditDi].exercises;
+  const search = (document.getElementById('pedit-search')?.value || '').toLowerCase();
+
+  const filtered = EXERCISES_DB.filter(ex => {
+    const matchMuscle = _peditMuscle === 'All' || ex.muscle === _peditMuscle;
+    const matchSearch = !search || (ex.nameAr||'').includes(search) || ex.name.toLowerCase().includes(search);
+    return matchMuscle && matchSearch;
+  });
+
+  const container = document.getElementById('pedit-lib-list');
+  if (!container) return;
+
+  if (filtered.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);font-family:var(--font-condensed);font-size:12px">لا توجد نتائج</div>';
+    return;
+  }
+
+  container.innerHTML = filtered.map(ex => {
+    const inDay = currentIds.includes(ex.id);
+    return `<div class="prog-edit-lib-item">
+      <div>
+        <div style="font-family:var(--font-condensed);font-size:14px;font-weight:700;text-transform:uppercase">${ex.nameAr || ex.name}</div>
+        <div style="font-size:11px;color:var(--text-muted);font-family:var(--font-condensed)">${ex.muscle} · ${ex.type||''}</div>
+      </div>
+      ${inDay
+        ? '<span style="font-family:var(--font-condensed);font-size:11px;color:var(--green);font-weight:700">✓ مضاف</span>'
+        : `<button class="prog-edit-add-btn" onclick="peAddEx('${ex.id}')">+ إضافة</button>`
+      }
+    </div>`;
+  }).join('');
+}
+
 </script>
 
 
@@ -4316,8 +5089,84 @@ window.addEventListener('appinstalled', () => {
 .muscle-opt.selected, .type-opt.selected { background: var(--red) !important; border-color: var(--red) !important; color: #fff !important; }
 </style>
 
+
+<!-- QUICK SESSION MODAL -->
+<div id="session-modal">
+  <div class="session-header">
+    <div>
+      <div class="session-title">سيشن <span style="color:var(--red)">سريع</span></div>
+      <div style="font-family:var(--font-condensed);font-size:11px;color:var(--text-muted);letter-spacing:1px;margin-top:2px">اختر يوم التمرين — مش هيتسجل على أي جيم</div>
+    </div>
+    <button class="session-close-btn" onclick="closeQuickSession()">✕ إغلاق</button>
+  </div>
+  <div style="margin-bottom:14px">
+    <div class="section-title">النظام الحالي: <span id="session-prog-name" style="color:var(--red)"></span></div>
+  </div>
+  <div id="session-days-list"></div>
+</div>
+
+
+<!-- PROGRAM DAY EDIT MODAL -->
+<div id="prog-edit-modal">
+  <div class="prog-edit-header">
+    <div>
+      <div class="prog-edit-title">تعديل <span style="color:var(--red)" id="pedit-title">اليوم</span></div>
+      <div style="font-family:var(--font-condensed);font-size:10px;color:var(--text-muted);letter-spacing:1px;margin-top:2px" id="pedit-sub"></div>
+    </div>
+    <button onclick="closeProgEdit()" style="background:var(--bg2);border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:8px 14px;font-family:var(--font-display);font-size:12px;cursor:pointer">✕ إغلاق</button>
+  </div>
+
+  <!-- Current exercises -->
+  <div style="margin-bottom:8px" class="section-title">التمارين الحالية <span id="pedit-count" style="color:var(--red)"></span></div>
+  <div id="pedit-ex-list" style="margin-bottom:20px"></div>
+
+  <!-- Add from library -->
+  <div style="margin-bottom:8px" class="section-title">إضافة من المكتبة</div>
+  <input type="text" class="prog-edit-search" placeholder="🔍 ابحث عن تمرين..." id="pedit-search" oninput="renderProgEditLib()">
+  <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px;scrollbar-width:none" id="pedit-muscle-filters"></div>
+  <div id="pedit-lib-list"></div>
+</div>
+
 </body>
 </html>
+
+
+<!-- QUICK SESSION MODAL -->
+<div id="session-modal">
+  <div class="session-header">
+    <div>
+      <div class="session-title">سيشن <span style="color:var(--red)">سريع</span></div>
+      <div style="font-family:var(--font-condensed);font-size:11px;color:var(--text-muted);letter-spacing:1px;margin-top:2px">اختر يوم التمرين — مش هيتسجل على أي جيم</div>
+    </div>
+    <button class="session-close-btn" onclick="closeQuickSession()">✕ إغلاق</button>
+  </div>
+  <div style="margin-bottom:14px">
+    <div class="section-title">النظام الحالي: <span id="session-prog-name" style="color:var(--red)"></span></div>
+  </div>
+  <div id="session-days-list"></div>
+</div>
+
+
+<!-- PROGRAM DAY EDIT MODAL -->
+<div id="prog-edit-modal">
+  <div class="prog-edit-header">
+    <div>
+      <div class="prog-edit-title">تعديل <span style="color:var(--red)" id="pedit-title">اليوم</span></div>
+      <div style="font-family:var(--font-condensed);font-size:10px;color:var(--text-muted);letter-spacing:1px;margin-top:2px" id="pedit-sub"></div>
+    </div>
+    <button onclick="closeProgEdit()" style="background:var(--bg2);border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:8px 14px;font-family:var(--font-display);font-size:12px;cursor:pointer">✕ إغلاق</button>
+  </div>
+
+  <!-- Current exercises -->
+  <div style="margin-bottom:8px" class="section-title">التمارين الحالية <span id="pedit-count" style="color:var(--red)"></span></div>
+  <div id="pedit-ex-list" style="margin-bottom:20px"></div>
+
+  <!-- Add from library -->
+  <div style="margin-bottom:8px" class="section-title">إضافة من المكتبة</div>
+  <input type="text" class="prog-edit-search" placeholder="🔍 ابحث عن تمرين..." id="pedit-search" oninput="renderProgEditLib()">
+  <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px;scrollbar-width:none" id="pedit-muscle-filters"></div>
+  <div id="pedit-lib-list"></div>
+</div>
 
 </body>
 </html>
