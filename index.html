@@ -2176,13 +2176,14 @@ function toggleProgramExpand(id) {
 
 function initProgramSystem() {
   const prog = getActiveProgram();
-  // Load saved schedule for active program or use default
   if (!state.programSchedules) state.programSchedules = {};
   if (!state.programSchedules[activeProgramId]) {
+    // First time only — copy default schedule
     state.programSchedules[activeProgramId] = JSON.parse(JSON.stringify(prog.schedule));
+    saveState(); // save only when creating for first time
   }
+  // Always load from saved — never overwrite existing
   state.schedule = state.programSchedules[activeProgramId];
-  saveState();
   updateWorkoutPageForProgram();
 }
 
@@ -2295,9 +2296,14 @@ function migrateState(s) {
 function saveState() {
   if (state && activeProgramId && state.schedule) {
     if (!state.programSchedules) state.programSchedules = {};
+    // Always sync current schedule back into programSchedules before saving
     state.programSchedules[activeProgramId] = JSON.parse(JSON.stringify(state.schedule));
   }
-  localStorage.setItem('tamreeni_state_' + activeGymId, JSON.stringify(state));
+  try {
+    localStorage.setItem('tamreeni_state_' + activeGymId, JSON.stringify(state));
+  } catch(e) {
+    console.warn('saveState failed:', e);
+  }
 }
 
 function tamreeniStorageKeys() {
@@ -3002,6 +3008,9 @@ function renderPPL() {
 
 function removeExercise(ppl, di, exId) {
   state.schedule[ppl][di].exercises = state.schedule[ppl][di].exercises.filter(id => id !== exId);
+  // Sync to programSchedules
+  if (!state.programSchedules) state.programSchedules = {};
+  state.programSchedules[activeProgramId] = JSON.parse(JSON.stringify(state.schedule));
   saveState();
   renderPPL();
 }
@@ -4871,10 +4880,8 @@ function peRemoveEx(exId) {
   const schedule = _getpeditSchedule();
   schedule[_peditKey][_peditDi].exercises =
     schedule[_peditKey][_peditDi].exercises.filter(id => id !== exId);
-  // Also update active program schedule
-  if (_peditProgId === activeProgramId) {
-    state.schedule = schedule;
-  }
+  state.programSchedules[_peditProgId] = schedule;
+  if (_peditProgId === activeProgramId) state.schedule = schedule;
   saveState();
   renderProgEditList();
   renderProgEditLib();
@@ -4885,6 +4892,8 @@ function peAddEx(exId) {
   const exs = schedule[_peditKey][_peditDi].exercises;
   if (exs.includes(exId)) { showToast('التمرين موجود بالفعل'); return; }
   exs.push(exId);
+  // Always sync — whether active program or not
+  state.programSchedules[_peditProgId] = schedule;
   if (_peditProgId === activeProgramId) state.schedule = schedule;
   saveState();
   renderProgEditList();
@@ -4914,6 +4923,7 @@ function peDrop(e, i) {
   const arr = schedule[_peditKey][_peditDi].exercises;
   const [moved] = arr.splice(_peditDragSrc, 1);
   arr.splice(i, 0, moved);
+  state.programSchedules[_peditProgId] = schedule;
   if (_peditProgId === activeProgramId) state.schedule = schedule;
   saveState();
   renderProgEditList();
