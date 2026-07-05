@@ -3607,18 +3607,44 @@ function _roundToPlate(weight, barWeight) {
 }
 
 function _getWorkWeight(ei) {
+  // Keep for backward compat — returns max working weight
+  return _getWorkProfile(ei).weight;
+}
+
+function _getWorkProfile(ei) {
+  // Returns { weight, avgReps, sets, totalVolume }
   const ex = activeWorkout.exercises[ei];
-  // 1. Try first non-warmup set with a weight
-  for (const s of ex.sets) {
-    if (s.setType !== 'warmup' && parseFloat(s.weight) > 0) return parseFloat(s.weight);
+
+  // Get working sets (non-warmup)
+  const workingSets = ex.sets.filter(s => s.setType !== 'warmup' && parseFloat(s.weight) > 0);
+
+  if (workingSets.length > 0) {
+    const weight = Math.max(...workingSets.map(s => parseFloat(s.weight) || 0));
+    const avgReps = workingSets.reduce((a, s) => a + (parseInt(s.reps) || 0), 0) / workingSets.length;
+    const totalVolume = workingSets.reduce((a, s) => a + (parseFloat(s.weight)||0) * (parseInt(s.reps)||0), 0);
+    return { weight, avgReps: avgReps || 5, sets: workingSets.length, totalVolume };
   }
-  // 2. Try last session
-  const prev = getLastExerciseSets(ex.id);
-  if (prev.length) {
-    const maxW = Math.max(...prev.map(s => s.weight || 0));
-    if (maxW > 0) return maxW;
+
+  // Fallback: last session
+  const prev = getLastExerciseSets(ex.id).filter(s => s.weight > 0);
+  if (prev.length > 0) {
+    const weight = Math.max(...prev.map(s => s.weight || 0));
+    const avgReps = prev.reduce((a, s) => a + (s.reps || 0), 0) / prev.length;
+    const totalVolume = prev.reduce((a, s) => a + s.weight * (s.reps || 0), 0);
+    return { weight, avgReps: avgReps || 5, sets: prev.length, totalVolume };
   }
-  return 0;
+
+  return { weight: 0, avgReps: 5, sets: 3, totalVolume: 0 };
+}
+
+function _calcWarmupReps(baseReps, volumeFactor, pct) {
+  // Higher volume = fewer warmup reps at each step to conserve energy
+  // volumeFactor: 0 (low) → 1 (high)
+  // At low volume (3×5): can afford slightly more warmup reps
+  // At high volume (3×12+): warmup reps must be minimal
+  const maxReps = pct <= 0.35 ? 10 : pct <= 0.65 ? 5 : pct <= 0.82 ? 2 : 1;
+  const minReps = pct <= 0.35 ? 6  : pct <= 0.65 ? 3 : 1;
+  return Math.round(maxReps - (maxReps - minReps) * volumeFactor);
 }
 
 function _isBarbell(ei) {
@@ -3675,29 +3701,14 @@ function confirmWarmup() {
   if (_warmupEi === null) return;
   const ei = _warmupEi;
   const ex = activeWorkout.exercises[ei];
-  const workWeight = _getWorkWeight(ei);
-  const isBar = _isBarbell(ei);
-  const barWeight = isBar ? 20 : 0;
 
-  if (workWeight <= 0) { closeWarmupModal(); return; }
+  const warmupSets = window._warmupComputedSets || [];
+  if (!warmupSets.length) { closeWarmupModal(); return; }
 
-  // Remove existing warmup sets first
+  // Remove existing warmup sets, keep working sets
   ex.sets = ex.sets.filter(s => s.setType !== 'warmup');
 
-  // Build warmup sets
-  const warmupSets = WARMUP_PROTOCOL
-    .map(([pct, reps]) => {
-      if (pct === 0) {
-        // Empty bar set
-        return { weight: isBar ? barWeight : Math.round(workWeight * 0.20 / 2.5) * 2.5, reps, done: false, setType: 'warmup' };
-      }
-      const raw = workWeight * pct;
-      const weight = isBar ? _roundToPlate(raw, barWeight) : Math.round(raw / 2.5) * 2.5;
-      return { weight: Math.max(weight, isBar ? barWeight : 0), reps, done: false, setType: 'warmup' };
-    })
-    .filter(s => s.weight < workWeight);
-
-  // Prepend warmup sets before working sets
+  // Prepend warmup sets
   ex.sets = [...warmupSets, ...ex.sets];
 
   state.activeWorkout = activeWorkout;
