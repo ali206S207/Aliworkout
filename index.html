@@ -1283,6 +1283,59 @@ body::after{
   content:'↑';font-size:10px;color:#22d35a;margin-right:2px;
 }
 
+
+/* ─── SMART WARM-UP ─── */
+.set-card.warmup-card{
+  background:rgba(240,165,0,0.06);
+  border-color:rgba(240,165,0,0.2);
+}
+.set-card.warmup-card .set-card-num{
+  color:var(--gold);font-size:11px;
+}
+.warmup-tag{
+  font-family:var(--font-condensed);font-size:9px;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;
+  color:var(--gold);background:rgba(240,165,0,0.12);
+  border-radius:4px;padding:1px 6px;flex-shrink:0;
+}
+
+/* warm-up preview modal */
+#warmup-modal{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,0.93);z-index:5500;
+  align-items:flex-end;justify-content:center;
+}
+#warmup-modal.open{display:flex;animation:overlayIn .2s ease}
+.warmup-sheet{
+  background:var(--bg2);border-radius:24px 24px 0 0;
+  border:1px solid var(--border-bright);border-bottom:none;
+  width:100%;max-width:600px;
+  padding:16px 16px env(safe-area-inset-bottom,20px);
+  animation:sheetIn .25s cubic-bezier(0.4,0,0.2,1);
+}
+.warmup-set-preview{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;background:var(--bg3);
+  border:1px solid var(--border);border-radius:12px;
+  margin-bottom:8px;
+}
+.warmup-set-pct{
+  font-family:var(--font-display);font-size:22px;font-weight:700;
+  color:var(--gold);width:52px;flex-shrink:0;text-align:center;
+}
+.warmup-set-info{flex:1}
+.warmup-set-weight{
+  font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text);
+}
+.warmup-set-reps{
+  font-family:var(--font-condensed);font-size:12px;color:var(--text-muted);
+  text-transform:uppercase;letter-spacing:1px;margin-top:2px;
+}
+.warmup-set-purpose{
+  font-family:var(--font-condensed);font-size:10px;
+  color:var(--text-muted);text-align:right;
+}
+
 </style>
 
 <script>
@@ -2668,6 +2721,31 @@ ${gymsHtml || '<section><p class="empty">لا توجد جيمات محفوظة</
   <div id="pedit-lib-list"></div>
 </div>
 
+
+<!-- SMART WARM-UP MODAL -->
+<div id="warmup-modal">
+  <div class="warmup-sheet">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <div>
+        <div class="modal-title" style="margin-bottom:0">🔥 إحماء ذكي</div>
+        <div style="font-family:var(--font-condensed);font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-top:2px" id="warmup-ex-name"></div>
+      </div>
+      <button onclick="closeWarmupModal()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:7px 14px;font-family:var(--font-display);font-size:12px;cursor:pointer">✕</button>
+    </div>
+    <div style="font-family:var(--font-condensed);font-size:11px;color:var(--text-muted);margin-bottom:14px;padding:8px 10px;background:rgba(240,165,0,0.06);border-radius:8px;border:1px solid rgba(240,165,0,0.15)">
+      📊 بناءً على وزن العمل: <strong id="warmup-work-weight" style="color:var(--gold)"></strong>
+    </div>
+    <div id="warmup-sets-preview"></div>
+    <div style="display:flex;gap:10px;margin-top:14px">
+      <button onclick="confirmWarmup()" style="flex:1;background:linear-gradient(135deg,#b08000,#f0a500);border:none;color:#000;border-radius:12px;padding:14px;font-family:var(--font-display);font-size:15px;font-weight:700;letter-spacing:1px;cursor:pointer">
+        🔥 إضافة سيتات الإحماء
+      </button>
+      <button onclick="closeWarmupModal()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text-muted);border-radius:12px;padding:14px 16px;font-family:var(--font-condensed);font-size:13px;cursor:pointer">إلغاء</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>`;
 }
@@ -3391,6 +3469,7 @@ function renderActiveExercises() {
           </div>
         </div>
         <div style="text-align:right;flex-shrink:0">
+          <button onclick="openWarmupModal(${ei})" style="background:rgba(240,165,0,0.1);border:1px solid rgba(240,165,0,0.25);color:var(--gold);border-radius:8px;padding:5px 10px;font-family:var(--font-condensed);font-size:11px;font-weight:700;cursor:pointer;width:100%;margin-bottom:6px;letter-spacing:0.5px">🔥 إحماء</button>
           <div style="font-family:var(--font-condensed);font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px">راحة</div>
           <select onchange="setExRestTime(${ei},this.value)" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 6px;font-family:var(--font-condensed);font-size:12px;font-weight:600">
             ${[30,60,90,120,180,240].map(s=>`<option value="${s}" ${(ex.restTime||90)==s?'selected':''}>${s}s</option>`).join('')}
@@ -3420,8 +3499,8 @@ function renderSetRow(ei, si, s) {
   const prevRow = buildSetPrevRow(ei, si);
   return `
     ${prevRow ? prevRow : ''}
-    <div id="row-${ei}-${si}" class="set-card ${s.done?'done-card':''}" style="animation-delay:${si*0.05}s">
-      <div class="set-card-num">${si+1}</div>
+    <div id="row-${ei}-${si}" class="set-card ${s.done?'done-card':''} ${s.setType==='warmup'?'warmup-card':''}" style="animation-delay:${si*0.05}s">
+      <div class="set-card-num">${s.setType==='warmup'?'W'+(si+1):(si+1)}</div>
       <input type="number" class="set-card-input" value="${s.weight}" placeholder="kg" min="0" step="0.5"
         readonly onfocus="openNumpad(this,'weight',${ei},${si})" inputmode="none">
       <div class="set-card-sep">×</div>
@@ -3503,6 +3582,123 @@ function buildSetPrevRow(ei, si) {
     <span class="set-prev-val">${p.reps > 0 ? p.reps : '—'}</span>
     ${deltaHtml}
   </div>`;
+}
+
+
+// ─── SMART WARM-UP ───
+let _warmupEi = null;
+
+// Warm-up protocol: [pct_of_work, reps, purpose]
+const WARMUP_PROTOCOL = [
+  [0.40, 10, 'تنشيط عام — دم وحركة'],
+  [0.55,  8, 'إحماء عضلي'],
+  [0.70,  5, 'تجهيز جهاز عصبي'],
+  [0.85,  3, 'تحريض قوة'],
+  [0.92,  1, 'سيت تفعيل'],
+];
+
+function _roundToPlate(weight, barWeight) {
+  // Round to nearest 2.5kg (smallest plate)
+  const load = Math.max(0, weight - barWeight);
+  const perSide = Math.round((load / 2) / 2.5) * 2.5;
+  return barWeight + perSide * 2;
+}
+
+function _getWorkWeight(ei) {
+  const ex = activeWorkout.exercises[ei];
+  // 1. Try first non-warmup set with a weight
+  for (const s of ex.sets) {
+    if (s.setType !== 'warmup' && parseFloat(s.weight) > 0) return parseFloat(s.weight);
+  }
+  // 2. Try last session
+  const prev = getLastExerciseSets(ex.id);
+  if (prev.length) {
+    const maxW = Math.max(...prev.map(s => s.weight || 0));
+    if (maxW > 0) return maxW;
+  }
+  return 0;
+}
+
+function _isBarbell(ei) {
+  const ex = activeWorkout.exercises[ei];
+  const dbEx = EXERCISES_DB.find(e => e.id === ex.id);
+  return dbEx && (dbEx.type === 'Barbell' || (dbEx.equipment||'').toLowerCase().includes('barbell'));
+}
+
+function openWarmupModal(ei) {
+  _warmupEi = ei;
+  const ex = activeWorkout.exercises[ei];
+  const workWeight = _getWorkWeight(ei);
+  const isBar = _isBarbell(ei);
+  const barWeight = isBar ? 20 : 0;
+
+  document.getElementById('warmup-ex-name').textContent = ex.name;
+  document.getElementById('warmup-work-weight').textContent =
+    workWeight > 0 ? workWeight + ' kg' : 'غير محدد — سيُحسب بعد تحديد الوزن';
+
+  const preview = document.getElementById('warmup-sets-preview');
+  if (workWeight <= 0) {
+    preview.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text-muted);font-family:var(--font-condensed);font-size:13px;text-transform:uppercase;letter-spacing:1px">
+      حدد وزن السيت الأول أو ابدأ بسيت عادي أولاً
+    </div>`;
+    document.getElementById('warmup-modal').classList.add('open');
+    return;
+  }
+
+  const sets = WARMUP_PROTOCOL.map(([pct, reps, purpose]) => {
+    const raw = workWeight * pct;
+    const weight = isBar ? _roundToPlate(raw, barWeight) : Math.round(raw / 2.5) * 2.5;
+    return { pct: Math.round(pct * 100), weight: Math.max(weight, barWeight), reps, purpose };
+  }).filter(s => s.weight < workWeight); // remove any that equal/exceed work weight
+
+  preview.innerHTML = sets.map((s, i) => `
+    <div class="warmup-set-preview">
+      <div class="warmup-set-pct">${s.pct}%</div>
+      <div class="warmup-set-info">
+        <div class="warmup-set-weight">${s.weight} kg</div>
+        <div class="warmup-set-reps">${s.reps} رباعة</div>
+      </div>
+      <div class="warmup-set-purpose">${s.purpose}</div>
+    </div>`).join('');
+
+  document.getElementById('warmup-modal').classList.add('open');
+}
+
+function closeWarmupModal() {
+  document.getElementById('warmup-modal').classList.remove('open');
+  _warmupEi = null;
+}
+
+function confirmWarmup() {
+  if (_warmupEi === null) return;
+  const ei = _warmupEi;
+  const ex = activeWorkout.exercises[ei];
+  const workWeight = _getWorkWeight(ei);
+  const isBar = _isBarbell(ei);
+  const barWeight = isBar ? 20 : 0;
+
+  if (workWeight <= 0) { closeWarmupModal(); return; }
+
+  // Remove existing warmup sets first
+  ex.sets = ex.sets.filter(s => s.setType !== 'warmup');
+
+  // Build warmup sets
+  const warmupSets = WARMUP_PROTOCOL
+    .map(([pct, reps]) => {
+      const raw = workWeight * pct;
+      const weight = isBar ? _roundToPlate(raw, barWeight) : Math.round(raw / 2.5) * 2.5;
+      return { weight: Math.max(weight, barWeight), reps, done: false, setType: 'warmup' };
+    })
+    .filter(s => s.weight < workWeight);
+
+  // Prepend warmup sets before working sets
+  ex.sets = [...warmupSets, ...ex.sets];
+
+  state.activeWorkout = activeWorkout;
+  saveState();
+  renderActiveExercises();
+  closeWarmupModal();
+  showToast('🔥 تمت إضافة ' + warmupSets.length + ' سيتات إحماء');
 }
 
 // ─── ACTIVE WORKOUT DRAG REORDER ───
@@ -5262,6 +5458,31 @@ function renderProgEditLib() {
   <div id="pedit-lib-list"></div>
 </div>
 
+
+<!-- SMART WARM-UP MODAL -->
+<div id="warmup-modal">
+  <div class="warmup-sheet">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <div>
+        <div class="modal-title" style="margin-bottom:0">🔥 إحماء ذكي</div>
+        <div style="font-family:var(--font-condensed);font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-top:2px" id="warmup-ex-name"></div>
+      </div>
+      <button onclick="closeWarmupModal()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:7px 14px;font-family:var(--font-display);font-size:12px;cursor:pointer">✕</button>
+    </div>
+    <div style="font-family:var(--font-condensed);font-size:11px;color:var(--text-muted);margin-bottom:14px;padding:8px 10px;background:rgba(240,165,0,0.06);border-radius:8px;border:1px solid rgba(240,165,0,0.15)">
+      📊 بناءً على وزن العمل: <strong id="warmup-work-weight" style="color:var(--gold)"></strong>
+    </div>
+    <div id="warmup-sets-preview"></div>
+    <div style="display:flex;gap:10px;margin-top:14px">
+      <button onclick="confirmWarmup()" style="flex:1;background:linear-gradient(135deg,#b08000,#f0a500);border:none;color:#000;border-radius:12px;padding:14px;font-family:var(--font-display);font-size:15px;font-weight:700;letter-spacing:1px;cursor:pointer">
+        🔥 إضافة سيتات الإحماء
+      </button>
+      <button onclick="closeWarmupModal()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text-muted);border-radius:12px;padding:14px 16px;font-family:var(--font-condensed);font-size:13px;cursor:pointer">إلغاء</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
 
@@ -5301,6 +5522,31 @@ function renderProgEditLib() {
   <input type="text" class="prog-edit-search" placeholder="🔍 ابحث عن تمرين..." id="pedit-search" oninput="renderProgEditLib()">
   <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px;scrollbar-width:none" id="pedit-muscle-filters"></div>
   <div id="pedit-lib-list"></div>
+</div>
+
+
+<!-- SMART WARM-UP MODAL -->
+<div id="warmup-modal">
+  <div class="warmup-sheet">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <div>
+        <div class="modal-title" style="margin-bottom:0">🔥 إحماء ذكي</div>
+        <div style="font-family:var(--font-condensed);font-size:10px;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;margin-top:2px" id="warmup-ex-name"></div>
+      </div>
+      <button onclick="closeWarmupModal()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:7px 14px;font-family:var(--font-display);font-size:12px;cursor:pointer">✕</button>
+    </div>
+    <div style="font-family:var(--font-condensed);font-size:11px;color:var(--text-muted);margin-bottom:14px;padding:8px 10px;background:rgba(240,165,0,0.06);border-radius:8px;border:1px solid rgba(240,165,0,0.15)">
+      📊 بناءً على وزن العمل: <strong id="warmup-work-weight" style="color:var(--gold)"></strong>
+    </div>
+    <div id="warmup-sets-preview"></div>
+    <div style="display:flex;gap:10px;margin-top:14px">
+      <button onclick="confirmWarmup()" style="flex:1;background:linear-gradient(135deg,#b08000,#f0a500);border:none;color:#000;border-radius:12px;padding:14px;font-family:var(--font-display);font-size:15px;font-weight:700;letter-spacing:1px;cursor:pointer">
+        🔥 إضافة سيتات الإحماء
+      </button>
+      <button onclick="closeWarmupModal()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text-muted);border-radius:12px;padding:14px 16px;font-family:var(--font-condensed);font-size:13px;cursor:pointer">إلغاء</button>
+    </div>
+  </div>
 </div>
 
 </body>
