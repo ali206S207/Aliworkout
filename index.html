@@ -2733,8 +2733,9 @@ ${gymsHtml || '<section><p class="empty">لا توجد جيمات محفوظة</
       </div>
       <button onclick="closeWarmupModal()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:7px 14px;font-family:var(--font-display);font-size:12px;cursor:pointer">✕</button>
     </div>
-    <div style="font-family:var(--font-condensed);font-size:11px;color:var(--text-muted);margin-bottom:14px;padding:8px 10px;background:rgba(240,165,0,0.06);border-radius:8px;border:1px solid rgba(240,165,0,0.15)">
-      📊 بناءً على وزن العمل: <strong id="warmup-work-weight" style="color:var(--gold)"></strong>
+    <div style="font-family:var(--font-condensed);font-size:11px;color:var(--text-muted);margin-bottom:14px;padding:8px 10px;background:rgba(240,165,0,0.06);border-radius:8px;border:1px solid rgba(240,165,0,0.15);line-height:1.6">
+      📊 وزن العمل: <strong id="warmup-work-weight" style="color:var(--gold)"></strong><br>
+      <span style="font-size:10px;opacity:0.7">أوزان تصاعدية + رباعات تنازلية = طاقة محفوظة للوزن الأساسي</span>
     </div>
     <div id="warmup-sets-preview"></div>
     <div style="display:flex;gap:10px;margin-top:14px">
@@ -3588,13 +3589,14 @@ function buildSetPrevRow(ei, si) {
 // ─── SMART WARM-UP ───
 let _warmupEi = null;
 
-// Warm-up protocol: [pct_of_work, reps, purpose]
+// Warm-up protocol (Gemini/science-based): [pct_of_work, reps, purpose, rest_sec]
+// Bar only → 10-12 reps, then 30%→6, 60%→3, 80%→1 (optional)
+// Decreasing reps = avoid lactate buildup, protect CNS energy
 const WARMUP_PROTOCOL = [
-  [0.40, 10, 'تنشيط عام — دم وحركة'],
-  [0.55,  8, 'إحماء عضلي'],
-  [0.70,  5, 'تجهيز جهاز عصبي'],
-  [0.85,  3, 'تحريض قوة'],
-  [0.92,  1, 'سيت تفعيل'],
+  [0,    12, 'بار فاضي — تصحية العضلة وتظبيط التكنيك', 30],
+  [0.30,  6, '30% — إحماء عضلي خفيف', 60],
+  [0.60,  3, '60% — تجهيز جهاز عصبي', 90],
+  [0.80,  1, '80% — تفعيل CNS (اختياري)', 120],
 ];
 
 function _roundToPlate(weight, barWeight) {
@@ -3685,9 +3687,13 @@ function confirmWarmup() {
   // Build warmup sets
   const warmupSets = WARMUP_PROTOCOL
     .map(([pct, reps]) => {
+      if (pct === 0) {
+        // Empty bar set
+        return { weight: isBar ? barWeight : Math.round(workWeight * 0.20 / 2.5) * 2.5, reps, done: false, setType: 'warmup' };
+      }
       const raw = workWeight * pct;
       const weight = isBar ? _roundToPlate(raw, barWeight) : Math.round(raw / 2.5) * 2.5;
-      return { weight: Math.max(weight, barWeight), reps, done: false, setType: 'warmup' };
+      return { weight: Math.max(weight, isBar ? barWeight : 0), reps, done: false, setType: 'warmup' };
     })
     .filter(s => s.weight < workWeight);
 
