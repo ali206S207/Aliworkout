@@ -1385,6 +1385,133 @@ body::after{
   color:var(--text-muted);text-align:right;
 }
 
+
+/* ─── GUIDED WARMUP SCREEN ─── */
+#guided-warmup{
+  display:none;position:fixed;inset:0;
+  background:var(--bg);z-index:2000;
+  overflow-y:auto;padding:20px 16px;
+  flex-direction:column;align-items:center;justify-content:flex-start;
+}
+#guided-warmup.open{display:flex}
+
+.gw-header{
+  width:100%;display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:24px;
+}
+.gw-title{
+  font-family:var(--font-display);font-size:13px;font-weight:700;
+  text-transform:uppercase;letter-spacing:3px;color:var(--text-muted);
+}
+.gw-close{
+  background:var(--bg2);border:1px solid var(--border);
+  color:var(--text-muted);border-radius:var(--r-sm);
+  padding:7px 14px;font-family:var(--font-main);font-size:12px;cursor:pointer;
+}
+
+/* progress dots */
+.gw-dots{
+  display:flex;gap:6px;margin-bottom:32px;
+}
+.gw-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--bg4);border:1px solid var(--border);
+  transition:all .3s cubic-bezier(0.4,0,0.2,1);
+}
+.gw-dot.done{background:var(--green);border-color:var(--green);transform:scale(1.1)}
+.gw-dot.active{background:var(--gold);border-color:var(--gold);transform:scale(1.3);box-shadow:0 0 10px rgba(232,150,10,0.5)}
+.gw-dot.rest-active{background:var(--red);border-color:var(--red);transform:scale(1.3);box-shadow:0 0 10px rgba(232,34,42,0.5)}
+
+/* current set block */
+.gw-set-block{
+  width:100%;text-align:center;margin-bottom:32px;
+}
+.gw-set-label{
+  font-family:var(--font-main);font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:3px;
+  color:var(--text-muted);margin-bottom:8px;
+}
+.gw-set-weight{
+  font-family:var(--font-display);font-size:72px;font-weight:700;
+  color:var(--text);letter-spacing:-3px;line-height:1;
+}
+.gw-set-unit{
+  font-family:var(--font-display);font-size:28px;color:var(--text-muted);
+  font-weight:400;
+}
+.gw-set-reps{
+  font-family:var(--font-main);font-size:18px;color:var(--text-dim);
+  margin-top:6px;letter-spacing:1px;
+}
+.gw-set-purpose{
+  font-family:var(--font-main);font-size:12px;color:var(--text-muted);
+  margin-top:8px;letter-spacing:0.5px;
+}
+
+/* rest countdown */
+.gw-rest-block{
+  display:none;width:100%;text-align:center;margin-bottom:32px;
+}
+.gw-rest-block.show{display:block}
+.gw-rest-label{
+  font-family:var(--font-main);font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:3px;color:var(--red);margin-bottom:16px;
+}
+.gw-rest-num{
+  font-family:var(--font-display);font-size:96px;font-weight:700;
+  color:var(--text);letter-spacing:-4px;line-height:1;
+  animation:timerGlow 2s ease-in-out infinite;
+}
+.gw-rest-unit{
+  font-family:var(--font-condensed);font-size:18px;color:var(--text-muted);letter-spacing:2px;
+}
+
+/* progress bar under rest num */
+.gw-rest-bar{
+  width:100%;height:3px;background:var(--bg4);
+  border-radius:2px;margin:16px 0;overflow:hidden;
+}
+.gw-rest-bar-fill{
+  height:100%;width:100%;
+  background:linear-gradient(90deg,var(--red-dim),var(--red));
+  border-radius:2px;transition:width 1s linear;
+  box-shadow:0 0 8px var(--red);
+}
+
+/* next set preview */
+.gw-next-preview{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--r-md);padding:12px 16px;
+  margin-bottom:24px;width:100%;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.gw-next-label{
+  font-family:var(--font-main);font-size:10px;
+  text-transform:uppercase;letter-spacing:2px;color:var(--text-muted);
+}
+.gw-next-val{
+  font-family:var(--font-display);font-size:18px;font-weight:700;color:var(--text-dim);
+}
+
+/* action button */
+.gw-action-btn{
+  width:100%;background:linear-gradient(135deg,#b01018,#e8222a);
+  border:none;border-radius:var(--r-md);padding:18px;
+  color:#fff;font-family:var(--font-display);font-size:18px;
+  font-weight:700;text-transform:uppercase;letter-spacing:2px;
+  cursor:pointer;box-shadow:var(--shadow-red);
+  transition:all .15s;
+}
+.gw-action-btn:active{transform:scale(0.97);opacity:0.9}
+.gw-action-btn.rest-btn{
+  background:linear-gradient(135deg,#6b0e12,#a01018);
+  font-size:15px;letter-spacing:1px;
+}
+.gw-action-btn.finish-btn{
+  background:linear-gradient(135deg,#0e6b1e,#1ec653);
+  color:#000;
+}
+
 </style>
 
 <script>
@@ -2788,12 +2915,65 @@ ${gymsHtml || '<section><p class="empty">لا توجد جيمات محفوظة</
     </div>
     <div id="warmup-sets-preview"></div>
     <div style="display:flex;gap:10px;margin-top:14px">
-      <button onclick="confirmWarmup()" style="flex:1;background:linear-gradient(135deg,#b08000,#f0a500);border:none;color:#000;border-radius:12px;padding:14px;font-family:var(--font-display);font-size:15px;font-weight:700;letter-spacing:1px;cursor:pointer">
-        🔥 إضافة سيتات الإحماء
+      <button onclick="closeWarmupModal();openGuidedWarmup(_warmupEi)" style="flex:1;background:linear-gradient(135deg,#b08000,#e8960a);border:none;color:#000;border-radius:12px;padding:14px;font-family:var(--font-display);font-size:15px;font-weight:700;letter-spacing:1px;cursor:pointer">
+        🔥 ابدأ الإحماء
       </button>
-      <button onclick="closeWarmupModal()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text-muted);border-radius:12px;padding:14px 16px;font-family:var(--font-condensed);font-size:13px;cursor:pointer">إلغاء</button>
+      <button onclick="closeWarmupModal()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text-muted);border-radius:12px;padding:14px 16px;font-family:var(--font-main);font-size:13px;cursor:pointer">إلغاء</button>
     </div>
   </div>
+</div>
+
+
+<!-- GUIDED WARMUP SCREEN -->
+<div id="guided-warmup">
+  <div class="gw-header">
+    <div class="gw-title">🔥 إحماء ذكي</div>
+    <button class="gw-close" onclick="closeGuidedWarmup()">✕ إلغاء</button>
+  </div>
+
+  <!-- progress dots -->
+  <div class="gw-dots" id="gw-dots"></div>
+
+  <!-- Current set info (shown during set) -->
+  <div class="gw-set-block" id="gw-set-block">
+    <div class="gw-set-label" id="gw-set-label">السيت الأول</div>
+    <div>
+      <span class="gw-set-weight" id="gw-set-weight">—</span>
+      <span class="gw-set-unit">kg</span>
+    </div>
+    <div class="gw-set-reps" id="gw-set-reps"></div>
+    <div class="gw-set-purpose" id="gw-set-purpose"></div>
+  </div>
+
+  <!-- Rest countdown (shown during rest) -->
+  <div class="gw-rest-block" id="gw-rest-block">
+    <div class="gw-rest-label">وقت الراحة</div>
+    <div class="gw-rest-num" id="gw-rest-num">30</div>
+    <div class="gw-rest-unit">ثانية</div>
+    <div class="gw-rest-bar"><div class="gw-rest-bar-fill" id="gw-rest-bar-fill"></div></div>
+  </div>
+
+  <!-- Next set preview -->
+  <div class="gw-next-preview" id="gw-next-preview" style="display:none">
+    <div>
+      <div class="gw-next-label">السيت الجاي</div>
+      <div class="gw-next-val" id="gw-next-val"></div>
+    </div>
+    <div style="font-size:24px">→</div>
+  </div>
+
+  <!-- Action button -->
+  <button class="gw-action-btn" id="gw-action-btn" onclick="gwAction()">
+    ✓ خلصت السيت
+  </button>
+
+  <!-- Skip rest button (shown during rest) -->
+  <button id="gw-skip-btn" onclick="gwSkipRest()"
+    style="display:none;margin-top:12px;width:100%;background:none;border:1px solid var(--border);
+    color:var(--text-muted);border-radius:var(--r-md);padding:12px;font-family:var(--font-main);
+    font-size:13px;cursor:pointer">
+    تخطى الراحة
+  </button>
 </div>
 
 </body>
@@ -3519,7 +3699,7 @@ function renderActiveExercises() {
           </div>
         </div>
         <div style="text-align:right;flex-shrink:0">
-          <button onclick="openWarmupModal(${ei})" style="background:rgba(240,165,0,0.1);border:1px solid rgba(240,165,0,0.25);color:var(--gold);border-radius:8px;padding:5px 10px;font-family:var(--font-condensed);font-size:11px;font-weight:700;cursor:pointer;width:100%;margin-bottom:6px;letter-spacing:0.5px">🔥 إحماء</button>
+          <button onclick="${ei===0?'openGuidedWarmup('+ei+')':'openGuidedWarmup('+ei+')'}" style="background:rgba(240,165,0,0.1);border:1px solid rgba(240,165,0,0.25);color:var(--gold);border-radius:8px;padding:5px 10px;font-family:var(--font-main);font-size:11px;font-weight:700;cursor:pointer;width:100%;margin-bottom:6px">${ei===0?'🔥 إحماء':'⚡ تنشيط'}</button>
           <div style="font-family:var(--font-condensed);font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px">راحة</div>
           <select onchange="setExRestTime(${ei},this.value)" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 6px;font-family:var(--font-condensed);font-size:12px;font-weight:600">
             ${[30,60,90,120,180,240].map(s=>`<option value="${s}" ${(ex.restTime||90)==s?'selected':''}>${s}s</option>`).join('')}
@@ -3765,6 +3945,230 @@ function confirmWarmup() {
   renderActiveExercises();
   closeWarmupModal();
   showToast('🔥 تمت إضافة ' + warmupSets.length + ' سيتات إحماء');
+}
+
+
+// ─── GUIDED WARMUP SCREEN ───
+let _gwSets = [];       // computed warmup sets
+let _gwStep = 0;        // current step index
+let _gwPhase = 'set';   // 'set' or 'rest'
+let _gwRestInterval = null;
+let _gwRestRemaining = 0;
+let _gwRestTotal = 0;
+let _gwEi = null;       // exercise index (null = standalone)
+let _gwIsFirst = true;  // first exercise in workout?
+
+// Rest times per step [bar, 30%, 60%, 80%]
+const GW_REST_TIMES = [30, 60, 90, 120];
+
+function openGuidedWarmup(ei) {
+  _gwEi = ei;
+  const ex = activeWorkout.exercises[ei];
+
+  // Determine if first exercise
+  _gwIsFirst = (ei === 0);
+
+  // Build warmup sets
+  const profile = _getWorkProfile(ei);
+  const { weight: workWeight, avgReps, sets: numSets } = profile;
+  const isBar = _isBarbell(ei);
+  const barWeight = isBar ? 20 : 0;
+
+  if (workWeight <= 0) {
+    showToast('حدد وزن السيت الأول الأول');
+    return;
+  }
+
+  const volumeFactor = (() => {
+    const planned = workWeight * avgReps * numSets;
+    const ref = workWeight * 5 * 3;
+    return Math.min(1, Math.max(0, (planned - ref) / (ref * 3)));
+  })();
+
+  // First exercise: full protocol. Others: single light set only
+  let steps;
+  if (_gwIsFirst) {
+    steps = [
+      { pct: 0,    label: 'بار فاضي', purpose: 'تصحية العضلة والتكنيك', restIdx: 0 },
+      { pct: 0.30, label: '30%',      purpose: 'إحماء عضلي',             restIdx: 1 },
+      { pct: 0.60, label: '60%',      purpose: 'تجهيز جهاز عصبي',        restIdx: 2 },
+      { pct: 0.80, label: '80%',      purpose: 'تفعيل CNS',              restIdx: 3 },
+    ];
+  } else {
+    steps = [
+      { pct: 0.50, label: '50%', purpose: 'سيت تنشيط سريع', restIdx: 1 },
+    ];
+  }
+
+  _gwSets = steps.map((step, i) => {
+    let weight;
+    if (step.pct === 0) {
+      weight = isBar ? barWeight : Math.round(workWeight * 0.20 / 2.5) * 2.5;
+    } else {
+      const raw = workWeight * step.pct;
+      weight = isBar ? _roundToPlate(raw, barWeight) : Math.round(raw / 2.5) * 2.5;
+      weight = Math.max(weight, isBar ? barWeight : 0);
+    }
+    const reps = _calcWarmupReps(avgReps, volumeFactor, step.pct);
+    return {
+      weight,
+      reps: Math.max(1, reps),
+      label: step.label,
+      purpose: step.purpose,
+      rest: GW_REST_TIMES[step.restIdx]
+    };
+  }).filter(s => s.weight < workWeight);
+
+  if (!_gwSets.length) {
+    showToast('الوزن خفيف — مش محتاج إحماء');
+    return;
+  }
+
+  _gwStep = 0;
+  _gwPhase = 'set';
+  _gwRenderStep();
+  document.getElementById('guided-warmup').classList.add('open');
+  // Hide warmup modal if open
+  document.getElementById('warmup-modal').classList.remove('open');
+}
+
+function closeGuidedWarmup() {
+  _gwClearRest();
+  document.getElementById('guided-warmup').classList.remove('open');
+}
+
+function _gwRenderDots() {
+  const dots = document.getElementById('gw-dots');
+  if (!dots) return;
+  dots.innerHTML = _gwSets.map((_, i) => {
+    let cls = 'gw-dot';
+    if (i < _gwStep) cls += ' done';
+    else if (i === _gwStep) cls += _gwPhase === 'rest' ? ' rest-active' : ' active';
+    return `<div class="${cls}"></div>`;
+  }).join('');
+}
+
+function _gwRenderStep() {
+  const s = _gwSets[_gwStep];
+  const isLast = _gwStep === _gwSets.length - 1;
+
+  _gwRenderDots();
+
+  if (_gwPhase === 'set') {
+    // Show set block, hide rest block
+    document.getElementById('gw-set-block').style.display = 'block';
+    document.getElementById('gw-rest-block').classList.remove('show');
+    document.getElementById('gw-skip-btn').style.display = 'none';
+
+    // Fill set info
+    document.getElementById('gw-set-label').textContent =
+      'السيت ' + (_gwStep + 1) + ' من ' + _gwSets.length + ' — ' + s.label;
+    document.getElementById('gw-set-weight').textContent = s.weight;
+    document.getElementById('gw-set-reps').textContent = s.reps + ' رباعة';
+    document.getElementById('gw-set-purpose').textContent = s.purpose;
+
+    // Next preview
+    const nextEl = document.getElementById('gw-next-preview');
+    const nextVal = document.getElementById('gw-next-val');
+    if (!isLast) {
+      const next = _gwSets[_gwStep + 1];
+      nextEl.style.display = 'flex';
+      nextVal.textContent = next.weight + ' kg × ' + next.reps;
+    } else {
+      nextEl.style.display = 'none';
+    }
+
+    // Action button
+    const btn = document.getElementById('gw-action-btn');
+    btn.textContent = '✓ خلصت السيت';
+    btn.className = 'gw-action-btn';
+
+  } else {
+    // Rest phase
+    document.getElementById('gw-set-block').style.display = 'none';
+    document.getElementById('gw-rest-block').classList.add('show');
+    document.getElementById('gw-skip-btn').style.display = 'block';
+
+    const btn = document.getElementById('gw-action-btn');
+    btn.textContent = 'تخطى الراحة';
+    btn.className = 'gw-action-btn rest-btn';
+
+    // Start countdown
+    _gwRestRemaining = s.rest;
+    _gwRestTotal = s.rest;
+    _gwTickRest();
+  }
+}
+
+function _gwTickRest() {
+  _gwClearRest();
+  _gwUpdateRestUI();
+  _gwRestInterval = setInterval(() => {
+    _gwRestRemaining--;
+    _gwUpdateRestUI();
+    if (_gwRestRemaining <= 0) {
+      _gwClearRest();
+      if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+      _gwNextStep();
+    }
+  }, 1000);
+}
+
+function _gwUpdateRestUI() {
+  const numEl = document.getElementById('gw-rest-num');
+  const fillEl = document.getElementById('gw-rest-bar-fill');
+  if (numEl) numEl.textContent = _gwRestRemaining;
+  if (fillEl) {
+    const pct = _gwRestTotal > 0 ? (_gwRestRemaining / _gwRestTotal) * 100 : 0;
+    fillEl.style.width = pct + '%';
+  }
+}
+
+function _gwClearRest() {
+  if (_gwRestInterval) { clearInterval(_gwRestInterval); _gwRestInterval = null; }
+}
+
+function gwAction() {
+  if (_gwPhase === 'set') {
+    // Move to rest phase (unless last set)
+    const isLast = _gwStep === _gwSets.length - 1;
+    if (isLast) {
+      _gwFinish();
+    } else {
+      _gwPhase = 'rest';
+      _gwRenderStep();
+    }
+  } else {
+    // Skip rest
+    gwSkipRest();
+  }
+}
+
+function gwSkipRest() {
+  _gwClearRest();
+  _gwNextStep();
+}
+
+function _gwNextStep() {
+  _gwStep++;
+  if (_gwStep >= _gwSets.length) {
+    _gwFinish();
+    return;
+  }
+  _gwPhase = 'set';
+  _gwRenderDots();
+  _gwRenderStep();
+}
+
+function _gwFinish() {
+  _gwClearRest();
+  document.getElementById('guided-warmup').classList.remove('open');
+
+  if (_gwIsFirst) {
+    showToast('✅ انتهى الإحماء — استنى دقيقتين ثم ابدأ وزنك الأساسي');
+  } else {
+    showToast('✅ سيت التنشيط خلص — ابدأ وزنك');
+  }
 }
 
 // ─── ACTIVE WORKOUT DRAG REORDER ───
@@ -5558,6 +5962,59 @@ function renderProgEditLib() {
   </div>
 </div>
 
+
+<!-- GUIDED WARMUP SCREEN -->
+<div id="guided-warmup">
+  <div class="gw-header">
+    <div class="gw-title">🔥 إحماء ذكي</div>
+    <button class="gw-close" onclick="closeGuidedWarmup()">✕ إلغاء</button>
+  </div>
+
+  <!-- progress dots -->
+  <div class="gw-dots" id="gw-dots"></div>
+
+  <!-- Current set info (shown during set) -->
+  <div class="gw-set-block" id="gw-set-block">
+    <div class="gw-set-label" id="gw-set-label">السيت الأول</div>
+    <div>
+      <span class="gw-set-weight" id="gw-set-weight">—</span>
+      <span class="gw-set-unit">kg</span>
+    </div>
+    <div class="gw-set-reps" id="gw-set-reps"></div>
+    <div class="gw-set-purpose" id="gw-set-purpose"></div>
+  </div>
+
+  <!-- Rest countdown (shown during rest) -->
+  <div class="gw-rest-block" id="gw-rest-block">
+    <div class="gw-rest-label">وقت الراحة</div>
+    <div class="gw-rest-num" id="gw-rest-num">30</div>
+    <div class="gw-rest-unit">ثانية</div>
+    <div class="gw-rest-bar"><div class="gw-rest-bar-fill" id="gw-rest-bar-fill"></div></div>
+  </div>
+
+  <!-- Next set preview -->
+  <div class="gw-next-preview" id="gw-next-preview" style="display:none">
+    <div>
+      <div class="gw-next-label">السيت الجاي</div>
+      <div class="gw-next-val" id="gw-next-val"></div>
+    </div>
+    <div style="font-size:24px">→</div>
+  </div>
+
+  <!-- Action button -->
+  <button class="gw-action-btn" id="gw-action-btn" onclick="gwAction()">
+    ✓ خلصت السيت
+  </button>
+
+  <!-- Skip rest button (shown during rest) -->
+  <button id="gw-skip-btn" onclick="gwSkipRest()"
+    style="display:none;margin-top:12px;width:100%;background:none;border:1px solid var(--border);
+    color:var(--text-muted);border-radius:var(--r-md);padding:12px;font-family:var(--font-main);
+    font-size:13px;cursor:pointer">
+    تخطى الراحة
+  </button>
+</div>
+
 </body>
 </html>
 
@@ -5622,6 +6079,59 @@ function renderProgEditLib() {
       <button onclick="closeWarmupModal()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text-muted);border-radius:12px;padding:14px 16px;font-family:var(--font-condensed);font-size:13px;cursor:pointer">إلغاء</button>
     </div>
   </div>
+</div>
+
+
+<!-- GUIDED WARMUP SCREEN -->
+<div id="guided-warmup">
+  <div class="gw-header">
+    <div class="gw-title">🔥 إحماء ذكي</div>
+    <button class="gw-close" onclick="closeGuidedWarmup()">✕ إلغاء</button>
+  </div>
+
+  <!-- progress dots -->
+  <div class="gw-dots" id="gw-dots"></div>
+
+  <!-- Current set info (shown during set) -->
+  <div class="gw-set-block" id="gw-set-block">
+    <div class="gw-set-label" id="gw-set-label">السيت الأول</div>
+    <div>
+      <span class="gw-set-weight" id="gw-set-weight">—</span>
+      <span class="gw-set-unit">kg</span>
+    </div>
+    <div class="gw-set-reps" id="gw-set-reps"></div>
+    <div class="gw-set-purpose" id="gw-set-purpose"></div>
+  </div>
+
+  <!-- Rest countdown (shown during rest) -->
+  <div class="gw-rest-block" id="gw-rest-block">
+    <div class="gw-rest-label">وقت الراحة</div>
+    <div class="gw-rest-num" id="gw-rest-num">30</div>
+    <div class="gw-rest-unit">ثانية</div>
+    <div class="gw-rest-bar"><div class="gw-rest-bar-fill" id="gw-rest-bar-fill"></div></div>
+  </div>
+
+  <!-- Next set preview -->
+  <div class="gw-next-preview" id="gw-next-preview" style="display:none">
+    <div>
+      <div class="gw-next-label">السيت الجاي</div>
+      <div class="gw-next-val" id="gw-next-val"></div>
+    </div>
+    <div style="font-size:24px">→</div>
+  </div>
+
+  <!-- Action button -->
+  <button class="gw-action-btn" id="gw-action-btn" onclick="gwAction()">
+    ✓ خلصت السيت
+  </button>
+
+  <!-- Skip rest button (shown during rest) -->
+  <button id="gw-skip-btn" onclick="gwSkipRest()"
+    style="display:none;margin-top:12px;width:100%;background:none;border:1px solid var(--border);
+    color:var(--text-muted);border-radius:var(--r-md);padding:12px;font-family:var(--font-main);
+    font-size:13px;cursor:pointer">
+    تخطى الراحة
+  </button>
 </div>
 
 </body>
