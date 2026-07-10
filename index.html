@@ -3738,8 +3738,8 @@ function renderActiveExercises() {
           </select>
         </div>
       </div>
-      \${buildMuscleMapHTML(ex.muscle)}
-      \${buildLastSessionBanner(ex.id)}
+      ${buildMuscleMapHTML(ex.muscle)}
+      ${buildLastSessionBanner(ex.id)}
       <div id="sets-${ei}" style="margin-top:8px">
         ${ex.sets.map((s, si) => renderSetRow(ei, si, s)).join('')}
       </div>
