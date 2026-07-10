@@ -1512,6 +1512,38 @@ body::after{
   color:#000;
 }
 
+
+/* ─── MUSCLE MAP ─── */
+.muscle-map-wrap{
+  padding:10px 14px 6px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:14px;
+}
+.muscle-map-svg-wrap{
+  position:relative;flex-shrink:0;
+}
+.muscle-map-svg-wrap svg{display:block}
+.muscle-map-info{flex:1;min-width:0}
+.muscle-map-primary{
+  font-family:var(--font-display);font-size:15px;font-weight:700;
+  text-transform:uppercase;letter-spacing:1px;color:var(--red);
+  line-height:1;
+}
+.muscle-map-secondary{
+  font-family:var(--font-main);font-size:11px;color:var(--text-muted);
+  margin-top:4px;
+}
+.muscle-map-legend{
+  display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;
+}
+.muscle-map-legend-item{
+  display:flex;align-items:center;gap:4px;
+  font-family:var(--font-main);font-size:10px;color:var(--text-muted);
+}
+.muscle-map-legend-dot{
+  width:8px;height:8px;border-radius:50%;flex-shrink:0;
+}
+
 </style>
 
 <script>
@@ -3706,6 +3738,7 @@ function renderActiveExercises() {
           </select>
         </div>
       </div>
+      \${buildMuscleMapHTML(ex.muscle)}
       \${buildLastSessionBanner(ex.id)}
       <div id="sets-${ei}" style="margin-top:8px">
         ${ex.sets.map((s, si) => renderSetRow(ei, si, s)).join('')}
@@ -3947,6 +3980,205 @@ function confirmWarmup() {
   showToast('🔥 تمت إضافة ' + warmupSets.length + ' سيتات إحماء');
 }
 
+
+
+// ─── MUSCLE MAP ───
+
+// Map muscle group → SVG path IDs (front and back body)
+const MUSCLE_MAP_DATA = {
+  Chest: {
+    primary: ['chest-l','chest-r'],
+    secondary: ['front-shoulder-l','front-shoulder-r','tricep-l','tricep-r'],
+    label: 'الصدر',
+    synergist: 'الكتف الأمامي، التراي'
+  },
+  Back: {
+    primary: ['lat-l','lat-r','trap-upper','trap-mid'],
+    secondary: ['rear-delt-l','rear-delt-r','bicep-l','bicep-r'],
+    label: 'الظهر',
+    synergist: 'الكتف الخلفي، الباي'
+  },
+  Shoulders: {
+    primary: ['front-shoulder-l','front-shoulder-r','side-delt-l','side-delt-r','rear-delt-l','rear-delt-r'],
+    secondary: ['trap-upper','tricep-l','tricep-r'],
+    label: 'الكتف',
+    synergist: 'التراب، التراي'
+  },
+  Biceps: {
+    primary: ['bicep-l','bicep-r'],
+    secondary: ['forearm-l','forearm-r'],
+    label: 'الباي سبس',
+    synergist: 'الساعد'
+  },
+  Triceps: {
+    primary: ['tricep-l','tricep-r'],
+    secondary: ['front-shoulder-l','front-shoulder-r'],
+    label: 'التراي سبس',
+    synergist: 'الكتف الأمامي'
+  },
+  Legs: {
+    primary: ['quad-l','quad-r','glute-l','glute-r'],
+    secondary: ['hamstring-l','hamstring-r','calf-l','calf-r'],
+    label: 'الأرجل',
+    synergist: 'الهامسترينج، الكالف'
+  },
+  Abs: {
+    primary: ['abs-upper','abs-lower'],
+    secondary: ['oblique-l','oblique-r'],
+    label: 'البطن',
+    synergist: 'المائل'
+  },
+  Calves: {
+    primary: ['calf-l','calf-r'],
+    secondary: ['hamstring-l','hamstring-r'],
+    label: 'الكالف',
+    synergist: 'الهامسترينج'
+  },
+};
+
+function buildMuscleMapSVG(muscle) {
+  const data = MUSCLE_MAP_DATA[muscle] || { primary: [], secondary: [], label: muscle, synergist: '' };
+
+  // Color function per path
+  function fillFor(id) {
+    if (data.primary.includes(id)) return '#e8222a';
+    if (data.secondary && data.secondary.includes(id)) return '#e8960a';
+    return 'rgba(255,255,255,0.07)';
+  }
+  function strokeFor(id) {
+    if (data.primary.includes(id)) return '#ff4a50';
+    if (data.secondary && data.secondary.includes(id)) return '#f0a500';
+    return 'rgba(255,255,255,0.12)';
+  }
+
+  // Build front body SVG (simplified anatomical)
+  const svg = `<svg width="90" height="140" viewBox="0 0 90 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Head -->
+    <ellipse cx="45" cy="10" rx="9" ry="10" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+    <!-- Neck -->
+    <rect x="41" y="19" width="8" height="6" rx="2" fill="rgba(255,255,255,0.06)"/>
+
+    <!-- FRONT SHOULDERS -->
+    <ellipse id="front-shoulder-l" cx="24" cy="32" rx="8" ry="7"
+      fill="${fillFor('front-shoulder-l')}" stroke="${strokeFor('front-shoulder-l')}" stroke-width="1"/>
+    <ellipse id="front-shoulder-r" cx="66" cy="32" rx="8" ry="7"
+      fill="${fillFor('front-shoulder-r')}" stroke="${strokeFor('front-shoulder-r')}" stroke-width="1"/>
+    <!-- SIDE DELT -->
+    <ellipse id="side-delt-l" cx="17" cy="36" rx="5" ry="6"
+      fill="${fillFor('side-delt-l')}" stroke="${strokeFor('side-delt-l')}" stroke-width="1"/>
+    <ellipse id="side-delt-r" cx="73" cy="36" rx="5" ry="6"
+      fill="${fillFor('side-delt-r')}" stroke="${strokeFor('side-delt-r')}" stroke-width="1"/>
+
+    <!-- CHEST -->
+    <path id="chest-l" d="M32 26 Q45 24 45 38 Q38 42 30 40 Q26 36 32 26Z"
+      fill="${fillFor('chest-l')}" stroke="${strokeFor('chest-l')}" stroke-width="1"/>
+    <path id="chest-r" d="M58 26 Q45 24 45 38 Q52 42 60 40 Q64 36 58 26Z"
+      fill="${fillFor('chest-r')}" stroke="${strokeFor('chest-r')}" stroke-width="1"/>
+
+    <!-- BICEPS -->
+    <path id="bicep-l" d="M14 40 Q10 48 12 56 Q17 58 20 56 Q22 48 20 40Z"
+      fill="${fillFor('bicep-l')}" stroke="${strokeFor('bicep-l')}" stroke-width="1"/>
+    <path id="bicep-r" d="M76 40 Q80 48 78 56 Q73 58 70 56 Q68 48 70 40Z"
+      fill="${fillFor('bicep-r')}" stroke="${strokeFor('bicep-r')}" stroke-width="1"/>
+
+    <!-- TRICEPS (side) -->
+    <path id="tricep-l" d="M13 42 Q8 50 10 58 Q13 60 15 58 Q14 50 16 42Z"
+      fill="${fillFor('tricep-l')}" stroke="${strokeFor('tricep-l')}" stroke-width="1"/>
+    <path id="tricep-r" d="M77 42 Q82 50 80 58 Q77 60 75 58 Q76 50 74 42Z"
+      fill="${fillFor('tricep-r')}" stroke="${strokeFor('tricep-r')}" stroke-width="1"/>
+
+    <!-- FOREARMS -->
+    <path id="forearm-l" d="M12 58 Q9 66 10 72 Q14 74 17 72 Q18 66 20 58Z"
+      fill="${fillFor('forearm-l')}" stroke="${strokeFor('forearm-l')}" stroke-width="1"/>
+    <path id="forearm-r" d="M78 58 Q81 66 80 72 Q76 74 73 72 Q72 66 70 58Z"
+      fill="${fillFor('forearm-r')}" stroke="${strokeFor('forearm-r')}" stroke-width="1"/>
+
+    <!-- ABS -->
+    <path id="abs-upper" d="M35 42 Q45 40 55 42 L54 58 Q45 60 36 58Z"
+      fill="${fillFor('abs-upper')}" stroke="${strokeFor('abs-upper')}" stroke-width="1"/>
+    <path id="abs-lower" d="M36 58 Q45 60 54 58 L53 72 Q45 74 37 72Z"
+      fill="${fillFor('abs-lower')}" stroke="${strokeFor('abs-lower')}" stroke-width="1"/>
+    <!-- abs lines -->
+    <line x1="45" y1="40" x2="45" y2="74" stroke="rgba(0,0,0,0.3)" stroke-width="0.8"/>
+    <line x1="36" y1="49" x2="54" y2="49" stroke="rgba(0,0,0,0.3)" stroke-width="0.8"/>
+    <line x1="36" y1="58" x2="54" y2="58" stroke="rgba(0,0,0,0.3)" stroke-width="0.8"/>
+    <line x1="36" y1="66" x2="54" y2="66" stroke="rgba(0,0,0,0.3)" stroke-width="0.8"/>
+
+    <!-- OBLIQUES -->
+    <path id="oblique-l" d="M30 46 Q33 54 34 66 Q29 68 27 62 Q26 54 28 46Z"
+      fill="${fillFor('oblique-l')}" stroke="${strokeFor('oblique-l')}" stroke-width="1"/>
+    <path id="oblique-r" d="M60 46 Q57 54 56 66 Q61 68 63 62 Q64 54 62 46Z"
+      fill="${fillFor('oblique-r')}" stroke="${strokeFor('oblique-r')}" stroke-width="1"/>
+
+    <!-- QUADS -->
+    <path id="quad-l" d="M29 76 Q24 90 25 106 Q33 110 38 106 Q40 90 37 76Z"
+      fill="${fillFor('quad-l')}" stroke="${strokeFor('quad-l')}" stroke-width="1"/>
+    <path id="quad-r" d="M61 76 Q66 90 65 106 Q57 110 52 106 Q50 90 53 76Z"
+      fill="${fillFor('quad-r')}" stroke="${strokeFor('quad-r')}" stroke-width="1"/>
+
+    <!-- CALVES (front visible) -->
+    <path id="calf-l" d="M26 110 Q23 120 24 130 Q30 133 34 130 Q35 120 34 110Z"
+      fill="${fillFor('calf-l')}" stroke="${strokeFor('calf-l')}" stroke-width="1"/>
+    <path id="calf-r" d="M64 110 Q67 120 66 130 Q60 133 56 130 Q55 120 56 110Z"
+      fill="${fillFor('calf-r')}" stroke="${strokeFor('calf-r')}" stroke-width="1"/>
+
+    <!-- GLUTES (hip area front) -->
+    <path id="glute-l" d="M30 74 Q26 78 27 84 Q32 86 37 84 Q38 78 36 74Z"
+      fill="${fillFor('glute-l')}" stroke="${strokeFor('glute-l')}" stroke-width="1"/>
+    <path id="glute-r" d="M60 74 Q64 78 63 84 Q58 86 53 84 Q52 78 54 74Z"
+      fill="${fillFor('glute-r')}" stroke="${strokeFor('glute-r')}" stroke-width="1"/>
+
+    <!-- HAMSTRINGS (back-visible on side) -->
+    <path id="hamstring-l" d="M26 86 Q22 96 23 108 Q28 111 32 108 Q33 96 30 86Z"
+      fill="${fillFor('hamstring-l')}" stroke="${strokeFor('hamstring-l')}" stroke-width="0.5" opacity="0.4"/>
+    <path id="hamstring-r" d="M64 86 Q68 96 67 108 Q62 111 58 108 Q57 96 60 86Z"
+      fill="${fillFor('hamstring-r')}" stroke="${strokeFor('hamstring-r')}" stroke-width="0.5" opacity="0.4"/>
+
+    <!-- BACK BODY (right side — lats, traps) -->
+    <!-- LAT -->
+    <path id="lat-l" d="M32 28 Q27 36 28 50 Q34 52 38 48 Q38 38 36 28Z"
+      fill="${fillFor('lat-l')}" stroke="${strokeFor('lat-l')}" stroke-width="1" opacity="0.5"/>
+    <path id="lat-r" d="M58 28 Q63 36 62 50 Q56 52 52 48 Q52 38 54 28Z"
+      fill="${fillFor('lat-r')}" stroke="${strokeFor('lat-r')}" stroke-width="1" opacity="0.5"/>
+
+    <!-- TRAP -->
+    <path id="trap-upper" d="M36 22 Q45 18 54 22 Q52 28 45 30 Q38 28 36 22Z"
+      fill="${fillFor('trap-upper')}" stroke="${strokeFor('trap-upper')}" stroke-width="1"/>
+    <path id="trap-mid" d="M34 28 Q45 26 56 28 Q54 36 45 38 Q36 36 34 28Z"
+      fill="${fillFor('trap-mid')}" stroke="${strokeFor('trap-mid')}" stroke-width="1" opacity="0.6"/>
+
+    <!-- REAR DELT -->
+    <path id="rear-delt-l" d="M22 28 Q18 34 20 40 Q25 42 28 38 Q28 32 24 28Z"
+      fill="${fillFor('rear-delt-l')}" stroke="${strokeFor('rear-delt-l')}" stroke-width="1" opacity="0.6"/>
+    <path id="rear-delt-r" d="M68 28 Q72 34 70 40 Q65 42 62 38 Q62 32 66 28Z"
+      fill="${fillFor('rear-delt-r')}" stroke="${strokeFor('rear-delt-r')}" stroke-width="1" opacity="0.6"/>
+  </svg>`;
+
+  return { svg, label: data.label, synergist: data.synergist };
+}
+
+function buildMuscleMapHTML(muscle) {
+  const { svg, label, synergist } = buildMuscleMapSVG(muscle);
+  return `
+  <div class="muscle-map-wrap">
+    <div class="muscle-map-svg-wrap">${svg}</div>
+    <div class="muscle-map-info">
+      <div style="font-family:var(--font-main);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--text-muted);margin-bottom:4px">العضلة المستهدفة</div>
+      <div class="muscle-map-primary">${label}</div>
+      ${synergist ? `<div class="muscle-map-secondary">مساعد: ${synergist}</div>` : ''}
+      <div class="muscle-map-legend">
+        <div class="muscle-map-legend-item">
+          <div class="muscle-map-legend-dot" style="background:var(--red)"></div>
+          <span>أساسي</span>
+        </div>
+        <div class="muscle-map-legend-item">
+          <div class="muscle-map-legend-dot" style="background:var(--gold)"></div>
+          <span>مساعد</span>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
 
 // ─── GUIDED WARMUP SCREEN ───
 let _gwSets = [];       // computed warmup sets
