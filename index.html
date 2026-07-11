@@ -4040,137 +4040,220 @@ function buildMuscleMapSVG(muscleDetail) {
   const primary = data.primary || [];
   const secondary = data.secondary || [];
 
+  // Glow colors
+  const RED = '#e8222a';
+  const GOLD = '#e8960a';
+  const BASE = 'rgba(255,255,255,0.08)';
+  const RED_GLOW = 'rgba(232,34,42,0.6)';
+  const GOLD_GLOW = 'rgba(232,150,10,0.4)';
+
   function fc(id) {
-    if (primary.includes(id))   return '#e8222a';
-    if (secondary.includes(id)) return '#e8960a';
-    return 'rgba(255,255,255,0.06)';
+    if (primary.includes(id))   return RED;
+    if (secondary.includes(id)) return GOLD;
+    return BASE;
   }
-  function sc(id) {
-    if (primary.includes(id))   return '#ff5a60';
-    if (secondary.includes(id)) return '#f0b030';
-    return 'rgba(255,255,255,0.1)';
+  function glow(id) {
+    if (primary.includes(id))   return `filter:drop-shadow(0 0 4px ${RED_GLOW})`;
+    if (secondary.includes(id)) return `filter:drop-shadow(0 0 3px ${GOLD_GLOW})`;
+    return '';
   }
   function op(id) {
     if (primary.includes(id))   return '1';
-    if (secondary.includes(id)) return '0.85';
-    return '0.7';
+    if (secondary.includes(id)) return '0.9';
+    return '0.55';
   }
 
-  // FRONT VIEW — anatomically accurate simplified
-  const svgFront = `<svg width="80" height="120" viewBox="0 0 100 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+  // Filled silhouette — clean athletic body shape
+  // Each muscle region is a filled path overlaid on a solid body silhouette
+  const svg = `<svg width="80" height="120" viewBox="0 0 60 115" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="glow-r" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="1.8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glow-g" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="1.4" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- BODY SILHOUETTE BASE -->
   <!-- Head -->
-  <ellipse cx="50" cy="10" rx="9" ry="10" fill="rgba(255,255,255,0.07)" stroke="rgba(255,255,255,0.12)" stroke-width="0.8"/>
-  <rect x="46" y="19" width="8" height="5" rx="2" fill="rgba(255,255,255,0.05)"/>
+  <ellipse cx="30" cy="6.5" rx="6" ry="6.5" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
+  <!-- Neck -->
+  <rect x="27.5" y="12" width="5" height="4" rx="1.5" fill="rgba(255,255,255,0.1)"/>
+  <!-- Torso -->
+  <path d="M18 16 Q15 20 15 30 L16 52 Q16 58 20 60 L22 74 Q22 78 20 82 L20 86 Q23 88 30 88 Q37 88 40 86 L40 82 Q38 78 38 74 L40 60 Q44 58 44 52 L45 30 Q45 20 42 16 Z" fill="rgba(255,255,255,0.07)" stroke="rgba(255,255,255,0.05)" stroke-width="0.4"/>
+  <!-- Left Arm -->
+  <path d="M15 16 Q10 18 9 26 L9 44 Q9 50 11 54 L12 62 Q13 66 12 70 L12 75 Q14 76 16 75 L17 70 Q16 66 17 62 L18 54 Q20 50 20 44 L20 26 Q19 18 15 16Z" fill="rgba(255,255,255,0.07)" stroke="rgba(255,255,255,0.04)" stroke-width="0.4"/>
+  <!-- Right Arm -->
+  <path d="M45 16 Q50 18 51 26 L51 44 Q51 50 49 54 L48 62 Q47 66 48 70 L48 75 Q46 76 44 75 L43 70 Q44 66 43 62 L42 54 Q40 50 40 44 L40 26 Q41 18 45 16Z" fill="rgba(255,255,255,0.07)" stroke="rgba(255,255,255,0.04)" stroke-width="0.4"/>
+  <!-- Left Leg -->
+  <path d="M20 86 Q18 92 18 102 L19 112 Q21 115 24 114 L25 104 Q26 98 26 88Z" fill="rgba(255,255,255,0.07)" stroke="rgba(255,255,255,0.04)" stroke-width="0.4"/>
+  <!-- Right Leg -->
+  <path d="M40 86 Q42 92 42 102 L41 112 Q39 115 36 114 L35 104 Q34 98 34 88Z" fill="rgba(255,255,255,0.07)" stroke="rgba(255,255,255,0.04)" stroke-width="0.4"/>
 
-  <!-- UPPER CHEST (clavicular head) -->
-  <path id="uc-l" d="M28 24 Q36 22 43 26 Q42 33 36 35 Q29 33 27 28Z" fill="${fc('uc-l')}" stroke="${sc('uc-l')}" stroke-width="0.8" opacity="${op('uc-l')}"/>
-  <path id="uc-r" d="M72 24 Q64 22 57 26 Q58 33 64 35 Q71 33 73 28Z" fill="${fc('uc-r')}" stroke="${sc('uc-r')}" stroke-width="0.8" opacity="${op('uc-r')}"/>
+  <!-- ═══ MUSCLE REGIONS — overlaid as filled glowing shapes ═══ -->
 
-  <!-- MID CHEST (sternal head) -->
-  <path id="mc-l" d="M27 28 Q29 33 36 35 Q43 38 43 44 Q36 46 30 42 Q25 37 27 28Z" fill="${fc('mc-l')}" stroke="${sc('mc-l')}" stroke-width="0.8" opacity="${op('mc-l')}"/>
-  <path id="mc-r" d="M73 28 Q71 33 64 35 Q57 38 57 44 Q64 46 70 42 Q75 37 73 28Z" fill="${fc('mc-r')}" stroke="${sc('mc-r')}" stroke-width="0.8" opacity="${op('mc-r')}"/>
+  <!-- UPPER CHEST -->
+  <path id="uc-l" d="M19 17 Q24 15 29 17 Q29 24 24 26 Q19 24 18 20Z"
+    fill="${fc('uc-l')}" opacity="${op('uc-l')}" ${primary.includes('uc-l')?'filter="url(#glow-r)"':secondary.includes('uc-l')?'filter="url(#glow-g)"':''}/>
+  <path id="uc-r" d="M41 17 Q36 15 31 17 Q31 24 36 26 Q41 24 42 20Z"
+    fill="${fc('uc-r')}" opacity="${op('uc-r')}" ${primary.includes('uc-r')?'filter="url(#glow-r)"':secondary.includes('uc-r')?'filter="url(#glow-g)"':''}/>
+
+  <!-- MID CHEST -->
+  <path id="mc-l" d="M18 20 Q19 24 24 26 Q29 28 29 34 Q24 36 19 32 Q16 27 18 20Z"
+    fill="${fc('mc-l')}" opacity="${op('mc-l')}" ${primary.includes('mc-l')?'filter="url(#glow-r)"':secondary.includes('mc-l')?'filter="url(#glow-g)"':''}/>
+  <path id="mc-r" d="M42 20 Q41 24 36 26 Q31 28 31 34 Q36 36 41 32 Q44 27 42 20Z"
+    fill="${fc('mc-r')}" opacity="${op('mc-r')}" ${primary.includes('mc-r')?'filter="url(#glow-r)"':secondary.includes('mc-r')?'filter="url(#glow-g)"':''}/>
 
   <!-- LOWER CHEST -->
-  <path id="lc-l" d="M30 42 Q36 46 43 44 Q44 50 38 53 Q31 51 28 46Z" fill="${fc('lc-l')}" stroke="${sc('lc-l')}" stroke-width="0.8" opacity="${op('lc-l')}"/>
-  <path id="lc-r" d="M70 42 Q64 46 57 44 Q56 50 62 53 Q69 51 72 46Z" fill="${fc('lc-r')}" stroke="${sc('lc-r')}" stroke-width="0.8" opacity="${op('lc-r')}"/>
+  <path id="lc-l" d="M19 32 Q24 36 29 34 Q30 40 25 42 Q19 40 17 35Z"
+    fill="${fc('lc-l')}" opacity="${op('lc-l')}" ${primary.includes('lc-l')?'filter="url(#glow-r)"':secondary.includes('lc-l')?'filter="url(#glow-g)"':''}/>
+  <path id="lc-r" d="M41 32 Q36 36 31 34 Q30 40 35 42 Q41 40 43 35Z"
+    fill="${fc('lc-r')}" opacity="${op('lc-r')}" ${primary.includes('lc-r')?'filter="url(#glow-r)"':secondary.includes('lc-r')?'filter="url(#glow-g)"':''}/>
 
   <!-- FRONT DELT -->
-  <path id="fd-l" d="M22 22 Q19 26 19 33 Q23 36 27 33 Q28 27 25 22Z" fill="${fc('fd-l')}" stroke="${sc('fd-l')}" stroke-width="0.8" opacity="${op('fd-l')}"/>
-  <path id="fd-r" d="M78 22 Q81 26 81 33 Q77 36 73 33 Q72 27 75 22Z" fill="${fc('fd-r')}" stroke="${sc('fd-r')}" stroke-width="0.8" opacity="${op('fd-r')}"/>
+  <path id="fd-l" d="M14 16 Q11 20 11 27 Q15 29 18 26 Q19 20 16 15Z"
+    fill="${fc('fd-l')}" opacity="${op('fd-l')}" ${primary.includes('fd-l')?'filter="url(#glow-r)"':secondary.includes('fd-l')?'filter="url(#glow-g)"':''}/>
+  <path id="fd-r" d="M46 16 Q49 20 49 27 Q45 29 42 26 Q41 20 44 15Z"
+    fill="${fc('fd-r')}" opacity="${op('fd-r')}" ${primary.includes('fd-r')?'filter="url(#glow-r)"':secondary.includes('fd-r')?'filter="url(#glow-g)"':''}/>
 
   <!-- SIDE DELT -->
-  <path id="sd-l" d="M14 28 Q11 34 13 41 Q17 43 20 40 Q21 34 19 27Z" fill="${fc('sd-l')}" stroke="${sc('sd-l')}" stroke-width="0.8" opacity="${op('sd-l')}"/>
-  <path id="sd-r" d="M86 28 Q89 34 87 41 Q83 43 80 40 Q79 34 81 27Z" fill="${fc('sd-r')}" stroke="${sc('sd-r')}" stroke-width="0.8" opacity="${op('sd-r')}"/>
+  <path id="sd-l" d="M9 18 Q6 23 7 30 Q10 32 13 29 Q13 22 11 17Z"
+    fill="${fc('sd-l')}" opacity="${op('sd-l')}" ${primary.includes('sd-l')?'filter="url(#glow-r)"':secondary.includes('sd-l')?'filter="url(#glow-g)"':''}/>
+  <path id="sd-r" d="M51 18 Q54 23 53 30 Q50 32 47 29 Q47 22 49 17Z"
+    fill="${fc('sd-r')}" opacity="${op('sd-r')}" ${primary.includes('sd-r')?'filter="url(#glow-r)"':secondary.includes('sd-r')?'filter="url(#glow-g)"':''}/>
 
-  <!-- TRICEP LATERAL (outer) -->
-  <path id="tl-l" d="M12 42 Q8 50 9 58 Q13 60 16 57 Q16 49 15 41Z" fill="${fc('tl-l')}" stroke="${sc('tl-l')}" stroke-width="0.8" opacity="${op('tl-l')}"/>
-  <path id="tl-r" d="M88 42 Q92 50 91 58 Q87 60 84 57 Q84 49 85 41Z" fill="${fc('tl-r')}" stroke="${sc('tl-r')}" stroke-width="0.8" opacity="${op('tl-r')}"/>
+  <!-- REAR DELT -->
+  <path id="rd-l" d="M11 17 Q8 21 9 28 Q12 30 15 27 Q15 21 13 16Z"
+    fill="${fc('rd-l')}" opacity="${op('rd-l')}" ${primary.includes('rd-l')?'filter="url(#glow-r)"':secondary.includes('rd-l')?'filter="url(#glow-g)"':''}/>
+  <path id="rd-r" d="M49 17 Q52 21 51 28 Q48 30 45 27 Q45 21 47 16Z"
+    fill="${fc('rd-r')}" opacity="${op('rd-r')}" ${primary.includes('rd-r')?'filter="url(#glow-r)"':secondary.includes('rd-r')?'filter="url(#glow-g)"':''}/>
 
-  <!-- TRICEP LONG (inner/posterior) -->
-  <path id="tlo-l" d="M16 41 Q13 49 14 58 Q18 61 21 58 Q21 49 20 40Z" fill="${fc('tlo-l')}" stroke="${sc('tlo-l')}" stroke-width="0.8" opacity="${op('tlo-l')}"/>
-  <path id="tlo-r" d="M84 41 Q87 49 86 58 Q82 61 79 58 Q79 49 80 40Z" fill="${fc('tlo-r')}" stroke="${sc('tlo-r')}" stroke-width="0.8" opacity="${op('tlo-r')}"/>
+  <!-- TRICEP LATERAL -->
+  <path id="tl-l" d="M9 28 Q6 36 7 44 Q10 46 13 43 Q13 35 11 27Z"
+    fill="${fc('tl-l')}" opacity="${op('tl-l')}" ${primary.includes('tl-l')?'filter="url(#glow-r)"':secondary.includes('tl-l')?'filter="url(#glow-g)"':''}/>
+  <path id="tl-r" d="M51 28 Q54 36 53 44 Q50 46 47 43 Q47 35 49 27Z"
+    fill="${fc('tl-r')}" opacity="${op('tl-r')}" ${primary.includes('tl-r')?'filter="url(#glow-r)"':secondary.includes('tl-r')?'filter="url(#glow-g)"':''}/>
 
-  <!-- TRICEP MEDIAL (middle) -->
-  <path id="tm-l" d="M14 52 Q11 58 12 64 Q16 66 19 63 Q19 57 17 51Z" fill="${fc('tm-l')}" stroke="${sc('tm-l')}" stroke-width="0.8" opacity="${op('tm-l')}"/>
-  <path id="tm-r" d="M86 52 Q89 58 88 64 Q84 66 81 63 Q81 57 83 51Z" fill="${fc('tm-r')}" stroke="${sc('tm-r')}" stroke-width="0.8" opacity="${op('tm-r')}"/>
+  <!-- TRICEP LONG -->
+  <path id="tlo-l" d="M12 28 Q9 36 10 44 Q13 46 16 43 Q16 35 14 27Z"
+    fill="${fc('tlo-l')}" opacity="${op('tlo-l')}" ${primary.includes('tlo-l')?'filter="url(#glow-r)"':secondary.includes('tlo-l')?'filter="url(#glow-g)"':''}/>
+  <path id="tlo-r" d="M48 28 Q51 36 50 44 Q47 46 44 43 Q44 35 46 27Z"
+    fill="${fc('tlo-r')}" opacity="${op('tlo-r')}" ${primary.includes('tlo-r')?'filter="url(#glow-r)"':secondary.includes('tlo-r')?'filter="url(#glow-g)"':''}/>
 
-  <!-- BICEP LONG (outer) -->
-  <path id="bl-l" d="M15 41 Q12 49 13 57 Q17 59 20 57 Q21 49 19 41Z" fill="${fc('bl-l')}" stroke="${sc('bl-l')}" stroke-width="0.8" opacity="${op('bl-l')}"/>
-  <path id="bl-r" d="M85 41 Q88 49 87 57 Q83 59 80 57 Q79 49 81 41Z" fill="${fc('bl-r')}" stroke="${sc('bl-r')}" stroke-width="0.8" opacity="${op('bl-r')}"/>
+  <!-- TRICEP MEDIAL -->
+  <path id="tm-l" d="M9 42 Q7 48 8 54 Q11 56 14 53 Q14 47 12 41Z"
+    fill="${fc('tm-l')}" opacity="${op('tm-l')}" ${primary.includes('tm-l')?'filter="url(#glow-r)"':secondary.includes('tm-l')?'filter="url(#glow-g)"':''}/>
+  <path id="tm-r" d="M51 42 Q53 48 52 54 Q49 56 46 53 Q46 47 48 41Z"
+    fill="${fc('tm-r')}" opacity="${op('tm-r')}" ${primary.includes('tm-r')?'filter="url(#glow-r)"':secondary.includes('tm-r')?'filter="url(#glow-g)"':''}/>
 
-  <!-- BICEP SHORT (inner) -->
-  <path id="bs-l" d="M19 42 Q17 49 18 57 Q21 59 24 56 Q24 48 22 41Z" fill="${fc('bs-l')}" stroke="${sc('bs-l')}" stroke-width="0.8" opacity="${op('bs-l')}"/>
-  <path id="bs-r" d="M81 42 Q83 49 82 57 Q79 59 76 56 Q76 48 78 41Z" fill="${fc('bs-r')}" stroke="${sc('bs-r')}" stroke-width="0.8" opacity="${op('bs-r')}"/>
+  <!-- BICEP LONG -->
+  <path id="bl-l" d="M10 28 Q8 36 9 44 Q12 46 15 43 Q15 35 13 27Z"
+    fill="${fc('bl-l')}" opacity="${op('bl-l')}" ${primary.includes('bl-l')?'filter="url(#glow-r)"':secondary.includes('bl-l')?'filter="url(#glow-g)"':''}/>
+  <path id="bl-r" d="M50 28 Q52 36 51 44 Q48 46 45 43 Q45 35 47 27Z"
+    fill="${fc('bl-r')}" opacity="${op('bl-r')}" ${primary.includes('bl-r')?'filter="url(#glow-r)"':secondary.includes('bl-r')?'filter="url(#glow-g)"':''}/>
+
+  <!-- BICEP SHORT -->
+  <path id="bs-l" d="M13 29 Q11 37 12 44 Q15 46 18 43 Q18 36 16 28Z"
+    fill="${fc('bs-l')}" opacity="${op('bs-l')}" ${primary.includes('bs-l')?'filter="url(#glow-r)"':secondary.includes('bs-l')?'filter="url(#glow-g)"':''}/>
+  <path id="bs-r" d="M47 29 Q49 37 48 44 Q45 46 42 43 Q42 36 44 28Z"
+    fill="${fc('bs-r')}" opacity="${op('bs-r')}" ${primary.includes('bs-r')?'filter="url(#glow-r)"':secondary.includes('bs-r')?'filter="url(#glow-g)"':''}/>
 
   <!-- BRACHIALIS -->
-  <path id="br-l" d="M13 54 Q10 60 11 66 Q15 68 18 65 Q18 59 16 53Z" fill="${fc('br-l')}" stroke="${sc('br-l')}" stroke-width="0.8" opacity="${op('br-l')}"/>
-  <path id="br-r" d="M87 54 Q90 60 89 66 Q85 68 82 65 Q82 59 84 53Z" fill="${fc('br-r')}" stroke="${sc('br-r')}" stroke-width="0.8" opacity="${op('br-r')}"/>
+  <path id="br-l" d="M9 42 Q7 48 8 56 Q12 58 15 55 Q15 47 12 41Z"
+    fill="${fc('br-l')}" opacity="${op('br-l')}" ${primary.includes('br-l')?'filter="url(#glow-r)"':secondary.includes('br-l')?'filter="url(#glow-g)"':''}/>
+  <path id="br-r" d="M51 42 Q53 48 52 56 Q48 58 45 55 Q45 47 48 41Z"
+    fill="${fc('br-r')}" opacity="${op('br-r')}" ${primary.includes('br-r')?'filter="url(#glow-r)"':secondary.includes('br-r')?'filter="url(#glow-g)"':''}/>
 
   <!-- FOREARM -->
-  <path id="fr-l" d="M12 58 Q9 66 10 74 Q14 76 17 73 Q18 65 16 57Z" fill="${fc('fr-l')}" stroke="${sc('fr-l')}" stroke-width="0.8" opacity="${op('fr-l')}"/>
-  <path id="fr-r" d="M88 58 Q91 66 90 74 Q86 76 83 73 Q82 65 84 57Z" fill="${fc('fr-r')}" stroke="${sc('fr-r')}" stroke-width="0.8" opacity="${op('fr-r')}"/>
-
-  <!-- ABS UPPER -->
-  <path id="au" d="M37 44 Q50 42 63 44 L62 60 Q50 62 38 60Z" fill="${fc('au')}" stroke="${sc('au')}" stroke-width="0.8" opacity="${op('au')}"/>
-  <!-- ABS LOWER -->
-  <path id="al" d="M38 60 Q50 62 62 60 L61 74 Q50 76 39 74Z" fill="${fc('al')}" stroke="${sc('al')}" stroke-width="0.8" opacity="${op('al')}"/>
-  <!-- Abs lines -->
-  <line x1="50" y1="42" x2="50" y2="76" stroke="rgba(0,0,0,0.35)" stroke-width="0.7"/>
-  <line x1="38" y1="52" x2="62" y2="52" stroke="rgba(0,0,0,0.25)" stroke-width="0.6"/>
-  <line x1="38" y1="60" x2="62" y2="60" stroke="rgba(0,0,0,0.25)" stroke-width="0.6"/>
-  <line x1="38" y1="68" x2="62" y2="68" stroke="rgba(0,0,0,0.25)" stroke-width="0.6"/>
-
-  <!-- OBLIQUE -->
-  <path id="ob-l" d="M30 48 Q34 56 36 70 Q30 72 27 66 Q25 58 27 48Z" fill="${fc('ob-l')}" stroke="${sc('ob-l')}" stroke-width="0.8" opacity="${op('ob-l')}"/>
-  <path id="ob-r" d="M70 48 Q66 56 64 70 Q70 72 73 66 Q75 58 73 48Z" fill="${fc('ob-r')}" stroke="${sc('ob-r')}" stroke-width="0.8" opacity="${op('ob-r')}"/>
-
-  <!-- HIP area -->
-  <path d="M36 74 Q50 76 64 74 L65 82 Q50 84 35 82Z" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.08)" stroke-width="0.6"/>
-
-  <!-- QUAD -->
-  <path id="qu-l" d="M31 84 Q26 96 27 112 Q34 116 40 112 Q42 96 39 84Z" fill="${fc('qu-l')}" stroke="${sc('qu-l')}" stroke-width="0.8" opacity="${op('qu-l')}"/>
-  <path id="qu-r" d="M69 84 Q74 96 73 112 Q66 116 60 112 Q58 96 61 84Z" fill="${fc('qu-r')}" stroke="${sc('qu-r')}" stroke-width="0.8" opacity="${op('qu-r')}"/>
-
-  <!-- GLUTE (hip front) -->
-  <path id="gl-l" d="M31 82 Q26 86 27 94 Q33 96 39 92 Q40 86 37 82Z" fill="${fc('gl-l')}" stroke="${sc('gl-l')}" stroke-width="0.8" opacity="${op('gl-l')}"/>
-  <path id="gl-r" d="M69 82 Q74 86 73 94 Q67 96 61 92 Q60 86 63 82Z" fill="${fc('gl-r')}" stroke="${sc('gl-r')}" stroke-width="0.8" opacity="${op('gl-r')}"/>
-
-  <!-- HAMSTRING (partially visible) -->
-  <path id="hs-l" d="M28 94 Q24 104 25 114 Q30 117 35 114 Q36 104 32 94Z" fill="${fc('hs-l')}" stroke="${sc('hs-l')}" stroke-width="0.6" opacity="${op('hs-l')}"/>
-  <path id="hs-r" d="M72 94 Q76 104 75 114 Q70 117 65 114 Q64 104 68 94Z" fill="${fc('hs-r')}" stroke="${sc('hs-r')}" stroke-width="0.6" opacity="${op('hs-r')}"/>
-
-  <!-- CALF GASTRO (outer head) -->
-  <path id="cg-l" d="M27 116 Q23 124 24 134 Q30 137 35 134 Q36 124 33 116Z" fill="${fc('cg-l')}" stroke="${sc('cg-l')}" stroke-width="0.8" opacity="${op('cg-l')}"/>
-  <path id="cg-r" d="M73 116 Q77 124 76 134 Q70 137 65 134 Q64 124 67 116Z" fill="${fc('cg-r')}" stroke="${sc('cg-r')}" stroke-width="0.8" opacity="${op('cg-r')}"/>
-
-  <!-- CALF SOLEUS (inner) -->
-  <path id="cs-l" d="M32 116 Q29 124 30 134 Q34 136 38 133 Q39 123 37 115Z" fill="${fc('cs-l')}" stroke="${sc('cs-l')}" stroke-width="0.8" opacity="${op('cs-l')}"/>
-  <path id="cs-r" d="M68 116 Q71 124 70 134 Q66 136 62 133 Q61 123 63 115Z" fill="${fc('cs-r')}" stroke="${sc('cs-r')}" stroke-width="0.8" opacity="${op('cs-r')}"/>
+  <path id="fr-l" d="M9 44 Q7 52 8 62 Q11 64 14 61 Q14 51 12 43Z"
+    fill="${fc('fr-l')}" opacity="${op('fr-l')}" ${primary.includes('fr-l')?'filter="url(#glow-r)"':secondary.includes('fr-l')?'filter="url(#glow-g)"':''}/>
+  <path id="fr-r" d="M51 44 Q53 52 52 62 Q49 64 46 61 Q46 51 48 43Z"
+    fill="${fc('fr-r')}" opacity="${op('fr-r')}" ${primary.includes('fr-r')?'filter="url(#glow-r)"':secondary.includes('fr-r')?'filter="url(#glow-g)"':''}/>
 
   <!-- TRAP UPPER -->
-  <path id="tu" d="M38 20 Q50 16 62 20 Q60 26 50 28 Q40 26 38 20Z" fill="${fc('tu')}" stroke="${sc('tu')}" stroke-width="0.8" opacity="${op('tu')}"/>
+  <path id="tu" d="M22 14 Q30 11 38 14 Q36 19 30 21 Q24 19 22 14Z"
+    fill="${fc('tu')}" opacity="${op('tu')}" ${primary.includes('tu')?'filter="url(#glow-r)"':secondary.includes('tu')?'filter="url(#glow-g)"':''}/>
 
-  <!-- LAT (visible from front) -->
-  <path id="lat-l" d="M24 34 Q20 44 22 56 Q27 58 32 54 Q32 44 29 33Z" fill="${fc('lat-l')}" stroke="${sc('lat-l')}" stroke-width="0.8" opacity="${op('lat-l')}"/>
-  <path id="lat-r" d="M76 34 Q80 44 78 56 Q73 58 68 54 Q68 44 71 33Z" fill="${fc('lat-r')}" stroke="${sc('lat-r')}" stroke-width="0.8" opacity="${op('lat-r')}"/>
+  <!-- TRAP MID / LAT visible -->
+  <path id="tm" d="M18 20 Q16 30 17 40 Q22 42 26 38 Q26 28 22 19Z"
+    fill="${fc('tm')}" opacity="${op('tm')}" ${primary.includes('tm')?'filter="url(#glow-r)"':secondary.includes('tm')?'filter="url(#glow-g)"':''}/>
 
-  <!-- REAR DELT (partial) -->
-  <path id="rd-l" d="M20 24 Q16 28 17 35 Q21 37 25 34 Q25 28 22 23Z" fill="${fc('rd-l')}" stroke="${sc('rd-l')}" stroke-width="0.6" opacity="${op('rd-l')}"/>
-  <path id="rd-r" d="M80 24 Q84 28 83 35 Q79 37 75 34 Q75 28 78 23Z" fill="${fc('rd-r')}" stroke="${sc('rd-r')}" stroke-width="0.6" opacity="${op('rd-r')}"/>
+  <!-- LAT -->
+  <path id="lat-l" d="M16 22 Q13 32 14 44 Q19 47 23 43 Q23 31 19 21Z"
+    fill="${fc('lat-l')}" opacity="${op('lat-l')}" ${primary.includes('lat-l')?'filter="url(#glow-r)"':secondary.includes('lat-l')?'filter="url(#glow-g)"':''}/>
+  <path id="lat-r" d="M44 22 Q47 32 46 44 Q41 47 37 43 Q37 31 41 21Z"
+    fill="${fc('lat-r')}" opacity="${op('lat-r')}" ${primary.includes('lat-r')?'filter="url(#glow-r)"':secondary.includes('lat-r')?'filter="url(#glow-g)"':''}/>
 
-  <!-- MID BACK / RHOMBOID (partial) -->
-  <path id="mb-l" d="M34 36 Q30 44 32 54 Q37 56 41 52 Q40 43 38 35Z" fill="${fc('mb-l')}" stroke="${sc('mb-l')}" stroke-width="0.6" opacity="${op('mb-l')}"/>
-  <path id="mb-r" d="M66 36 Q70 44 68 54 Q63 56 59 52 Q60 43 62 35Z" fill="${fc('mb-r')}" stroke="${sc('mb-r')}" stroke-width="0.6" opacity="${op('mb-r')}"/>
-  <path id="rh" d="M42 34 Q50 32 58 34 Q57 42 50 44 Q43 42 42 34Z" fill="${fc('rh')}" stroke="${sc('rh')}" stroke-width="0.6" opacity="${op('rh')}"/>
+  <!-- MID BACK -->
+  <path id="mb-l" d="M18 26 Q16 36 17 46 Q22 48 26 44 Q26 34 21 25Z"
+    fill="${fc('mb-l')}" opacity="${op('mb-l')}" ${primary.includes('mb-l')?'filter="url(#glow-r)"':secondary.includes('mb-l')?'filter="url(#glow-g)"':''}/>
+  <path id="mb-r" d="M42 26 Q44 36 43 46 Q38 48 34 44 Q34 34 39 25Z"
+    fill="${fc('mb-r')}" opacity="${op('mb-r')}" ${primary.includes('mb-r')?'filter="url(#glow-r)"':secondary.includes('mb-r')?'filter="url(#glow-g)"':''}/>
 
-  <!-- TRAP MID -->
-  <path id="tm" d="M36 28 Q50 26 64 28 Q62 36 50 38 Q38 36 36 28Z" fill="${fc('tm')}" stroke="${sc('tm')}" stroke-width="0.6" opacity="${op('tm')}"/>
+  <!-- RHOMBOID -->
+  <path id="rh" d="M24 22 Q30 20 36 22 Q35 30 30 32 Q25 30 24 22Z"
+    fill="${fc('rh')}" opacity="${op('rh')}" ${primary.includes('rh')?'filter="url(#glow-r)"':secondary.includes('rh')?'filter="url(#glow-g)"':''}/>
+
+  <!-- ABS UPPER -->
+  <path id="au" d="M22 42 Q30 40 38 42 L37 56 Q30 58 23 56Z"
+    fill="${fc('au')}" opacity="${op('au')}" ${primary.includes('au')?'filter="url(#glow-r)"':secondary.includes('au')?'filter="url(#glow-g)"':''}/>
+
+  <!-- ABS LOWER -->
+  <path id="al" d="M23 56 Q30 58 37 56 L36 68 Q30 70 24 68Z"
+    fill="${fc('al')}" opacity="${op('al')}" ${primary.includes('al')?'filter="url(#glow-r)"':secondary.includes('al')?'filter="url(#glow-g)"':''}/>
+
+  <!-- Abs dividers (subtle) -->
+  <line x1="30" y1="40" x2="30" y2="70" stroke="rgba(0,0,0,0.3)" stroke-width="0.6"/>
+  <line x1="23" y1="50" x2="37" y2="50" stroke="rgba(0,0,0,0.2)" stroke-width="0.5"/>
+  <line x1="23" y1="58" x2="37" y2="58" stroke="rgba(0,0,0,0.2)" stroke-width="0.5"/>
+  <line x1="23" y1="64" x2="37" y2="64" stroke="rgba(0,0,0,0.2)" stroke-width="0.5"/>
+
+  <!-- OBLIQUE -->
+  <path id="ob-l" d="M18 44 Q21 52 22 64 Q17 66 15 60 Q13 52 15 44Z"
+    fill="${fc('ob-l')}" opacity="${op('ob-l')}" ${primary.includes('ob-l')?'filter="url(#glow-r)"':secondary.includes('ob-l')?'filter="url(#glow-g)"':''}/>
+  <path id="ob-r" d="M42 44 Q39 52 38 64 Q43 66 45 60 Q47 52 45 44Z"
+    fill="${fc('ob-r')}" opacity="${op('ob-r')}" ${primary.includes('ob-r')?'filter="url(#glow-r)"':secondary.includes('ob-r')?'filter="url(#glow-g)"':''}/>
 
   <!-- LOWER BACK -->
-  <path id="lb" d="M38 56 Q50 54 62 56 L61 72 Q50 74 39 72Z" fill="${fc('lb')}" stroke="${sc('lb')}" stroke-width="0.8" opacity="${op('lb')}"/>
+  <path id="lb" d="M22 52 Q30 50 38 52 L37 66 Q30 68 23 66Z"
+    fill="${fc('lb')}" opacity="${op('lb')}" ${primary.includes('lb')?'filter="url(#glow-r)"':secondary.includes('lb')?'filter="url(#glow-g)"':''}/>
+
+  <!-- GLUTE -->
+  <path id="gl-l" d="M20 74 Q16 80 17 88 Q22 90 27 86 Q28 80 25 74Z"
+    fill="${fc('gl-l')}" opacity="${op('gl-l')}" ${primary.includes('gl-l')?'filter="url(#glow-r)"':secondary.includes('gl-l')?'filter="url(#glow-g)"':''}/>
+  <path id="gl-r" d="M40 74 Q44 80 43 88 Q38 90 33 86 Q32 80 35 74Z"
+    fill="${fc('gl-r')}" opacity="${op('gl-r')}" ${primary.includes('gl-r')?'filter="url(#glow-r)"':secondary.includes('gl-r')?'filter="url(#glow-g)"':''}/>
+
+  <!-- QUAD -->
+  <path id="qu-l" d="M19 86 Q15 96 16 108 Q21 112 26 108 Q28 96 25 86Z"
+    fill="${fc('qu-l')}" opacity="${op('qu-l')}" ${primary.includes('qu-l')?'filter="url(#glow-r)"':secondary.includes('qu-l')?'filter="url(#glow-g)"':''}/>
+  <path id="qu-r" d="M41 86 Q45 96 44 108 Q39 112 34 108 Q32 96 35 86Z"
+    fill="${fc('qu-r')}" opacity="${op('qu-r')}" ${primary.includes('qu-r')?'filter="url(#glow-r)"':secondary.includes('qu-r')?'filter="url(#glow-g)"':''}/>
+
+  <!-- HAMSTRING -->
+  <path id="hs-l" d="M18 88 Q14 98 15 110 Q20 113 25 110 Q26 98 22 88Z"
+    fill="${fc('hs-l')}" opacity="${op('hs-l')}" ${primary.includes('hs-l')?'filter="url(#glow-r)"':secondary.includes('hs-l')?'filter="url(#glow-g)"':''}/>
+  <path id="hs-r" d="M42 88 Q46 98 45 110 Q40 113 35 110 Q34 98 38 88Z"
+    fill="${fc('hs-r')}" opacity="${op('hs-r')}" ${primary.includes('hs-r')?'filter="url(#glow-r)"':secondary.includes('hs-r')?'filter="url(#glow-g)"':''}/>
+
+  <!-- CALF GASTRO -->
+  <path id="cg-l" d="M16 110 Q13 118 14 114 Q19 117 24 114 Q25 108 21 109Z"
+    fill="${fc('cg-l')}" opacity="${op('cg-l')}" ${primary.includes('cg-l')?'filter="url(#glow-r)"':secondary.includes('cg-l')?'filter="url(#glow-g)"':''}/>
+  <path id="cg-r" d="M44 110 Q47 118 46 114 Q41 117 36 114 Q35 108 39 109Z"
+    fill="${fc('cg-r')}" opacity="${op('cg-r')}" ${primary.includes('cg-r')?'filter="url(#glow-r)"':secondary.includes('cg-r')?'filter="url(#glow-g)"':''}/>
+
+  <!-- CALF SOLEUS -->
+  <path id="cs-l" d="M19 110 Q17 116 18 114 Q21 116 25 113 Q25 109 22 109Z"
+    fill="${fc('cs-l')}" opacity="${op('cs-l')}" ${primary.includes('cs-l')?'filter="url(#glow-r)"':secondary.includes('cs-l')?'filter="url(#glow-g)"':''}/>
+  <path id="cs-r" d="M41 110 Q43 116 42 114 Q39 116 35 113 Q35 109 38 109Z"
+    fill="${fc('cs-r')}" opacity="${op('cs-r')}" ${primary.includes('cs-r')?'filter="url(#glow-r)"':secondary.includes('cs-r')?'filter="url(#glow-g)"':''}/>
+
 </svg>`;
 
-  return { svg: svgFront, label: data.labelAr || muscleDetail, synergist: data.noteAr || '' };
+  return { svg, label: data.labelAr || muscleDetail, synergist: data.noteAr || '' };
 }
 
 function buildMuscleMapHTML(muscleDetail) {
