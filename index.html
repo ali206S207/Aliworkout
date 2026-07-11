@@ -1517,14 +1517,17 @@ body::after{
 
 /* ─── MUSCLE MAP ─── */
 .muscle-map-wrap{
-  padding:10px 14px 6px;
+  padding:10px 14px 8px;
   border-bottom:1px solid var(--border);
-  display:flex;align-items:center;gap:14px;
+  display:flex;align-items:center;gap:12px;
+  overflow:hidden;
+  background:rgba(255,255,255,0.02);
 }
 .muscle-map-svg-wrap{
   position:relative;flex-shrink:0;
+  width:80px;height:120px;overflow:hidden;
 }
-.muscle-map-svg-wrap svg{display:block}
+.muscle-map-svg-wrap svg{display:block;width:80px;height:120px;}
 .muscle-map-info{flex:1;min-width:0}
 .muscle-map-primary{
   font-family:var(--font-display);font-size:15px;font-weight:700;
@@ -4043,7 +4046,7 @@ function buildMuscleMapSVG(muscleDetail) {
   }
 
   // FRONT VIEW — anatomically accurate simplified
-  const svgFront = `<svg width="100" height="150" viewBox="0 0 100 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+  const svgFront = `<svg width="80" height="120" viewBox="0 0 100 150" fill="none" xmlns="http://www.w3.org/2000/svg">
   <!-- Head -->
   <ellipse cx="50" cy="10" rx="9" ry="10" fill="rgba(255,255,255,0.07)" stroke="rgba(255,255,255,0.12)" stroke-width="0.8"/>
   <rect x="46" y="19" width="8" height="5" rx="2" fill="rgba(255,255,255,0.05)"/>
@@ -4181,29 +4184,6 @@ function buildMuscleMapHTML(muscleDetail) {
     </div>
   </div>`;
 }
-function buildMuscleMapHTML(muscle) {
-  const { svg, label, synergist } = buildMuscleMapSVG(muscle);
-  return `
-  <div class="muscle-map-wrap">
-    <div class="muscle-map-svg-wrap">${svg}</div>
-    <div class="muscle-map-info">
-      <div style="font-family:var(--font-main);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--text-muted);margin-bottom:4px">العضلة المستهدفة</div>
-      <div class="muscle-map-primary">${label}</div>
-      ${synergist ? `<div class="muscle-map-secondary">مساعد: ${synergist}</div>` : ''}
-      <div class="muscle-map-legend">
-        <div class="muscle-map-legend-item">
-          <div class="muscle-map-legend-dot" style="background:var(--red)"></div>
-          <span>أساسي</span>
-        </div>
-        <div class="muscle-map-legend-item">
-          <div class="muscle-map-legend-dot" style="background:var(--gold)"></div>
-          <span>مساعد</span>
-        </div>
-      </div>
-    </div>
-  </div>`;
-}
-
 // ─── GUIDED WARMUP SCREEN ───
 let _gwSets = [];       // computed warmup sets
 let _gwStep = 0;        // current step index
