@@ -1557,6 +1557,24 @@ body::after{
   width:8px;height:8px;border-radius:50%;flex-shrink:0;
 }
 
+
+/* ─── MUSCLE MODAL ─── */
+#muscle-modal{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,0.85);
+  z-index:4000;align-items:flex-end;justify-content:center;
+  backdrop-filter:blur(8px);
+}
+#muscle-modal.open{display:flex;animation:overlayIn .18s ease}
+.muscle-modal-sheet{
+  background:var(--bg2);
+  border-radius:var(--r-xl) var(--r-xl) 0 0;
+  border:1px solid var(--border-bright);border-bottom:none;
+  width:100%;max-width:420px;
+  padding:16px 16px env(safe-area-inset-bottom,20px);
+  animation:sheetIn .22s cubic-bezier(0.34,1.1,0.64,1);
+}
+
 </style>
 
 <script>
@@ -3021,6 +3039,35 @@ ${gymsHtml || '<section><p class="empty">لا توجد جيمات محفوظة</
   </button>
 </div>
 
+
+<!-- MUSCLE MAP MODAL -->
+<div id="muscle-modal" onclick="if(event.target===this)closeMuscleModal()">
+  <div class="muscle-modal-sheet">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div>
+        <div class="modal-title" style="margin-bottom:2px" id="mm-modal-title">العضلة المستهدفة</div>
+        <div style="font-family:var(--font-main);font-size:11px;color:var(--text-muted)" id="mm-modal-synergist"></div>
+      </div>
+      <button onclick="closeMuscleModal()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:7px 14px;font-family:var(--font-main);font-size:12px;cursor:pointer">✕</button>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:24px;padding:10px 0">
+      <div id="mm-modal-svg" style="flex-shrink:0"></div>
+      <div>
+        <div style="font-family:var(--font-main);font-size:10px;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px">المناطق</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <div style="width:12px;height:12px;border-radius:50%;background:var(--red);box-shadow:0 0 8px rgba(232,34,42,0.6)"></div>
+          <span style="font-family:var(--font-main);font-size:12px;color:var(--text-dim)">أساسي</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:12px;height:12px;border-radius:50%;background:var(--gold);box-shadow:0 0 6px rgba(232,150,10,0.5)"></div>
+          <span style="font-family:var(--font-main);font-size:12px;color:var(--text-dim)">مساعد</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>`;
 }
@@ -3724,6 +3771,7 @@ function renderActiveExercises() {
   const container = document.getElementById('aw-exercises');
   container.innerHTML = activeWorkout.exercises.map((ex, ei) => `
     <div class="active-exercise-card" id="awex-${ei}"
+      data-muscle-detail="${ex.muscleDetail || ex.muscle}"
       draggable="true"
       ondragstart="awDragStart(event,${ei})"
       ondragover="awDragOver(event,${ei})"
@@ -3744,16 +3792,13 @@ function renderActiveExercises() {
           </div>
         </div>
         <div style="text-align:right;flex-shrink:0">
-          <button onclick="toggleMuscleMap(${ei})" id="mm-btn-${ei}" style="background:rgba(232,34,42,0.1);border:1px solid rgba(232,34,42,0.2);color:var(--red);border-radius:8px;padding:5px 10px;font-family:var(--font-main);font-size:10px;font-weight:700;cursor:pointer;width:100%;margin-bottom:4px;letter-spacing:0.5px">💪 عضلة</button>
+          <button onclick="openMuscleModal(${ei})" style="background:rgba(232,34,42,0.1);border:1px solid rgba(232,34,42,0.2);color:var(--red);border-radius:8px;padding:5px 10px;font-family:var(--font-main);font-size:10px;font-weight:700;cursor:pointer;width:100%;margin-bottom:4px;letter-spacing:0.5px">💪 عضلة</button>
           <button onclick="${ei===0?'openGuidedWarmup('+ei+')':'openGuidedWarmup('+ei+')'}" style="background:rgba(240,165,0,0.1);border:1px solid rgba(240,165,0,0.25);color:var(--gold);border-radius:8px;padding:5px 10px;font-family:var(--font-main);font-size:10px;font-weight:700;cursor:pointer;width:100%;margin-bottom:6px">${ei===0?'🔥 إحماء':'⚡ تنشيط'}</button>
           <div style="font-family:var(--font-condensed);font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px">راحة</div>
           <select onchange="setExRestTime(${ei},this.value)" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 6px;font-family:var(--font-condensed);font-size:12px;font-weight:600">
             ${[30,60,90,120,180,240].map(s=>`<option value="${s}" ${(ex.restTime||90)==s?'selected':''}>${s}s</option>`).join('')}
           </select>
         </div>
-      </div>
-      <div id="mm-${ei}" style="display:none;padding:0;overflow:hidden;border-bottom:1px solid var(--border)">
-        ${buildMuscleMapHTML(ex.muscleDetail || ex.muscle)}
       </div>
       ${buildLastSessionBanner(ex.id)}
       <div id="sets-${ei}" style="margin-top:8px">
@@ -4502,14 +4547,34 @@ function _gwFinish() {
 }
 
 
-function toggleMuscleMap(ei) {
-  const el = document.getElementById('mm-' + ei);
-  const btn = document.getElementById('mm-btn-' + ei);
-  if (!el) return;
-  const isOpen = el.style.display !== 'none';
-  el.style.display = isOpen ? 'none' : 'block';
-  if (btn) btn.style.background = isOpen ? 'rgba(232,34,42,0.1)' : 'rgba(232,34,42,0.25)';
+
+// ─── MUSCLE MAP MODAL ───
+function openMuscleModal(ei) {
+  const card = document.getElementById('awex-' + ei);
+  const muscleDetail = card ? card.dataset.muscleDetail : 'mid-chest';
+  const ex = activeWorkout && activeWorkout.exercises[ei];
+  const exName = ex ? ex.name : '';
+
+  const { svg, label, synergist } = buildMuscleMapSVG(muscleDetail);
+
+  // Inject into modal with unique filter IDs
+  const uniqueSvg = svg
+    .replace(/id="glow-r"/g, `id="glow-r-${ei}"`)
+    .replace(/filter="url\(#glow-r\)"/g, `filter="url(#glow-r-${ei})"`)
+    .replace(/id="glow-g"/g, `id="glow-g-${ei}"`)
+    .replace(/filter="url\(#glow-g\)"/g, `filter="url(#glow-g-${ei})"`);
+
+  document.getElementById('mm-modal-svg').innerHTML =
+    `<div style="width:120px;height:180px;overflow:hidden">${uniqueSvg.replace('width="80" height="120"','width="120" height="180"')}</div>`;
+  document.getElementById('mm-modal-title').textContent = label || exName;
+  document.getElementById('mm-modal-synergist').textContent = synergist || '';
+  document.getElementById('muscle-modal').classList.add('open');
 }
+
+function closeMuscleModal() {
+  document.getElementById('muscle-modal').classList.remove('open');
+}
+
 
 // ─── ACTIVE WORKOUT DRAG REORDER ───
 let _awDragSrc = null;
@@ -6355,6 +6420,35 @@ function renderProgEditLib() {
   </button>
 </div>
 
+
+<!-- MUSCLE MAP MODAL -->
+<div id="muscle-modal" onclick="if(event.target===this)closeMuscleModal()">
+  <div class="muscle-modal-sheet">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div>
+        <div class="modal-title" style="margin-bottom:2px" id="mm-modal-title">العضلة المستهدفة</div>
+        <div style="font-family:var(--font-main);font-size:11px;color:var(--text-muted)" id="mm-modal-synergist"></div>
+      </div>
+      <button onclick="closeMuscleModal()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:7px 14px;font-family:var(--font-main);font-size:12px;cursor:pointer">✕</button>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:24px;padding:10px 0">
+      <div id="mm-modal-svg" style="flex-shrink:0"></div>
+      <div>
+        <div style="font-family:var(--font-main);font-size:10px;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px">المناطق</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <div style="width:12px;height:12px;border-radius:50%;background:var(--red);box-shadow:0 0 8px rgba(232,34,42,0.6)"></div>
+          <span style="font-family:var(--font-main);font-size:12px;color:var(--text-dim)">أساسي</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:12px;height:12px;border-radius:50%;background:var(--gold);box-shadow:0 0 6px rgba(232,150,10,0.5)"></div>
+          <span style="font-family:var(--font-main);font-size:12px;color:var(--text-dim)">مساعد</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
 
@@ -6472,6 +6566,35 @@ function renderProgEditLib() {
     font-size:13px;cursor:pointer">
     تخطى الراحة
   </button>
+</div>
+
+
+<!-- MUSCLE MAP MODAL -->
+<div id="muscle-modal" onclick="if(event.target===this)closeMuscleModal()">
+  <div class="muscle-modal-sheet">
+    <div class="modal-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div>
+        <div class="modal-title" style="margin-bottom:2px" id="mm-modal-title">العضلة المستهدفة</div>
+        <div style="font-family:var(--font-main);font-size:11px;color:var(--text-muted)" id="mm-modal-synergist"></div>
+      </div>
+      <button onclick="closeMuscleModal()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text-muted);border-radius:8px;padding:7px 14px;font-family:var(--font-main);font-size:12px;cursor:pointer">✕</button>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:24px;padding:10px 0">
+      <div id="mm-modal-svg" style="flex-shrink:0"></div>
+      <div>
+        <div style="font-family:var(--font-main);font-size:10px;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px">المناطق</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <div style="width:12px;height:12px;border-radius:50%;background:var(--red);box-shadow:0 0 8px rgba(232,34,42,0.6)"></div>
+          <span style="font-family:var(--font-main);font-size:12px;color:var(--text-dim)">أساسي</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:12px;height:12px;border-radius:50%;background:var(--gold);box-shadow:0 0 6px rgba(232,150,10,0.5)"></div>
+          <span style="font-family:var(--font-main);font-size:12px;color:var(--text-dim)">مساعد</span>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 </body>
