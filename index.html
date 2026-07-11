@@ -2135,70 +2135,70 @@ self.addEventListener('notificationclick', e => {
 // ============================================================
 const EXERCISES_DB = [
   // CHEST
-  {id:'e1',name:'Bench Press',nameAr:'بنش بريس',muscle:'Chest',type:'Barbell',equipment:'Barbell'},
-  {id:'e2',name:'Incline Bench Press',nameAr:'بنش مائل علوي',muscle:'Chest',type:'Barbell',equipment:'Barbell'},
-  {id:'e3',name:'Decline Bench Press',nameAr:'بنش مائل سفلي',muscle:'Chest',type:'Barbell',equipment:'Barbell'},
-  {id:'e4',name:'Dumbbell Fly',nameAr:'فلاي دمبل',muscle:'Chest',type:'Dumbbell',equipment:'Dumbbell'},
-  {id:'e5',name:'Incline Dumbbell Press',nameAr:'دمبل مائل علوي',muscle:'Chest',type:'Dumbbell',equipment:'Dumbbell'},
-  {id:'e6',name:'Cable Crossover',nameAr:'كروسوفر كابل',muscle:'Chest',type:'Cable',equipment:'Cable Machine'},
-  {id:'e7',name:'Pec Deck',nameAr:'بيك ديك',muscle:'Chest',type:'Machine',equipment:'Machine'},
-  {id:'e8',name:'Push Up',nameAr:'ضغط أرضي',muscle:'Chest',type:'Bodyweight',equipment:'Bodyweight'},
-  {id:'e9',name:'Dips',nameAr:'ديبس',muscle:'Chest',type:'Bodyweight',equipment:'Dip Bar'},
+  {id:'e1', name:'Bench Press',           nameAr:'بنش بريس',         muscle:'Chest',     muscleDetail:'mid-chest',     muscleDetailAr:'الصدر الأوسط',   synergist:['front-delt','tricep-lateral'],  type:'Barbell',    equipment:'Barbell'},
+  {id:'e2', name:'Incline Bench Press',   nameAr:'بنش مائل علوي',    muscle:'Chest',     muscleDetail:'upper-chest',   muscleDetailAr:'الصدر العلوي',   synergist:['front-delt','tricep-long'],     type:'Barbell',    equipment:'Barbell'},
+  {id:'e3', name:'Decline Bench Press',   nameAr:'بنش مائل سفلي',    muscle:'Chest',     muscleDetail:'lower-chest',   muscleDetailAr:'الصدر السفلي',   synergist:['front-delt','tricep-lateral'],  type:'Barbell',    equipment:'Barbell'},
+  {id:'e4', name:'Dumbbell Fly',          nameAr:'فلاي دمبل',        muscle:'Chest',     muscleDetail:'mid-chest',     muscleDetailAr:'الصدر الأوسط',   synergist:['front-delt'],                  type:'Dumbbell',   equipment:'Dumbbell'},
+  {id:'e5', name:'Incline Dumbbell Press',nameAr:'دمبل مائل علوي',   muscle:'Chest',     muscleDetail:'upper-chest',   muscleDetailAr:'الصدر العلوي',   synergist:['front-delt','tricep-long'],     type:'Dumbbell',   equipment:'Dumbbell'},
+  {id:'e6', name:'Cable Crossover',       nameAr:'كروسوفر كابل',     muscle:'Chest',     muscleDetail:'mid-chest',     muscleDetailAr:'الصدر الأوسط',   synergist:['front-delt'],                  type:'Cable',      equipment:'Cable Machine'},
+  {id:'e7', name:'Pec Deck',              nameAr:'بيك ديك',          muscle:'Chest',     muscleDetail:'mid-chest',     muscleDetailAr:'الصدر الأوسط',   synergist:['front-delt'],                  type:'Machine',    equipment:'Machine'},
+  {id:'e8', name:'Push Up',               nameAr:'ضغط أرضي',         muscle:'Chest',     muscleDetail:'mid-chest',     muscleDetailAr:'الصدر الأوسط',   synergist:['front-delt','tricep-lateral'],  type:'Bodyweight', equipment:'Bodyweight'},
+  {id:'e9', name:'Dips',                  nameAr:'ديبس',             muscle:'Chest',     muscleDetail:'lower-chest',   muscleDetailAr:'الصدر السفلي',   synergist:['front-delt','tricep-lateral'],  type:'Bodyweight', equipment:'Dip Bar'},
   // SHOULDERS
-  {id:'e10',name:'Overhead Press',nameAr:'أوفرهيد بريس',muscle:'Shoulders',type:'Barbell',equipment:'Barbell'},
-  {id:'e11',name:'Dumbbell Shoulder Press',nameAr:'بريس دمبل',muscle:'Shoulders',type:'Dumbbell',equipment:'Dumbbell'},
-  {id:'e12',name:'Lateral Raise',nameAr:'رفعات جانبية',muscle:'Shoulders',type:'Dumbbell',equipment:'Dumbbell'},
-  {id:'e13',name:'Front Raise',nameAr:'رفعات أمامية',muscle:'Shoulders',type:'Dumbbell',equipment:'Dumbbell'},
-  {id:'e14',name:'Face Pull',nameAr:'فيس بول',muscle:'Shoulders',type:'Cable',equipment:'Cable Machine'},
-  {id:'e15',name:'Upright Row',nameAr:'رو قائم',muscle:'Shoulders',type:'Barbell',equipment:'Barbell'},
-  {id:'e16',name:'Arnold Press',nameAr:'أرنولد بريس',muscle:'Shoulders',type:'Dumbbell',equipment:'Dumbbell'},
-  {id:'e17',name:'Cable Lateral Raise',nameAr:'رفعات جانبية كابل',muscle:'Shoulders',type:'Cable',equipment:'Cable Machine'},
+  {id:'e10',name:'Overhead Press',        nameAr:'أوفرهيد بريس',     muscle:'Shoulders', muscleDetail:'front-delt',    muscleDetailAr:'الكتف الأمامي',  synergist:['side-delt','tricep-long'],      type:'Barbell',    equipment:'Barbell'},
+  {id:'e11',name:'Dumbbell Shoulder Press',nameAr:'بريس دمبل',       muscle:'Shoulders', muscleDetail:'front-delt',    muscleDetailAr:'الكتف الأمامي',  synergist:['side-delt','tricep-long'],      type:'Dumbbell',   equipment:'Dumbbell'},
+  {id:'e12',name:'Lateral Raise',         nameAr:'رفعات جانبية',     muscle:'Shoulders', muscleDetail:'side-delt',     muscleDetailAr:'الكتف الجانبي',  synergist:['trap-upper'],                  type:'Dumbbell',   equipment:'Dumbbell'},
+  {id:'e13',name:'Front Raise',           nameAr:'رفعات أمامية',     muscle:'Shoulders', muscleDetail:'front-delt',    muscleDetailAr:'الكتف الأمامي',  synergist:['upper-chest'],                 type:'Dumbbell',   equipment:'Dumbbell'},
+  {id:'e14',name:'Face Pull',             nameAr:'فيس بول',          muscle:'Shoulders', muscleDetail:'rear-delt',     muscleDetailAr:'الكتف الخلفي',   synergist:['trap-mid','rhomboid'],         type:'Cable',      equipment:'Cable Machine'},
+  {id:'e15',name:'Upright Row',           nameAr:'رو قائم',          muscle:'Shoulders', muscleDetail:'side-delt',     muscleDetailAr:'الكتف الجانبي',  synergist:['trap-upper','bicep-short'],    type:'Barbell',    equipment:'Barbell'},
+  {id:'e16',name:'Arnold Press',          nameAr:'أرنولد بريس',      muscle:'Shoulders', muscleDetail:'front-delt',    muscleDetailAr:'الكتف الأمامي',  synergist:['side-delt','tricep-long'],      type:'Dumbbell',   equipment:'Dumbbell'},
+  {id:'e17',name:'Cable Lateral Raise',   nameAr:'رفعات جانبية كابل',muscle:'Shoulders', muscleDetail:'side-delt',     muscleDetailAr:'الكتف الجانبي',  synergist:['trap-upper'],                  type:'Cable',      equipment:'Cable Machine'},
   // TRICEPS
-  {id:'e18',name:'Tricep Pushdown',nameAr:'ترايسبس كابل',muscle:'Triceps',type:'Cable',equipment:'Cable Machine'},
-  {id:'e19',name:'Skull Crusher',nameAr:'سكال كراشر',muscle:'Triceps',type:'Barbell',equipment:'Barbell'},
-  {id:'e20',name:'Overhead Tricep Extension',nameAr:'إكستنشن علوي',muscle:'Triceps',type:'Dumbbell',equipment:'Dumbbell'},
-  {id:'e21',name:'Close Grip Bench',nameAr:'بنش ضيق',muscle:'Triceps',type:'Barbell',equipment:'Barbell'},
-  {id:'e22',name:'Tricep Dips',nameAr:'ديبس ترايسبس',muscle:'Triceps',type:'Bodyweight',equipment:'Bench'},
-  {id:'e23',name:'Rope Pushdown',nameAr:'روب بوش داون',muscle:'Triceps',type:'Cable',equipment:'Cable Machine'},
+  {id:'e18',name:'Tricep Pushdown',       nameAr:'ترايسبس كابل',     muscle:'Triceps',   muscleDetail:'tricep-lateral',muscleDetailAr:'الترايسبس الجانبي',synergist:['tricep-medial'],              type:'Cable',      equipment:'Cable Machine'},
+  {id:'e19',name:'Skull Crusher',         nameAr:'سكال كراشر',       muscle:'Triceps',   muscleDetail:'tricep-long',   muscleDetailAr:'الرأس الطويل',   synergist:['tricep-lateral','tricep-medial'],type:'Barbell',  equipment:'Barbell'},
+  {id:'e20',name:'Overhead Tricep Extension',nameAr:'إكستنشن علوي',  muscle:'Triceps',   muscleDetail:'tricep-long',   muscleDetailAr:'الرأس الطويل',   synergist:['tricep-lateral'],               type:'Dumbbell',   equipment:'Dumbbell'},
+  {id:'e21',name:'Close Grip Bench',      nameAr:'بنش ضيق',          muscle:'Triceps',   muscleDetail:'tricep-lateral',muscleDetailAr:'الترايسبس الجانبي',synergist:['tricep-long','front-delt'],   type:'Barbell',    equipment:'Barbell'},
+  {id:'e22',name:'Tricep Dips',           nameAr:'ديبس ترايسبس',     muscle:'Triceps',   muscleDetail:'tricep-lateral',muscleDetailAr:'الترايسبس الجانبي',synergist:['tricep-long','lower-chest'],  type:'Bodyweight', equipment:'Bench'},
+  {id:'e23',name:'Rope Pushdown',         nameAr:'روب بوش داون',     muscle:'Triceps',   muscleDetail:'tricep-lateral',muscleDetailAr:'الترايسبس الجانبي',synergist:['tricep-medial'],              type:'Cable',      equipment:'Cable Machine'},
   // BACK
-  {id:'e24',name:'Deadlift',nameAr:'ديدليفت',muscle:'Back',type:'Barbell',equipment:'Barbell'},
-  {id:'e25',name:'Pull Up',nameAr:'عقلة',muscle:'Back',type:'Bodyweight',equipment:'Pull Up Bar'},
-  {id:'e26',name:'Lat Pulldown',nameAr:'لات بول داون',muscle:'Back',type:'Cable',equipment:'Cable Machine'},
-  {id:'e27',name:'Barbell Row',nameAr:'رو بار',muscle:'Back',type:'Barbell',equipment:'Barbell'},
-  {id:'e28',name:'Dumbbell Row',nameAr:'رو دمبل',muscle:'Back',type:'Dumbbell',equipment:'Dumbbell'},
-  {id:'e29',name:'Seated Cable Row',nameAr:'رو جلوس كابل',muscle:'Back',type:'Cable',equipment:'Cable Machine'},
-  {id:'e30',name:'T-Bar Row',nameAr:'تي بار رو',muscle:'Back',type:'Machine',equipment:'T-Bar'},
-  {id:'e31',name:'Face Pull',nameAr:'فيس بول ظهر',muscle:'Back',type:'Cable',equipment:'Cable Machine'},
-  {id:'e32',name:'Hyperextension',nameAr:'هايبر إكستنشن',muscle:'Back',type:'Bodyweight',equipment:'GHD'},
-  {id:'e33',name:'Straight Arm Pulldown',nameAr:'سترايت آرم',muscle:'Back',type:'Cable',equipment:'Cable Machine'},
+  {id:'e24',name:'Deadlift',              nameAr:'ديدليفت',          muscle:'Back',      muscleDetail:'lower-back',    muscleDetailAr:'أسفل الظهر',     synergist:['glute','hamstring','trap-mid'], type:'Barbell',    equipment:'Barbell'},
+  {id:'e25',name:'Pull Up',               nameAr:'عقلة',             muscle:'Back',      muscleDetail:'lat',           muscleDetailAr:'العضلة العريضة', synergist:['bicep-long','rear-delt'],       type:'Bodyweight', equipment:'Pull Up Bar'},
+  {id:'e26',name:'Lat Pulldown',          nameAr:'لات بول داون',     muscle:'Back',      muscleDetail:'lat',           muscleDetailAr:'العضلة العريضة', synergist:['bicep-long','rear-delt'],       type:'Cable',      equipment:'Cable Machine'},
+  {id:'e27',name:'Barbell Row',           nameAr:'رو بار',           muscle:'Back',      muscleDetail:'mid-back',      muscleDetailAr:'وسط الظهر',      synergist:['bicep-short','rear-delt','trap-mid'],type:'Barbell',equipment:'Barbell'},
+  {id:'e28',name:'Dumbbell Row',          nameAr:'رو دمبل',          muscle:'Back',      muscleDetail:'mid-back',      muscleDetailAr:'وسط الظهر',      synergist:['bicep-short','lat'],            type:'Dumbbell',   equipment:'Dumbbell'},
+  {id:'e29',name:'Seated Cable Row',      nameAr:'رو جلوس كابل',     muscle:'Back',      muscleDetail:'mid-back',      muscleDetailAr:'وسط الظهر',      synergist:['bicep-short','lat'],            type:'Cable',      equipment:'Cable Machine'},
+  {id:'e30',name:'T-Bar Row',             nameAr:'تي بار رو',        muscle:'Back',      muscleDetail:'mid-back',      muscleDetailAr:'وسط الظهر',      synergist:['bicep-short','trap-mid'],       type:'Machine',    equipment:'T-Bar'},
+  {id:'e31',name:'Face Pull',             nameAr:'فيس بول ظهر',      muscle:'Back',      muscleDetail:'rear-delt',     muscleDetailAr:'الكتف الخلفي',   synergist:['rhomboid','trap-mid'],          type:'Cable',      equipment:'Cable Machine'},
+  {id:'e32',name:'Hyperextension',        nameAr:'هايبر إكستنشن',    muscle:'Back',      muscleDetail:'lower-back',    muscleDetailAr:'أسفل الظهر',     synergist:['glute','hamstring'],            type:'Bodyweight', equipment:'GHD'},
+  {id:'e33',name:'Straight Arm Pulldown', nameAr:'سترايت آرم',       muscle:'Back',      muscleDetail:'lat',           muscleDetailAr:'العضلة العريضة', synergist:['tricep-long'],                  type:'Cable',      equipment:'Cable Machine'},
   // BICEPS
-  {id:'e34',name:'Barbell Curl',nameAr:'كيرل بار',muscle:'Biceps',type:'Barbell',equipment:'Barbell'},
-  {id:'e35',name:'Dumbbell Curl',nameAr:'كيرل دمبل',muscle:'Biceps',type:'Dumbbell',equipment:'Dumbbell'},
-  {id:'e36',name:'Hammer Curl',nameAr:'هامر كيرل',muscle:'Biceps',type:'Dumbbell',equipment:'Dumbbell'},
-  {id:'e37',name:'Preacher Curl',nameAr:'بريتشر كيرل',muscle:'Biceps',type:'Barbell',equipment:'Preacher Bench'},
-  {id:'e38',name:'Cable Curl',nameAr:'كيرل كابل',muscle:'Biceps',type:'Cable',equipment:'Cable Machine'},
-  {id:'e39',name:'Concentration Curl',nameAr:'كيرل تركيز',muscle:'Biceps',type:'Dumbbell',equipment:'Dumbbell'},
-  {id:'e40',name:'Incline Dumbbell Curl',nameAr:'كيرل مائل',muscle:'Biceps',type:'Dumbbell',equipment:'Dumbbell'},
+  {id:'e34',name:'Barbell Curl',          nameAr:'كيرل بار',         muscle:'Biceps',    muscleDetail:'bicep-short',   muscleDetailAr:'الرأس القصير',   synergist:['bicep-long','forearm'],         type:'Barbell',    equipment:'Barbell'},
+  {id:'e35',name:'Dumbbell Curl',         nameAr:'كيرل دمبل',        muscle:'Biceps',    muscleDetail:'bicep-long',    muscleDetailAr:'الرأس الطويل',   synergist:['forearm'],                      type:'Dumbbell',   equipment:'Dumbbell'},
+  {id:'e36',name:'Hammer Curl',           nameAr:'هامر كيرل',        muscle:'Biceps',    muscleDetail:'brachialis',    muscleDetailAr:'العضلة العضدية', synergist:['bicep-long','forearm'],         type:'Dumbbell',   equipment:'Dumbbell'},
+  {id:'e37',name:'Preacher Curl',         nameAr:'بريتشر كيرل',      muscle:'Biceps',    muscleDetail:'bicep-short',   muscleDetailAr:'الرأس القصير',   synergist:['forearm'],                      type:'Barbell',    equipment:'Preacher Bench'},
+  {id:'e38',name:'Cable Curl',            nameAr:'كيرل كابل',        muscle:'Biceps',    muscleDetail:'bicep-long',    muscleDetailAr:'الرأس الطويل',   synergist:['forearm'],                      type:'Cable',      equipment:'Cable Machine'},
+  {id:'e39',name:'Concentration Curl',    nameAr:'كيرل تركيز',       muscle:'Biceps',    muscleDetail:'bicep-short',   muscleDetailAr:'الرأس القصير',   synergist:['forearm'],                      type:'Dumbbell',   equipment:'Dumbbell'},
+  {id:'e40',name:'Incline Dumbbell Curl', nameAr:'كيرل مائل',        muscle:'Biceps',    muscleDetail:'bicep-long',    muscleDetailAr:'الرأس الطويل',   synergist:['forearm'],                      type:'Dumbbell',   equipment:'Dumbbell'},
   // LEGS
-  {id:'e41',name:'Squat',nameAr:'سكوات',muscle:'Legs',type:'Barbell',equipment:'Barbell'},
-  {id:'e42',name:'Romanian Deadlift',nameAr:'ديدليفت روماني',muscle:'Legs',type:'Barbell',equipment:'Barbell'},
-  {id:'e43',name:'Leg Press',nameAr:'ليج بريس',muscle:'Legs',type:'Machine',equipment:'Leg Press'},
-  {id:'e44',name:'Leg Extension',nameAr:'ليج إكستنشن',muscle:'Legs',type:'Machine',equipment:'Machine'},
-  {id:'e45',name:'Leg Curl',nameAr:'ليج كيرل',muscle:'Legs',type:'Machine',equipment:'Machine'},
-  {id:'e46',name:'Bulgarian Split Squat',nameAr:'بلغاري سبليت',muscle:'Legs',type:'Dumbbell',equipment:'Dumbbell'},
-  {id:'e47',name:'Walking Lunges',nameAr:'لونج',muscle:'Legs',type:'Dumbbell',equipment:'Dumbbell'},
-  {id:'e48',name:'Hack Squat',nameAr:'هاك سكوات',muscle:'Legs',type:'Machine',equipment:'Hack Squat'},
-  {id:'e49',name:'Calf Raise',nameAr:'كالف رايز',muscle:'Calves',type:'Machine',equipment:'Machine'},
-  {id:'e50',name:'Seated Calf Raise',nameAr:'كالف جلوس',muscle:'Calves',type:'Machine',equipment:'Machine'},
-  {id:'e51',name:'Good Morning',nameAr:'جود مورنينج',muscle:'Legs',type:'Barbell',equipment:'Barbell'},
-  {id:'e52',name:'Hip Thrust',nameAr:'هيب ثراست',muscle:'Legs',type:'Barbell',equipment:'Barbell'},
+  {id:'e41',name:'Squat',                 nameAr:'سكوات',            muscle:'Legs',      muscleDetail:'quad',          muscleDetailAr:'الرباعية',       synergist:['glute','hamstring'],            type:'Barbell',    equipment:'Barbell'},
+  {id:'e42',name:'Romanian Deadlift',     nameAr:'ديدليفت روماني',   muscle:'Legs',      muscleDetail:'hamstring',     muscleDetailAr:'الهامسترينج',    synergist:['glute','lower-back'],           type:'Barbell',    equipment:'Barbell'},
+  {id:'e43',name:'Leg Press',             nameAr:'ليج بريس',         muscle:'Legs',      muscleDetail:'quad',          muscleDetailAr:'الرباعية',       synergist:['glute','hamstring'],            type:'Machine',    equipment:'Leg Press'},
+  {id:'e44',name:'Leg Extension',         nameAr:'ليج إكستنشن',      muscle:'Legs',      muscleDetail:'quad',          muscleDetailAr:'الرباعية',       synergist:[],                               type:'Machine',    equipment:'Machine'},
+  {id:'e45',name:'Leg Curl',              nameAr:'ليج كيرل',         muscle:'Legs',      muscleDetail:'hamstring',     muscleDetailAr:'الهامسترينج',    synergist:['calf'],                         type:'Machine',    equipment:'Machine'},
+  {id:'e46',name:'Bulgarian Split Squat', nameAr:'بلغاري سبليت',     muscle:'Legs',      muscleDetail:'quad',          muscleDetailAr:'الرباعية',       synergist:['glute','hamstring'],            type:'Dumbbell',   equipment:'Dumbbell'},
+  {id:'e47',name:'Walking Lunges',        nameAr:'لونج',             muscle:'Legs',      muscleDetail:'quad',          muscleDetailAr:'الرباعية',       synergist:['glute','hamstring'],            type:'Dumbbell',   equipment:'Dumbbell'},
+  {id:'e48',name:'Hack Squat',            nameAr:'هاك سكوات',        muscle:'Legs',      muscleDetail:'quad',          muscleDetailAr:'الرباعية',       synergist:['glute'],                        type:'Machine',    equipment:'Hack Squat'},
+  {id:'e49',name:'Calf Raise',            nameAr:'كالف رايز',        muscle:'Calves',    muscleDetail:'calf-gastro',   muscleDetailAr:'الغاسترو',       synergist:['calf-soleus'],                  type:'Machine',    equipment:'Machine'},
+  {id:'e50',name:'Seated Calf Raise',     nameAr:'كالف جلوس',        muscle:'Calves',    muscleDetail:'calf-soleus',   muscleDetailAr:'السولياس',       synergist:['calf-gastro'],                  type:'Machine',    equipment:'Machine'},
+  {id:'e51',name:'Good Morning',          nameAr:'جود مورنينج',      muscle:'Legs',      muscleDetail:'hamstring',     muscleDetailAr:'الهامسترينج',    synergist:['lower-back','glute'],           type:'Barbell',    equipment:'Barbell'},
+  {id:'e52',name:'Hip Thrust',            nameAr:'هيب ثراست',        muscle:'Legs',      muscleDetail:'glute',         muscleDetailAr:'الجلوتس',        synergist:['hamstring'],                    type:'Barbell',    equipment:'Barbell'},
   // ABS
-  {id:'e53',name:'Crunch',nameAr:'كرنش',muscle:'Abs',type:'Bodyweight',equipment:'Bodyweight'},
-  {id:'e54',name:'Plank',nameAr:'بلانك',muscle:'Abs',type:'Bodyweight',equipment:'Bodyweight'},
-  {id:'e55',name:'Cable Crunch',nameAr:'كرنش كابل',muscle:'Abs',type:'Cable',equipment:'Cable Machine'},
-  {id:'e56',name:'Leg Raise',nameAr:'رفع رجلين',muscle:'Abs',type:'Bodyweight',equipment:'Bodyweight'},
-  {id:'e57',name:'Russian Twist',nameAr:'روشن تويست',muscle:'Abs',type:'Bodyweight',equipment:'Bodyweight'},
-  {id:'e58',name:'Ab Wheel',nameAr:'أب ويل',muscle:'Abs',type:'Equipment',equipment:'Ab Wheel'},
+  {id:'e53',name:'Crunch',                nameAr:'كرنش',             muscle:'Abs',       muscleDetail:'abs-upper',     muscleDetailAr:'البطن العلوي',   synergist:['abs-lower'],                    type:'Bodyweight', equipment:'Bodyweight'},
+  {id:'e54',name:'Plank',                 nameAr:'بلانك',            muscle:'Abs',       muscleDetail:'abs-upper',     muscleDetailAr:'البطن العلوي',   synergist:['oblique','lower-back'],         type:'Bodyweight', equipment:'Bodyweight'},
+  {id:'e55',name:'Cable Crunch',          nameAr:'كرنش كابل',        muscle:'Abs',       muscleDetail:'abs-upper',     muscleDetailAr:'البطن العلوي',   synergist:['abs-lower'],                    type:'Cable',      equipment:'Cable Machine'},
+  {id:'e56',name:'Leg Raise',             nameAr:'رفع رجلين',        muscle:'Abs',       muscleDetail:'abs-lower',     muscleDetailAr:'البطن السفلي',   synergist:['hip-flexor'],                   type:'Bodyweight', equipment:'Bodyweight'},
+  {id:'e57',name:'Russian Twist',         nameAr:'روشن تويست',       muscle:'Abs',       muscleDetail:'oblique',       muscleDetailAr:'العضلة المائلة', synergist:['abs-upper'],                    type:'Bodyweight', equipment:'Bodyweight'},
+  {id:'e58',name:'Ab Wheel',              nameAr:'أب ويل',           muscle:'Abs',       muscleDetail:'abs-upper',     muscleDetailAr:'البطن العلوي',   synergist:['oblique','lower-back'],         type:'Equipment',  equipment:'Ab Wheel'},
 ];
 
 // DEFAULT PPL SCHEDULE
@@ -3740,7 +3740,7 @@ function renderActiveExercises() {
           </select>
         </div>
       </div>
-      ${buildMuscleMapHTML(ex.muscle)}
+      ${buildMuscleMapHTML(ex.muscleDetail || ex.muscle)}
       ${buildLastSessionBanner(ex.id)}
       <div id="sets-${ei}" style="margin-top:8px">
         ${ex.sets.map((s, si) => renderSetRow(ei, si, s)).join('')}
@@ -3986,179 +3986,201 @@ function confirmWarmup() {
 
 // ─── MUSCLE MAP ───
 
-// Map muscle group → SVG path IDs (front and back body)
-const MUSCLE_MAP_DATA = {
-  Chest: {
-    primary: ['chest-l','chest-r'],
-    secondary: ['front-shoulder-l','front-shoulder-r','tricep-l','tricep-r'],
-    label: 'الصدر',
-    synergist: 'الكتف الأمامي، التراي'
-  },
-  Back: {
-    primary: ['lat-l','lat-r','trap-upper','trap-mid'],
-    secondary: ['rear-delt-l','rear-delt-r','bicep-l','bicep-r'],
-    label: 'الظهر',
-    synergist: 'الكتف الخلفي، الباي'
-  },
-  Shoulders: {
-    primary: ['front-shoulder-l','front-shoulder-r','side-delt-l','side-delt-r','rear-delt-l','rear-delt-r'],
-    secondary: ['trap-upper','tricep-l','tricep-r'],
-    label: 'الكتف',
-    synergist: 'التراب، التراي'
-  },
-  Biceps: {
-    primary: ['bicep-l','bicep-r'],
-    secondary: ['forearm-l','forearm-r'],
-    label: 'الباي سبس',
-    synergist: 'الساعد'
-  },
-  Triceps: {
-    primary: ['tricep-l','tricep-r'],
-    secondary: ['front-shoulder-l','front-shoulder-r'],
-    label: 'التراي سبس',
-    synergist: 'الكتف الأمامي'
-  },
-  Legs: {
-    primary: ['quad-l','quad-r','glute-l','glute-r'],
-    secondary: ['hamstring-l','hamstring-r','calf-l','calf-r'],
-    label: 'الأرجل',
-    synergist: 'الهامسترينج، الكالف'
-  },
-  Abs: {
-    primary: ['abs-upper','abs-lower'],
-    secondary: ['oblique-l','oblique-r'],
-    label: 'البطن',
-    synergist: 'المائل'
-  },
-  Calves: {
-    primary: ['calf-l','calf-r'],
-    secondary: ['hamstring-l','hamstring-r'],
-    label: 'الكالف',
-    synergist: 'الهامسترينج'
-  },
+// Detailed muscle detail → SVG highlighted region IDs + colors
+const MUSCLE_DETAIL_MAP = {
+  // ── CHEST ──
+  'upper-chest':   { primary:['uc-l','uc-r'],           secondary:['fd-l','fd-r'],              labelAr:'الصدر العلوي',    noteAr:'الكتف الأمامي مساعد' },
+  'mid-chest':     { primary:['mc-l','mc-r'],           secondary:['fd-l','fd-r','tl-l','tl-r'],labelAr:'الصدر الأوسط',    noteAr:'الكتف والترايسبس مساعد' },
+  'lower-chest':   { primary:['lc-l','lc-r'],           secondary:['fd-l','fd-r','tl-l','tl-r'],labelAr:'الصدر السفلي',    noteAr:'الكتف الأمامي والترايسبس' },
+  // ── SHOULDERS ──
+  'front-delt':    { primary:['fd-l','fd-r'],           secondary:['sd-l','sd-r','tlo-l','tlo-r'],labelAr:'الكتف الأمامي',  noteAr:'الكتف الجانبي مساعد' },
+  'side-delt':     { primary:['sd-l','sd-r'],           secondary:['tu'],                        labelAr:'الكتف الجانبي',   noteAr:'التراب العلوي مساعد' },
+  'rear-delt':     { primary:['rd-l','rd-r'],           secondary:['tm','rh'],                   labelAr:'الكتف الخلفي',    noteAr:'الرومبويد ووسط التراب' },
+  // ── TRICEPS ──
+  'tricep-lateral':{ primary:['tl-l','tl-r'],           secondary:['tm-l','tm-r'],               labelAr:'الترايسبس الجانبي',noteAr:'الرأس الأوسط مساعد' },
+  'tricep-long':   { primary:['tlo-l','tlo-r'],         secondary:['tl-l','tl-r'],               labelAr:'الترايسبس الرأس الطويل',noteAr:'الرأس الجانبي مساعد' },
+  'tricep-medial': { primary:['tm-l','tm-r'],           secondary:['tl-l','tl-r'],               labelAr:'الترايسبس الأوسط',noteAr:'الرأس الجانبي مساعد' },
+  // ── BACK ──
+  'lat':           { primary:['lat-l','lat-r'],         secondary:['bl-l','bl-r','rd-l','rd-r'], labelAr:'العضلة العريضة',  noteAr:'الباي والكتف الخلفي' },
+  'mid-back':      { primary:['mb-l','mb-r','rh'],      secondary:['lat-l','lat-r','tm'],         labelAr:'وسط الظهر',       noteAr:'اللات والتراب الأوسط' },
+  'lower-back':    { primary:['lb'],                    secondary:['gl-l','gl-r','hs-l','hs-r'], labelAr:'أسفل الظهر',      noteAr:'الجلوتس والهامسترينج' },
+  // ── BICEPS ──
+  'bicep-long':    { primary:['bl-l','bl-r'],           secondary:['fr-l','fr-r'],               labelAr:'الرأس الطويل',    noteAr:'الساعد مساعد' },
+  'bicep-short':   { primary:['bs-l','bs-r'],           secondary:['fr-l','fr-r'],               labelAr:'الرأس القصير',    noteAr:'الساعد مساعد' },
+  'brachialis':    { primary:['br-l','br-r'],           secondary:['bl-l','bl-r','fr-l','fr-r'], labelAr:'العضلة العضدية',  noteAr:'الباي والساعد مساعد' },
+  // ── LEGS ──
+  'quad':          { primary:['qu-l','qu-r'],           secondary:['gl-l','gl-r'],               labelAr:'الرباعية',        noteAr:'الجلوتس مساعد' },
+  'hamstring':     { primary:['hs-l','hs-r'],           secondary:['gl-l','gl-r'],               labelAr:'الهامسترينج',     noteAr:'الجلوتس مساعد' },
+  'glute':         { primary:['gl-l','gl-r'],           secondary:['hs-l','hs-r'],               labelAr:'الجلوتس',         noteAr:'الهامسترينج مساعد' },
+  // ── CALVES ──
+  'calf-gastro':   { primary:['cg-l','cg-r'],           secondary:['cs-l','cs-r'],               labelAr:'الغاسترو',        noteAr:'السولياس مساعد' },
+  'calf-soleus':   { primary:['cs-l','cs-r'],           secondary:['cg-l','cg-r'],               labelAr:'السولياس',        noteAr:'الغاسترو مساعد' },
+  // ── ABS ──
+  'abs-upper':     { primary:['au'],                    secondary:['al','ob-l','ob-r'],          labelAr:'البطن العلوي',    noteAr:'البطن السفلي والمائل' },
+  'abs-lower':     { primary:['al'],                    secondary:['au'],                        labelAr:'البطن السفلي',    noteAr:'البطن العلوي مساعد' },
+  'oblique':       { primary:['ob-l','ob-r'],           secondary:['au','al'],                   labelAr:'العضلة المائلة',  noteAr:'البطن مساعد' },
 };
 
-function buildMuscleMapSVG(muscle) {
-  const data = MUSCLE_MAP_DATA[muscle] || { primary: [], secondary: [], label: muscle, synergist: '' };
+function buildMuscleMapSVG(muscleDetail) {
+  const data = MUSCLE_DETAIL_MAP[muscleDetail] || MUSCLE_DETAIL_MAP['mid-chest'];
+  const primary = data.primary || [];
+  const secondary = data.secondary || [];
 
-  // Color function per path
-  function fillFor(id) {
-    if (data.primary.includes(id)) return '#e8222a';
-    if (data.secondary && data.secondary.includes(id)) return '#e8960a';
-    return 'rgba(255,255,255,0.07)';
+  function fc(id) {
+    if (primary.includes(id))   return '#e8222a';
+    if (secondary.includes(id)) return '#e8960a';
+    return 'rgba(255,255,255,0.06)';
   }
-  function strokeFor(id) {
-    if (data.primary.includes(id)) return '#ff4a50';
-    if (data.secondary && data.secondary.includes(id)) return '#f0a500';
-    return 'rgba(255,255,255,0.12)';
+  function sc(id) {
+    if (primary.includes(id))   return '#ff5a60';
+    if (secondary.includes(id)) return '#f0b030';
+    return 'rgba(255,255,255,0.1)';
+  }
+  function op(id) {
+    if (primary.includes(id))   return '1';
+    if (secondary.includes(id)) return '0.85';
+    return '0.7';
   }
 
-  // Build front body SVG (simplified anatomical)
-  const svg = `<svg width="90" height="140" viewBox="0 0 90 140" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <!-- Head -->
-    <ellipse cx="45" cy="10" rx="9" ry="10" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
-    <!-- Neck -->
-    <rect x="41" y="19" width="8" height="6" rx="2" fill="rgba(255,255,255,0.06)"/>
+  // FRONT VIEW — anatomically accurate simplified
+  const svgFront = `<svg width="100" height="150" viewBox="0 0 100 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Head -->
+  <ellipse cx="50" cy="10" rx="9" ry="10" fill="rgba(255,255,255,0.07)" stroke="rgba(255,255,255,0.12)" stroke-width="0.8"/>
+  <rect x="46" y="19" width="8" height="5" rx="2" fill="rgba(255,255,255,0.05)"/>
 
-    <!-- FRONT SHOULDERS -->
-    <ellipse id="front-shoulder-l" cx="24" cy="32" rx="8" ry="7"
-      fill="${fillFor('front-shoulder-l')}" stroke="${strokeFor('front-shoulder-l')}" stroke-width="1"/>
-    <ellipse id="front-shoulder-r" cx="66" cy="32" rx="8" ry="7"
-      fill="${fillFor('front-shoulder-r')}" stroke="${strokeFor('front-shoulder-r')}" stroke-width="1"/>
-    <!-- SIDE DELT -->
-    <ellipse id="side-delt-l" cx="17" cy="36" rx="5" ry="6"
-      fill="${fillFor('side-delt-l')}" stroke="${strokeFor('side-delt-l')}" stroke-width="1"/>
-    <ellipse id="side-delt-r" cx="73" cy="36" rx="5" ry="6"
-      fill="${fillFor('side-delt-r')}" stroke="${strokeFor('side-delt-r')}" stroke-width="1"/>
+  <!-- UPPER CHEST (clavicular head) -->
+  <path id="uc-l" d="M28 24 Q36 22 43 26 Q42 33 36 35 Q29 33 27 28Z" fill="${fc('uc-l')}" stroke="${sc('uc-l')}" stroke-width="0.8" opacity="${op('uc-l')}"/>
+  <path id="uc-r" d="M72 24 Q64 22 57 26 Q58 33 64 35 Q71 33 73 28Z" fill="${fc('uc-r')}" stroke="${sc('uc-r')}" stroke-width="0.8" opacity="${op('uc-r')}"/>
 
-    <!-- CHEST -->
-    <path id="chest-l" d="M32 26 Q45 24 45 38 Q38 42 30 40 Q26 36 32 26Z"
-      fill="${fillFor('chest-l')}" stroke="${strokeFor('chest-l')}" stroke-width="1"/>
-    <path id="chest-r" d="M58 26 Q45 24 45 38 Q52 42 60 40 Q64 36 58 26Z"
-      fill="${fillFor('chest-r')}" stroke="${strokeFor('chest-r')}" stroke-width="1"/>
+  <!-- MID CHEST (sternal head) -->
+  <path id="mc-l" d="M27 28 Q29 33 36 35 Q43 38 43 44 Q36 46 30 42 Q25 37 27 28Z" fill="${fc('mc-l')}" stroke="${sc('mc-l')}" stroke-width="0.8" opacity="${op('mc-l')}"/>
+  <path id="mc-r" d="M73 28 Q71 33 64 35 Q57 38 57 44 Q64 46 70 42 Q75 37 73 28Z" fill="${fc('mc-r')}" stroke="${sc('mc-r')}" stroke-width="0.8" opacity="${op('mc-r')}"/>
 
-    <!-- BICEPS -->
-    <path id="bicep-l" d="M14 40 Q10 48 12 56 Q17 58 20 56 Q22 48 20 40Z"
-      fill="${fillFor('bicep-l')}" stroke="${strokeFor('bicep-l')}" stroke-width="1"/>
-    <path id="bicep-r" d="M76 40 Q80 48 78 56 Q73 58 70 56 Q68 48 70 40Z"
-      fill="${fillFor('bicep-r')}" stroke="${strokeFor('bicep-r')}" stroke-width="1"/>
+  <!-- LOWER CHEST -->
+  <path id="lc-l" d="M30 42 Q36 46 43 44 Q44 50 38 53 Q31 51 28 46Z" fill="${fc('lc-l')}" stroke="${sc('lc-l')}" stroke-width="0.8" opacity="${op('lc-l')}"/>
+  <path id="lc-r" d="M70 42 Q64 46 57 44 Q56 50 62 53 Q69 51 72 46Z" fill="${fc('lc-r')}" stroke="${sc('lc-r')}" stroke-width="0.8" opacity="${op('lc-r')}"/>
 
-    <!-- TRICEPS (side) -->
-    <path id="tricep-l" d="M13 42 Q8 50 10 58 Q13 60 15 58 Q14 50 16 42Z"
-      fill="${fillFor('tricep-l')}" stroke="${strokeFor('tricep-l')}" stroke-width="1"/>
-    <path id="tricep-r" d="M77 42 Q82 50 80 58 Q77 60 75 58 Q76 50 74 42Z"
-      fill="${fillFor('tricep-r')}" stroke="${strokeFor('tricep-r')}" stroke-width="1"/>
+  <!-- FRONT DELT -->
+  <path id="fd-l" d="M22 22 Q19 26 19 33 Q23 36 27 33 Q28 27 25 22Z" fill="${fc('fd-l')}" stroke="${sc('fd-l')}" stroke-width="0.8" opacity="${op('fd-l')}"/>
+  <path id="fd-r" d="M78 22 Q81 26 81 33 Q77 36 73 33 Q72 27 75 22Z" fill="${fc('fd-r')}" stroke="${sc('fd-r')}" stroke-width="0.8" opacity="${op('fd-r')}"/>
 
-    <!-- FOREARMS -->
-    <path id="forearm-l" d="M12 58 Q9 66 10 72 Q14 74 17 72 Q18 66 20 58Z"
-      fill="${fillFor('forearm-l')}" stroke="${strokeFor('forearm-l')}" stroke-width="1"/>
-    <path id="forearm-r" d="M78 58 Q81 66 80 72 Q76 74 73 72 Q72 66 70 58Z"
-      fill="${fillFor('forearm-r')}" stroke="${strokeFor('forearm-r')}" stroke-width="1"/>
+  <!-- SIDE DELT -->
+  <path id="sd-l" d="M14 28 Q11 34 13 41 Q17 43 20 40 Q21 34 19 27Z" fill="${fc('sd-l')}" stroke="${sc('sd-l')}" stroke-width="0.8" opacity="${op('sd-l')}"/>
+  <path id="sd-r" d="M86 28 Q89 34 87 41 Q83 43 80 40 Q79 34 81 27Z" fill="${fc('sd-r')}" stroke="${sc('sd-r')}" stroke-width="0.8" opacity="${op('sd-r')}"/>
 
-    <!-- ABS -->
-    <path id="abs-upper" d="M35 42 Q45 40 55 42 L54 58 Q45 60 36 58Z"
-      fill="${fillFor('abs-upper')}" stroke="${strokeFor('abs-upper')}" stroke-width="1"/>
-    <path id="abs-lower" d="M36 58 Q45 60 54 58 L53 72 Q45 74 37 72Z"
-      fill="${fillFor('abs-lower')}" stroke="${strokeFor('abs-lower')}" stroke-width="1"/>
-    <!-- abs lines -->
-    <line x1="45" y1="40" x2="45" y2="74" stroke="rgba(0,0,0,0.3)" stroke-width="0.8"/>
-    <line x1="36" y1="49" x2="54" y2="49" stroke="rgba(0,0,0,0.3)" stroke-width="0.8"/>
-    <line x1="36" y1="58" x2="54" y2="58" stroke="rgba(0,0,0,0.3)" stroke-width="0.8"/>
-    <line x1="36" y1="66" x2="54" y2="66" stroke="rgba(0,0,0,0.3)" stroke-width="0.8"/>
+  <!-- TRICEP LATERAL (outer) -->
+  <path id="tl-l" d="M12 42 Q8 50 9 58 Q13 60 16 57 Q16 49 15 41Z" fill="${fc('tl-l')}" stroke="${sc('tl-l')}" stroke-width="0.8" opacity="${op('tl-l')}"/>
+  <path id="tl-r" d="M88 42 Q92 50 91 58 Q87 60 84 57 Q84 49 85 41Z" fill="${fc('tl-r')}" stroke="${sc('tl-r')}" stroke-width="0.8" opacity="${op('tl-r')}"/>
 
-    <!-- OBLIQUES -->
-    <path id="oblique-l" d="M30 46 Q33 54 34 66 Q29 68 27 62 Q26 54 28 46Z"
-      fill="${fillFor('oblique-l')}" stroke="${strokeFor('oblique-l')}" stroke-width="1"/>
-    <path id="oblique-r" d="M60 46 Q57 54 56 66 Q61 68 63 62 Q64 54 62 46Z"
-      fill="${fillFor('oblique-r')}" stroke="${strokeFor('oblique-r')}" stroke-width="1"/>
+  <!-- TRICEP LONG (inner/posterior) -->
+  <path id="tlo-l" d="M16 41 Q13 49 14 58 Q18 61 21 58 Q21 49 20 40Z" fill="${fc('tlo-l')}" stroke="${sc('tlo-l')}" stroke-width="0.8" opacity="${op('tlo-l')}"/>
+  <path id="tlo-r" d="M84 41 Q87 49 86 58 Q82 61 79 58 Q79 49 80 40Z" fill="${fc('tlo-r')}" stroke="${sc('tlo-r')}" stroke-width="0.8" opacity="${op('tlo-r')}"/>
 
-    <!-- QUADS -->
-    <path id="quad-l" d="M29 76 Q24 90 25 106 Q33 110 38 106 Q40 90 37 76Z"
-      fill="${fillFor('quad-l')}" stroke="${strokeFor('quad-l')}" stroke-width="1"/>
-    <path id="quad-r" d="M61 76 Q66 90 65 106 Q57 110 52 106 Q50 90 53 76Z"
-      fill="${fillFor('quad-r')}" stroke="${strokeFor('quad-r')}" stroke-width="1"/>
+  <!-- TRICEP MEDIAL (middle) -->
+  <path id="tm-l" d="M14 52 Q11 58 12 64 Q16 66 19 63 Q19 57 17 51Z" fill="${fc('tm-l')}" stroke="${sc('tm-l')}" stroke-width="0.8" opacity="${op('tm-l')}"/>
+  <path id="tm-r" d="M86 52 Q89 58 88 64 Q84 66 81 63 Q81 57 83 51Z" fill="${fc('tm-r')}" stroke="${sc('tm-r')}" stroke-width="0.8" opacity="${op('tm-r')}"/>
 
-    <!-- CALVES (front visible) -->
-    <path id="calf-l" d="M26 110 Q23 120 24 130 Q30 133 34 130 Q35 120 34 110Z"
-      fill="${fillFor('calf-l')}" stroke="${strokeFor('calf-l')}" stroke-width="1"/>
-    <path id="calf-r" d="M64 110 Q67 120 66 130 Q60 133 56 130 Q55 120 56 110Z"
-      fill="${fillFor('calf-r')}" stroke="${strokeFor('calf-r')}" stroke-width="1"/>
+  <!-- BICEP LONG (outer) -->
+  <path id="bl-l" d="M15 41 Q12 49 13 57 Q17 59 20 57 Q21 49 19 41Z" fill="${fc('bl-l')}" stroke="${sc('bl-l')}" stroke-width="0.8" opacity="${op('bl-l')}"/>
+  <path id="bl-r" d="M85 41 Q88 49 87 57 Q83 59 80 57 Q79 49 81 41Z" fill="${fc('bl-r')}" stroke="${sc('bl-r')}" stroke-width="0.8" opacity="${op('bl-r')}"/>
 
-    <!-- GLUTES (hip area front) -->
-    <path id="glute-l" d="M30 74 Q26 78 27 84 Q32 86 37 84 Q38 78 36 74Z"
-      fill="${fillFor('glute-l')}" stroke="${strokeFor('glute-l')}" stroke-width="1"/>
-    <path id="glute-r" d="M60 74 Q64 78 63 84 Q58 86 53 84 Q52 78 54 74Z"
-      fill="${fillFor('glute-r')}" stroke="${strokeFor('glute-r')}" stroke-width="1"/>
+  <!-- BICEP SHORT (inner) -->
+  <path id="bs-l" d="M19 42 Q17 49 18 57 Q21 59 24 56 Q24 48 22 41Z" fill="${fc('bs-l')}" stroke="${sc('bs-l')}" stroke-width="0.8" opacity="${op('bs-l')}"/>
+  <path id="bs-r" d="M81 42 Q83 49 82 57 Q79 59 76 56 Q76 48 78 41Z" fill="${fc('bs-r')}" stroke="${sc('bs-r')}" stroke-width="0.8" opacity="${op('bs-r')}"/>
 
-    <!-- HAMSTRINGS (back-visible on side) -->
-    <path id="hamstring-l" d="M26 86 Q22 96 23 108 Q28 111 32 108 Q33 96 30 86Z"
-      fill="${fillFor('hamstring-l')}" stroke="${strokeFor('hamstring-l')}" stroke-width="0.5" opacity="0.4"/>
-    <path id="hamstring-r" d="M64 86 Q68 96 67 108 Q62 111 58 108 Q57 96 60 86Z"
-      fill="${fillFor('hamstring-r')}" stroke="${strokeFor('hamstring-r')}" stroke-width="0.5" opacity="0.4"/>
+  <!-- BRACHIALIS -->
+  <path id="br-l" d="M13 54 Q10 60 11 66 Q15 68 18 65 Q18 59 16 53Z" fill="${fc('br-l')}" stroke="${sc('br-l')}" stroke-width="0.8" opacity="${op('br-l')}"/>
+  <path id="br-r" d="M87 54 Q90 60 89 66 Q85 68 82 65 Q82 59 84 53Z" fill="${fc('br-r')}" stroke="${sc('br-r')}" stroke-width="0.8" opacity="${op('br-r')}"/>
 
-    <!-- BACK BODY (right side — lats, traps) -->
-    <!-- LAT -->
-    <path id="lat-l" d="M32 28 Q27 36 28 50 Q34 52 38 48 Q38 38 36 28Z"
-      fill="${fillFor('lat-l')}" stroke="${strokeFor('lat-l')}" stroke-width="1" opacity="0.5"/>
-    <path id="lat-r" d="M58 28 Q63 36 62 50 Q56 52 52 48 Q52 38 54 28Z"
-      fill="${fillFor('lat-r')}" stroke="${strokeFor('lat-r')}" stroke-width="1" opacity="0.5"/>
+  <!-- FOREARM -->
+  <path id="fr-l" d="M12 58 Q9 66 10 74 Q14 76 17 73 Q18 65 16 57Z" fill="${fc('fr-l')}" stroke="${sc('fr-l')}" stroke-width="0.8" opacity="${op('fr-l')}"/>
+  <path id="fr-r" d="M88 58 Q91 66 90 74 Q86 76 83 73 Q82 65 84 57Z" fill="${fc('fr-r')}" stroke="${sc('fr-r')}" stroke-width="0.8" opacity="${op('fr-r')}"/>
 
-    <!-- TRAP -->
-    <path id="trap-upper" d="M36 22 Q45 18 54 22 Q52 28 45 30 Q38 28 36 22Z"
-      fill="${fillFor('trap-upper')}" stroke="${strokeFor('trap-upper')}" stroke-width="1"/>
-    <path id="trap-mid" d="M34 28 Q45 26 56 28 Q54 36 45 38 Q36 36 34 28Z"
-      fill="${fillFor('trap-mid')}" stroke="${strokeFor('trap-mid')}" stroke-width="1" opacity="0.6"/>
+  <!-- ABS UPPER -->
+  <path id="au" d="M37 44 Q50 42 63 44 L62 60 Q50 62 38 60Z" fill="${fc('au')}" stroke="${sc('au')}" stroke-width="0.8" opacity="${op('au')}"/>
+  <!-- ABS LOWER -->
+  <path id="al" d="M38 60 Q50 62 62 60 L61 74 Q50 76 39 74Z" fill="${fc('al')}" stroke="${sc('al')}" stroke-width="0.8" opacity="${op('al')}"/>
+  <!-- Abs lines -->
+  <line x1="50" y1="42" x2="50" y2="76" stroke="rgba(0,0,0,0.35)" stroke-width="0.7"/>
+  <line x1="38" y1="52" x2="62" y2="52" stroke="rgba(0,0,0,0.25)" stroke-width="0.6"/>
+  <line x1="38" y1="60" x2="62" y2="60" stroke="rgba(0,0,0,0.25)" stroke-width="0.6"/>
+  <line x1="38" y1="68" x2="62" y2="68" stroke="rgba(0,0,0,0.25)" stroke-width="0.6"/>
 
-    <!-- REAR DELT -->
-    <path id="rear-delt-l" d="M22 28 Q18 34 20 40 Q25 42 28 38 Q28 32 24 28Z"
-      fill="${fillFor('rear-delt-l')}" stroke="${strokeFor('rear-delt-l')}" stroke-width="1" opacity="0.6"/>
-    <path id="rear-delt-r" d="M68 28 Q72 34 70 40 Q65 42 62 38 Q62 32 66 28Z"
-      fill="${fillFor('rear-delt-r')}" stroke="${strokeFor('rear-delt-r')}" stroke-width="1" opacity="0.6"/>
-  </svg>`;
+  <!-- OBLIQUE -->
+  <path id="ob-l" d="M30 48 Q34 56 36 70 Q30 72 27 66 Q25 58 27 48Z" fill="${fc('ob-l')}" stroke="${sc('ob-l')}" stroke-width="0.8" opacity="${op('ob-l')}"/>
+  <path id="ob-r" d="M70 48 Q66 56 64 70 Q70 72 73 66 Q75 58 73 48Z" fill="${fc('ob-r')}" stroke="${sc('ob-r')}" stroke-width="0.8" opacity="${op('ob-r')}"/>
 
-  return { svg, label: data.label, synergist: data.synergist };
+  <!-- HIP area -->
+  <path d="M36 74 Q50 76 64 74 L65 82 Q50 84 35 82Z" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.08)" stroke-width="0.6"/>
+
+  <!-- QUAD -->
+  <path id="qu-l" d="M31 84 Q26 96 27 112 Q34 116 40 112 Q42 96 39 84Z" fill="${fc('qu-l')}" stroke="${sc('qu-l')}" stroke-width="0.8" opacity="${op('qu-l')}"/>
+  <path id="qu-r" d="M69 84 Q74 96 73 112 Q66 116 60 112 Q58 96 61 84Z" fill="${fc('qu-r')}" stroke="${sc('qu-r')}" stroke-width="0.8" opacity="${op('qu-r')}"/>
+
+  <!-- GLUTE (hip front) -->
+  <path id="gl-l" d="M31 82 Q26 86 27 94 Q33 96 39 92 Q40 86 37 82Z" fill="${fc('gl-l')}" stroke="${sc('gl-l')}" stroke-width="0.8" opacity="${op('gl-l')}"/>
+  <path id="gl-r" d="M69 82 Q74 86 73 94 Q67 96 61 92 Q60 86 63 82Z" fill="${fc('gl-r')}" stroke="${sc('gl-r')}" stroke-width="0.8" opacity="${op('gl-r')}"/>
+
+  <!-- HAMSTRING (partially visible) -->
+  <path id="hs-l" d="M28 94 Q24 104 25 114 Q30 117 35 114 Q36 104 32 94Z" fill="${fc('hs-l')}" stroke="${sc('hs-l')}" stroke-width="0.6" opacity="${op('hs-l')}"/>
+  <path id="hs-r" d="M72 94 Q76 104 75 114 Q70 117 65 114 Q64 104 68 94Z" fill="${fc('hs-r')}" stroke="${sc('hs-r')}" stroke-width="0.6" opacity="${op('hs-r')}"/>
+
+  <!-- CALF GASTRO (outer head) -->
+  <path id="cg-l" d="M27 116 Q23 124 24 134 Q30 137 35 134 Q36 124 33 116Z" fill="${fc('cg-l')}" stroke="${sc('cg-l')}" stroke-width="0.8" opacity="${op('cg-l')}"/>
+  <path id="cg-r" d="M73 116 Q77 124 76 134 Q70 137 65 134 Q64 124 67 116Z" fill="${fc('cg-r')}" stroke="${sc('cg-r')}" stroke-width="0.8" opacity="${op('cg-r')}"/>
+
+  <!-- CALF SOLEUS (inner) -->
+  <path id="cs-l" d="M32 116 Q29 124 30 134 Q34 136 38 133 Q39 123 37 115Z" fill="${fc('cs-l')}" stroke="${sc('cs-l')}" stroke-width="0.8" opacity="${op('cs-l')}"/>
+  <path id="cs-r" d="M68 116 Q71 124 70 134 Q66 136 62 133 Q61 123 63 115Z" fill="${fc('cs-r')}" stroke="${sc('cs-r')}" stroke-width="0.8" opacity="${op('cs-r')}"/>
+
+  <!-- TRAP UPPER -->
+  <path id="tu" d="M38 20 Q50 16 62 20 Q60 26 50 28 Q40 26 38 20Z" fill="${fc('tu')}" stroke="${sc('tu')}" stroke-width="0.8" opacity="${op('tu')}"/>
+
+  <!-- LAT (visible from front) -->
+  <path id="lat-l" d="M24 34 Q20 44 22 56 Q27 58 32 54 Q32 44 29 33Z" fill="${fc('lat-l')}" stroke="${sc('lat-l')}" stroke-width="0.8" opacity="${op('lat-l')}"/>
+  <path id="lat-r" d="M76 34 Q80 44 78 56 Q73 58 68 54 Q68 44 71 33Z" fill="${fc('lat-r')}" stroke="${sc('lat-r')}" stroke-width="0.8" opacity="${op('lat-r')}"/>
+
+  <!-- REAR DELT (partial) -->
+  <path id="rd-l" d="M20 24 Q16 28 17 35 Q21 37 25 34 Q25 28 22 23Z" fill="${fc('rd-l')}" stroke="${sc('rd-l')}" stroke-width="0.6" opacity="${op('rd-l')}"/>
+  <path id="rd-r" d="M80 24 Q84 28 83 35 Q79 37 75 34 Q75 28 78 23Z" fill="${fc('rd-r')}" stroke="${sc('rd-r')}" stroke-width="0.6" opacity="${op('rd-r')}"/>
+
+  <!-- MID BACK / RHOMBOID (partial) -->
+  <path id="mb-l" d="M34 36 Q30 44 32 54 Q37 56 41 52 Q40 43 38 35Z" fill="${fc('mb-l')}" stroke="${sc('mb-l')}" stroke-width="0.6" opacity="${op('mb-l')}"/>
+  <path id="mb-r" d="M66 36 Q70 44 68 54 Q63 56 59 52 Q60 43 62 35Z" fill="${fc('mb-r')}" stroke="${sc('mb-r')}" stroke-width="0.6" opacity="${op('mb-r')}"/>
+  <path id="rh" d="M42 34 Q50 32 58 34 Q57 42 50 44 Q43 42 42 34Z" fill="${fc('rh')}" stroke="${sc('rh')}" stroke-width="0.6" opacity="${op('rh')}"/>
+
+  <!-- TRAP MID -->
+  <path id="tm" d="M36 28 Q50 26 64 28 Q62 36 50 38 Q38 36 36 28Z" fill="${fc('tm')}" stroke="${sc('tm')}" stroke-width="0.6" opacity="${op('tm')}"/>
+
+  <!-- LOWER BACK -->
+  <path id="lb" d="M38 56 Q50 54 62 56 L61 72 Q50 74 39 72Z" fill="${fc('lb')}" stroke="${sc('lb')}" stroke-width="0.8" opacity="${op('lb')}"/>
+</svg>`;
+
+  return { svg: svgFront, label: data.labelAr || muscleDetail, synergist: data.noteAr || '' };
 }
 
+function buildMuscleMapHTML(muscleDetail) {
+  // Support both old muscle field and new muscleDetail field
+  const detail = muscleDetail || 'mid-chest';
+  const { svg, label, synergist } = buildMuscleMapSVG(detail);
+  return `
+  <div class="muscle-map-wrap">
+    <div class="muscle-map-svg-wrap">${svg}</div>
+    <div class="muscle-map-info">
+      <div style="font-family:var(--font-main);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--text-muted);margin-bottom:4px">العضلة المستهدفة</div>
+      <div class="muscle-map-primary">${label}</div>
+      ${synergist ? `<div class="muscle-map-secondary">${synergist}</div>` : ''}
+      <div class="muscle-map-legend">
+        <div class="muscle-map-legend-item">
+          <div class="muscle-map-legend-dot" style="background:var(--red)"></div><span>أساسي</span>
+        </div>
+        <div class="muscle-map-legend-item">
+          <div class="muscle-map-legend-dot" style="background:var(--gold)"></div><span>مساعد</span>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
 function buildMuscleMapHTML(muscle) {
   const { svg, label, synergist } = buildMuscleMapSVG(muscle);
   return `
