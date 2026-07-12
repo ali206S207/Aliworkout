@@ -2458,6 +2458,8 @@ function setActiveProgram(id) {
 
 function updateWorkoutPageForProgram() {
   const prog = getActiveProgram();
+  // Ensure currentPPL valid for this program
+  if (!prog.tabs.find(t => t.key === currentPPL)) currentPPL = prog.tabs[0].key;
   // Update title
   const titleEl = document.getElementById('workout-title-label');
   if (titleEl) titleEl.textContent = prog.nameShort;
@@ -2467,9 +2469,10 @@ function updateWorkoutPageForProgram() {
   // Rebuild tabs
   const tabsEl = document.getElementById('ppl-tabs');
   if (tabsEl) {
-    tabsEl.innerHTML = prog.tabs.map((t, i) =>
-      `<button class="ppl-tab ${i===0?'active':''}" onclick="switchPPL('${t.key}')">${t.label}</button>`
-    ).join('');
+    tabsEl.innerHTML = prog.tabs.map((t) => {
+      const isAct = t.key === currentPPL;
+      return `<button class="ppl-tab ${isAct?'active':''}" onclick="switchPPL('${t.key}')">${t.label}</button>`;
+    }).join('');
   }
   renderPPL();
 }
@@ -2532,6 +2535,8 @@ function toggleProgramExpand(id) {
 
 function initProgramSystem() {
   const prog = getActiveProgram();
+  // Set currentPPL to first tab of active program
+  currentPPL = prog.tabs[0].key;
   if (!state.programSchedules) state.programSchedules = {};
   if (!state.programSchedules[activeProgramId]) {
     // First time only — copy default schedule
@@ -3439,6 +3444,11 @@ function switchPPL(type) {
 
 function renderPPL() {
   const container = document.getElementById('ppl-content');
+  // Guard: if currentPPL not in schedule, fall back to first tab
+  const prog = getActiveProgram();
+  if (!state.schedule || !state.schedule[currentPPL]) {
+    currentPPL = prog.tabs[0].key;
+  }
   const days = state.schedule[currentPPL];
   
   container.innerHTML = days.map((day, di) => {
