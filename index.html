@@ -2260,16 +2260,13 @@ const TRAINING_PROGRAMS = [
     ],
     schedule: {
       push: [
-        { day: 'Push A', exercises: ['e1','e3','e11','e12','e18','e20'] },
-        { day: 'Push B', exercises: ['e2','e9','e10','e13','e19','e23'] },
+        { day: 'Push Day', exercises: ['e1','e3','e11','e12','e18','e20'] },
       ],
       pull: [
-        { day: 'Pull A', exercises: ['e26','e27','e29','e34','e36','e31'] },
-        { day: 'Pull B', exercises: ['e25','e24','e28','e35','e37','e38'] },
+        { day: 'Pull Day', exercises: ['e26','e27','e29','e34','e36','e31'] },
       ],
       legs: [
-        { day: 'Legs A', exercises: ['e41','e43','e44','e45','e49','e53'] },
-        { day: 'Legs B', exercises: ['e42','e52','e46','e47','e48','e50'] },
+        { day: 'Legs Day', exercises: ['e41','e43','e44','e45','e49','e53'] },
       ],
     }
   },
@@ -2297,16 +2294,13 @@ const TRAINING_PROGRAMS = [
     ],
     schedule: {
       chest_back: [
-        { day: 'Chest & Back A', exercises: ['e1','e2','e3','e26','e27','e29'] },
-        { day: 'Chest & Back B', exercises: ['e9','e10','e11','e25','e24','e28'] },
+        { day: 'Chest & Back', exercises: ['e1','e2','e3','e26','e27','e29'] },
       ],
       arms_shoulders: [
-        { day: 'Arms & Shoulders A', exercises: ['e12','e18','e34','e36','e31','e20'] },
-        { day: 'Arms & Shoulders B', exercises: ['e13','e19','e35','e37','e38','e23'] },
+        { day: 'Arms & Shoulders', exercises: ['e12','e18','e34','e36','e31','e20'] },
       ],
       legs: [
-        { day: 'Legs A', exercises: ['e41','e43','e44','e45','e49','e53'] },
-        { day: 'Legs B', exercises: ['e42','e52','e46','e47','e48','e50'] },
+        { day: 'Legs Day', exercises: ['e41','e43','e44','e45','e49','e53'] },
       ],
     }
   },
@@ -2375,12 +2369,10 @@ const TRAINING_PROGRAMS = [
     ],
     schedule: {
       upper: [
-        { day: 'Upper A', exercises: ['e1','e26','e12','e34','e36','e31'] },
-        { day: 'Upper B', exercises: ['e2','e27','e13','e35','e37','e38'] },
+        { day: 'Upper Day', exercises: ['e1','e26','e12','e34','e36','e31'] },
       ],
       lower: [
-        { day: 'Lower A', exercises: ['e41','e43','e44','e45','e49','e53'] },
-        { day: 'Lower B', exercises: ['e42','e52','e46','e47','e48','e50'] },
+        { day: 'Lower Day', exercises: ['e41','e43','e44','e45','e49','e53'] },
       ],
     }
   },
@@ -2410,24 +2402,12 @@ const TRAINING_PROGRAMS = [
       { day: 'Rest', phase: '' },
     ],
     schedule: {
-      push: [
-        { day: 'Week 1 — Push', exercises: ['e1','e3','e11','e12','e18','e20'] },
-      ],
-      pull: [
-        { day: 'Week 1 — Pull', exercises: ['e26','e27','e29','e34','e36','e31'] },
-      ],
-      legs_ppl: [
-        { day: 'Week 1 — Legs', exercises: ['e41','e43','e44','e45','e49','e53'] },
-      ],
-      chest_back: [
-        { day: 'Week 2 — Chest & Back', exercises: ['e1','e2','e9','e26','e27','e24'] },
-      ],
-      arms_shoulders: [
-        { day: 'Week 2 — Arms & Shoulders', exercises: ['e34','e35','e12','e13','e18','e36'] },
-      ],
-      legs_arnold: [
-        { day: 'Week 2 — Legs', exercises: ['e42','e52','e46','e47','e48','e50'] },
-      ],
+      push:           [{ day: 'W1 — Push',         exercises: ['e1','e3','e11','e12','e18','e20'] }],
+      pull:           [{ day: 'W1 — Pull',         exercises: ['e26','e27','e29','e34','e36','e31'] }],
+      legs_ppl:       [{ day: 'W1 — Legs',         exercises: ['e41','e43','e44','e45','e49','e53'] }],
+      chest_back:     [{ day: 'W2 — Chest & Back', exercises: ['e1','e2','e9','e26','e27','e24'] }],
+      arms_shoulders: [{ day: 'W2 — Arms & Sho',  exercises: ['e34','e35','e12','e13','e18','e36'] }],
+      legs_arnold:    [{ day: 'W2 — Legs',         exercises: ['e42','e52','e46','e47','e48','e50'] }],
     }
   },
 ];
@@ -2665,7 +2645,37 @@ function migrateState(s) {
   if (!s.prs) s.prs = {};
   if (!s.restDays) s.restDays = [];
   if (!s.schedule) s.schedule = JSON.parse(JSON.stringify(DEFAULT_SCHEDULE));
-  if (!s.exRestTimes) s.exRestTimes = {}; // per-exercise rest time persistence
+  if (!s.exRestTimes) s.exRestTimes = {};
+  // Migration: collapse A/B days → keep only first day per tab
+  if (s.programSchedules) {
+    Object.keys(s.programSchedules).forEach(progId => {
+      const sched = s.programSchedules[progId];
+      Object.keys(sched).forEach(tabKey => {
+        if (Array.isArray(sched[tabKey]) && sched[tabKey].length > 1) {
+          // Merge exercises from A+B into first day, remove duplicates
+          const allEx = [];
+          sched[tabKey].forEach(day => {
+            (day.exercises || []).forEach(id => {
+              if (!allEx.includes(id)) allEx.push(id);
+            });
+          });
+          sched[tabKey] = [{ day: sched[tabKey][0].day.replace(/ [AB]$/, ' Day').replace(' A', '').replace(' B', ''), exercises: allEx }];
+        }
+      });
+    });
+    // Also migrate active schedule
+    if (s.schedule) {
+      Object.keys(s.schedule).forEach(tabKey => {
+        if (Array.isArray(s.schedule[tabKey]) && s.schedule[tabKey].length > 1) {
+          const allEx = [];
+          s.schedule[tabKey].forEach(day => {
+            (day.exercises || []).forEach(id => { if (!allEx.includes(id)) allEx.push(id); });
+          });
+          s.schedule[tabKey] = [{ day: s.schedule[tabKey][0].day.replace(/ [AB]$/, ' Day').replace(' A','').replace(' B',''), exercises: allEx }];
+        }
+      });
+    }
+  }
   return s;
 }
 
