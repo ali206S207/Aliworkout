@@ -4635,6 +4635,56 @@ function resetArnoldXPPL() {
   if (activeProgramId === 'arnold_x_ppl') updateWorkoutPageForProgram();
   showToast('✅ تم تحديث Arnold×PPL من PPL و Arnold الحالية');
 }
+
+// ── ONE-TIME MIGRATION: collapse A/B days → single day ──
+function forceCollapseABDays() {
+  const migKey = 'tamreeni_migrated_ab_v1';
+  if (localStorage.getItem(migKey)) return; // already done
+
+  function collapseSchedule(sched) {
+    if (!sched) return sched;
+    Object.keys(sched).forEach(tabKey => {
+      const days = sched[tabKey];
+      if (Array.isArray(days) && days.length > 1) {
+        const allEx = [];
+        days.forEach(day => {
+          (day.exercises || []).forEach(id => {
+            if (!allEx.includes(id)) allEx.push(id);
+          });
+        });
+        const firstName = days[0].day
+          .replace(/ A$/, '').replace(/ B$/, '')
+          .replace(' A', '').replace(' B', '')
+          .trim();
+        sched[tabKey] = [{ day: firstName, exercises: allEx }];
+      }
+    });
+    return sched;
+  }
+
+  // Migrate all programSchedules across all gyms
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith('tamreeni_state_')) {
+      try {
+        const gymState = JSON.parse(localStorage.getItem(key));
+        if (gymState && gymState.programSchedules) {
+          Object.keys(gymState.programSchedules).forEach(progId => {
+            gymState.programSchedules[progId] = collapseSchedule(gymState.programSchedules[progId]);
+          });
+          if (gymState.schedule) {
+            gymState.schedule = collapseSchedule(gymState.schedule);
+          }
+          localStorage.setItem(key, JSON.stringify(gymState));
+        }
+      } catch(e) { console.warn('Migration error:', e); }
+    }
+  }
+
+  localStorage.setItem(migKey, '1');
+  console.log('✅ A/B migration done');
+}
+
 // ─── ACTIVE WORKOUT DRAG REORDER ───
 let _awDragSrc = null;
 
@@ -5536,6 +5586,7 @@ if (heroDate) {
   const d = new Date();
   heroDate.textContent = d.toLocaleDateString('ar-EG', { weekday:'short', month:'short', day:'numeric' });
 }
+forceCollapseABDays();
 initProgramSystem();
 renderDash();
 restoreActiveWorkout();
