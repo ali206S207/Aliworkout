@@ -2393,12 +2393,12 @@ const TRAINING_PROGRAMS = [
     frequency: '6 أيام / أسبوع',
     level: 'متقدم',
     tabs: [
-      { key: 'push', label: 'PUSH' },
-      { key: 'pull', label: 'PULL' },
-      { key: 'legs_ppl', label: 'LEGS' },
-      { key: 'chest_back', label: 'CHEST & BACK' },
-      { key: 'arms_shoulders', label: 'ARMS & SHO' },
-      { key: 'legs_arnold', label: 'LEGS II' },
+      { key: 'push',           label: 'W1 PUSH' },
+      { key: 'pull',           label: 'W1 PULL' },
+      { key: 'legs_ppl',       label: 'W1 LEGS' },
+      { key: 'chest_back',     label: 'W2 CHEST+BACK' },
+      { key: 'arms_shoulders', label: 'W2 ARMS+SHO' },
+      { key: 'legs_arnold',    label: 'W2 LEGS' },
     ],
     weekPreview: [
       { day: 'Push', phase: 'a' },
@@ -2446,7 +2446,21 @@ function setActiveProgram(id) {
   if (typeof state !== 'undefined' && state) {
     if (!state.programSchedules) state.programSchedules = {};
     if (!state.programSchedules[id]) {
-      state.programSchedules[id] = JSON.parse(JSON.stringify(prog.schedule));
+      // Arnold×PPL: inherit push/pull/legs from user's saved PPL schedule
+      if (id === 'arnold_x_ppl') {
+        const pplSched = state.programSchedules['ppl'] || {};
+        const arnoldSched = state.programSchedules['arnold_split'] || {};
+        state.programSchedules[id] = {
+          push:           JSON.parse(JSON.stringify(pplSched.push    || prog.schedule.push)),
+          pull:           JSON.parse(JSON.stringify(pplSched.pull    || prog.schedule.pull)),
+          legs_ppl:       JSON.parse(JSON.stringify(pplSched.legs    || prog.schedule.legs_ppl)),
+          chest_back:     JSON.parse(JSON.stringify(arnoldSched.chest_back     || prog.schedule.chest_back)),
+          arms_shoulders: JSON.parse(JSON.stringify(arnoldSched.arms_shoulders || prog.schedule.arms_shoulders)),
+          legs_arnold:    JSON.parse(JSON.stringify(arnoldSched.legs           || prog.schedule.legs_arnold)),
+        };
+      } else {
+        state.programSchedules[id] = JSON.parse(JSON.stringify(prog.schedule));
+      }
     }
     state.schedule = state.programSchedules[id];
     saveState();
@@ -2516,6 +2530,7 @@ function renderPrograms() {
         <button class="program-select-btn ${isActive?'selected-btn':''}"
           onclick="${isActive ? 'void(0)' : 'setActiveProgram(&quot;'+p.id+'&quot;)'}"
         >${isActive ? '✓ النظام الحالي' : '▶ تفعيل هذا النظام'}</button>
+        ${p.id === 'arnold_x_ppl' ? '<button onclick="resetArnoldXPPL()" style="width:calc(100% - 24px);margin:0 12px 8px;background:var(--bg3);border:1px solid var(--border);color:var(--text-muted);border-radius:10px;padding:10px;font-family:var(--font-main);font-size:12px;cursor:pointer">🔄 تحديث من PPL و Arnold الحالية</button>' : ''}
       </div>
     </div>`;
   }).join('');
@@ -4588,6 +4603,28 @@ function closeMuscleModal() {
 }
 
 
+
+function resetArnoldXPPL() {
+  if (!state.programSchedules) state.programSchedules = {};
+  const prog = TRAINING_PROGRAMS.find(p => p.id === 'arnold_x_ppl');
+  const pplSched = state.programSchedules['ppl'] || {};
+  const arnoldSched = state.programSchedules['arnold_split'] || {};
+  state.programSchedules['arnold_x_ppl'] = {
+    push:           JSON.parse(JSON.stringify(pplSched.push    || prog.schedule.push)),
+    pull:           JSON.parse(JSON.stringify(pplSched.pull    || prog.schedule.pull)),
+    legs_ppl:       JSON.parse(JSON.stringify(pplSched.legs    || prog.schedule.legs_ppl)),
+    chest_back:     JSON.parse(JSON.stringify(arnoldSched.chest_back     || prog.schedule.chest_back)),
+    arms_shoulders: JSON.parse(JSON.stringify(arnoldSched.arms_shoulders || prog.schedule.arms_shoulders)),
+    legs_arnold:    JSON.parse(JSON.stringify(arnoldSched.legs           || prog.schedule.legs_arnold)),
+  };
+  if (activeProgramId === 'arnold_x_ppl') {
+    state.schedule = state.programSchedules['arnold_x_ppl'];
+  }
+  saveState();
+  renderPrograms();
+  if (activeProgramId === 'arnold_x_ppl') updateWorkoutPageForProgram();
+  showToast('✅ تم تحديث Arnold×PPL من PPL و Arnold الحالية');
+}
 // ─── ACTIVE WORKOUT DRAG REORDER ───
 let _awDragSrc = null;
 
