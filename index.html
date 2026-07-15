@@ -1575,6 +1575,67 @@ body::after{
   animation:sheetIn .22s cubic-bezier(0.34,1.1,0.64,1);
 }
 
+
+/* ─── CUSTOM REST TIME PICKER ─── */
+#rest-picker-modal{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,0.85);
+  z-index:5000;align-items:flex-end;justify-content:center;
+  backdrop-filter:blur(8px);
+}
+#rest-picker-modal.open{display:flex;animation:overlayIn .18s ease}
+
+.rest-picker-sheet{
+  background:var(--bg2);
+  border-radius:var(--r-xl) var(--r-xl) 0 0;
+  border:1px solid var(--border-bright);border-bottom:none;
+  width:100%;max-width:480px;
+  padding:16px 16px env(safe-area-inset-bottom,24px);
+  animation:sheetIn .22s cubic-bezier(0.34,1.1,0.64,1);
+}
+
+.rest-picker-title{
+  font-family:var(--font-display);font-size:15px;font-weight:700;
+  text-transform:uppercase;letter-spacing:2px;color:var(--red);
+  margin-bottom:4px;
+}
+.rest-picker-sub{
+  font-family:var(--font-main);font-size:11px;color:var(--text-muted);
+  margin-bottom:16px;
+}
+
+.rest-picker-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:8px;
+  margin-bottom:14px;
+}
+
+.rest-picker-btn{
+  background:var(--bg3);border:1.5px solid var(--border);
+  border-radius:var(--r-md);padding:14px 8px;
+  font-family:var(--font-display);font-size:20px;font-weight:700;
+  color:var(--text);cursor:pointer;text-align:center;
+  transition:all .15s;
+}
+.rest-picker-btn:active{transform:scale(0.94)}
+.rest-picker-btn.selected{
+  background:rgba(232,34,42,0.12);
+  border-color:var(--red);color:var(--red);
+  box-shadow:0 0 0 1px rgba(232,34,42,0.2);
+}
+.rest-picker-btn small{
+  display:block;font-family:var(--font-main);
+  font-size:10px;font-weight:400;color:var(--text-muted);
+  margin-top:2px;letter-spacing:0.5px;
+}
+
+.rest-picker-close{
+  width:100%;background:var(--bg3);border:1px solid var(--border);
+  color:var(--text-muted);border-radius:var(--r-md);padding:13px;
+  font-family:var(--font-main);font-size:13px;cursor:pointer;
+  transition:all .15s;
+}
+.rest-picker-close:active{background:var(--bg4)}
+
 </style>
 
 <script>
@@ -3098,6 +3159,18 @@ ${gymsHtml || '<section><p class="empty">لا توجد جيمات محفوظة</
   </div>
 </div>
 
+
+<!-- REST TIME PICKER MODAL -->
+<div id="rest-picker-modal" onclick="if(event.target===this)closeRestPicker()">
+  <div class="rest-picker-sheet">
+    <div class="modal-handle"></div>
+    <div class="rest-picker-title">وقت الراحة</div>
+    <div class="rest-picker-sub" id="rp-ex-name">اختر وقت الراحة بين السيتات</div>
+    <div class="rest-picker-grid" id="rp-grid"></div>
+    <button class="rest-picker-close" onclick="closeRestPicker()">تم</button>
+  </div>
+</div>
+
 </body>
 </html>`;
 }
@@ -3829,10 +3902,10 @@ function renderActiveExercises() {
         <div style="text-align:right;flex-shrink:0">
           <button onclick="openMuscleModal(${ei})" style="background:rgba(232,34,42,0.1);border:1px solid rgba(232,34,42,0.2);color:var(--red);border-radius:8px;padding:5px 10px;font-family:var(--font-main);font-size:10px;font-weight:700;cursor:pointer;width:100%;margin-bottom:4px;letter-spacing:0.5px">💪 عضلة</button>
           <button onclick="${ei===0?'openGuidedWarmup('+ei+')':'openGuidedWarmup('+ei+')'}" style="background:rgba(240,165,0,0.1);border:1px solid rgba(240,165,0,0.25);color:var(--gold);border-radius:8px;padding:5px 10px;font-family:var(--font-main);font-size:10px;font-weight:700;cursor:pointer;width:100%;margin-bottom:6px">${ei===0?'🔥 إحماء':'⚡ تنشيط'}</button>
-          <div style="font-family:var(--font-condensed);font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px">راحة</div>
-          <select onchange="setExRestTime(${ei},this.value)" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 6px;font-family:var(--font-condensed);font-size:12px;font-weight:600">
-            ${[30,60,90,120,180,240].map(s=>`<option value="${s}" ${(ex.restTime||90)==s?'selected':''}>${s}s</option>`).join('')}
-          </select>
+          <div style="font-family:var(--font-main);font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">راحة</div>
+          <button onclick="openRestPicker(${ei})" style="background:var(--bg3);border:1.5px solid var(--border);color:var(--text);border-radius:8px;padding:5px 10px;font-family:var(--font-display);font-size:15px;font-weight:700;cursor:pointer;width:100%;text-align:center;transition:border-color .15s" id="rest-display-${ei}">
+            ${ex.restTime||90}s
+          </button>
         </div>
       </div>
       ${buildLastSessionBanner(ex.id)}
@@ -4569,6 +4642,60 @@ function forceCollapseABDays() {
 
   localStorage.setItem(migKey, '1');
   console.log('✅ A/B migration done');
+}
+
+
+// ─── CUSTOM REST TIME PICKER ───
+let _rpEi = null;
+
+const REST_OPTIONS = [
+  { val: 30,  label: '30', sub: 'ثانية' },
+  { val: 60,  label: '60', sub: 'ثانية' },
+  { val: 90,  label: '90', sub: 'ثانية' },
+  { val: 120, label: '2',  sub: 'دقيقة' },
+  { val: 180, label: '3',  sub: 'دقائق' },
+  { val: 240, label: '4',  sub: 'دقائق' },
+];
+
+function openRestPicker(ei) {
+  _rpEi = ei;
+  const ex = activeWorkout && activeWorkout.exercises[ei];
+  const current = (ex ? ex.restTime : null) || 90;
+
+  const nameEl = document.getElementById('rp-ex-name');
+  if (nameEl && ex) nameEl.textContent = ex.name;
+
+  const grid = document.getElementById('rp-grid');
+  if (grid) {
+    grid.innerHTML = REST_OPTIONS.map(opt => `
+      <button class="rest-picker-btn ${opt.val === current ? 'selected' : ''}"
+        onclick="selectRestTime(${opt.val})">
+        ${opt.label}
+        <small>${opt.sub}</small>
+      </button>
+    `).join('');
+  }
+
+  document.getElementById('rest-picker-modal').classList.add('open');
+}
+
+function selectRestTime(val) {
+  if (_rpEi === null) return;
+  // Update all buttons
+  document.querySelectorAll('.rest-picker-btn').forEach(btn => {
+    btn.classList.remove('selected');
+  });
+  event.currentTarget.classList.add('selected');
+  // Save
+  setExRestTime(_rpEi, val);
+  // Update display button
+  const display = document.getElementById('rest-display-' + _rpEi);
+  if (display) display.textContent = val + 's';
+}
+
+function closeRestPicker() {
+  document.getElementById('rest-picker-modal').classList.remove('open');
+  _rpEi = null;
 }
 
 // ─── ACTIVE WORKOUT DRAG REORDER ───
@@ -6445,6 +6572,18 @@ function renderProgEditLib() {
   </div>
 </div>
 
+
+<!-- REST TIME PICKER MODAL -->
+<div id="rest-picker-modal" onclick="if(event.target===this)closeRestPicker()">
+  <div class="rest-picker-sheet">
+    <div class="modal-handle"></div>
+    <div class="rest-picker-title">وقت الراحة</div>
+    <div class="rest-picker-sub" id="rp-ex-name">اختر وقت الراحة بين السيتات</div>
+    <div class="rest-picker-grid" id="rp-grid"></div>
+    <button class="rest-picker-close" onclick="closeRestPicker()">تم</button>
+  </div>
+</div>
+
 </body>
 </html>
 
@@ -6590,6 +6729,18 @@ function renderProgEditLib() {
         </div>
       </div>
     </div>
+  </div>
+</div>
+
+
+<!-- REST TIME PICKER MODAL -->
+<div id="rest-picker-modal" onclick="if(event.target===this)closeRestPicker()">
+  <div class="rest-picker-sheet">
+    <div class="modal-handle"></div>
+    <div class="rest-picker-title">وقت الراحة</div>
+    <div class="rest-picker-sub" id="rp-ex-name">اختر وقت الراحة بين السيتات</div>
+    <div class="rest-picker-grid" id="rp-grid"></div>
+    <button class="rest-picker-close" onclick="closeRestPicker()">تم</button>
   </div>
 </div>
 
