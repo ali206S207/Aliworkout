@@ -1777,7 +1777,7 @@ self.addEventListener('notificationclick', e => {
 `;
     const swBlob = new Blob([swCode], {type:'application/javascript'});
     const swUrl = URL.createObjectURL(swBlob);
-    navigator.serviceWorker.register(swUrl, {scope: './'}).then(reg => { _swReg = reg; reg.active && reg.active.postMessage({type:'CACHE_PAGE',url:location.href}); requestNotifPermission(); }). catch(()=>{});
+    navigator.serviceWorker.register(swUrl, {scope: './'}).then(reg => { _swReg = reg; reg.active && reg.active.postMessage({type:'CACHE_PAGE',url:location.href}); }). catch(()=>{});
   }
 })();
 </script>
@@ -5195,6 +5195,7 @@ let _bstTotal = 0;
 function startBetweenSetTimer(ei, si, seconds) {
   // Clear any existing timer
   if (_bstInterval) clearInterval(_bstInterval);
+  requestNotifPermission();
   sendToSW({ type: 'START_REST', seconds, icon: '' });
 
   _bstTotal = seconds;
@@ -5238,6 +5239,7 @@ function showRestTimer(seconds = 90) {
   restTotal = seconds;
   restEndTime = Date.now() + seconds * 1000;
 
+  requestNotifPermission();
   sendToSW({ type: 'START_REST', seconds, icon: document.getElementById('apple-icon')?.href || '' });
 
   // Show inline bar (not modal)
@@ -6003,11 +6005,17 @@ function sendToSW(msg) {
 }
 
 function requestNotifPermission() {
-  if ('Notification' in window && Notification.permission === 'default') {
-    Notification.requestPermission().then(p => {
-      if (p === 'granted') showToast('✓ الإشعارات مفعلة');
-    });
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'granted') return;
+  if (Notification.permission === 'denied') {
+    showToast('🔕 الإشعارات متمنوعة — فعّلها من إعدادات الموقع في كروم');
+    return;
   }
+  // permission === 'default' — must be called from a real tap (Chrome ignores it otherwise)
+  Notification.requestPermission().then(p => {
+    if (p === 'granted') showToast('✓ الإشعارات مفعلة');
+    else if (p === 'denied') showToast('🔕 الإشعارات متمنوعة — فعّلها من إعدادات الموقع في كروم');
+  });
 }
 
 // ── CUSTOM EXERCISES ──
