@@ -1671,6 +1671,18 @@ body::after{
     const swCode = `
 const CACHE = 'trainer-v3';
 let restTimer = null;
+let restTickInterval = null;
+let restEndTime = null;
+
+function _fmt(sec) {
+  sec = Math.max(0, Math.round(sec));
+  const m = Math.floor(sec/60), s = sec%60;
+  return m + ':' + (s<10?'0':'') + s;
+}
+
+function _clearRestNotifs() {
+  self.registration.getNotifications({tag:'rest-active'}).then(ns => ns.forEach(n => n.close()));
+}
 
 self.addEventListener('install', e => { self.skipWaiting(); });
 self.addEventListener('activate', e => {
@@ -1685,12 +1697,34 @@ self.addEventListener('message', e => {
   if (!e.data) return;
 
   if (e.data.type === 'START_REST') {
-    // Cancel any existing timer
+    // Cancel any existing timer/ticker
     if (restTimer) { clearTimeout(restTimer); restTimer = null; }
-    const ms = e.data.seconds * 1000;
+    if (restTickInterval) { clearInterval(restTickInterval); restTickInterval = null; }
+    const seconds = e.data.seconds;
+    const ms = seconds * 1000;
     const icon = e.data.icon || '';
+    restEndTime = Date.now() + ms;
+
+    const tick = () => {
+      const remaining = Math.round((restEndTime - Date.now()) / 1000);
+      if (remaining <= 0) return;
+      self.registration.showNotification('⏱ الراحة شغالة', {
+        body: 'متبقي ' + _fmt(remaining) + ' — هيرن لما تخلص',
+        icon, badge: icon,
+        tag: 'rest-active',
+        renotify: false,
+        silent: true,
+        requireInteraction: true,
+        actions: [{ action: 'skip', title: '⏭ تخطي الراحة' }]
+      });
+    };
+    tick();
+    restTickInterval = setInterval(tick, 5000);
+
     restTimer = setTimeout(() => {
       restTimer = null;
+      if (restTickInterval) { clearInterval(restTickInterval); restTickInterval = null; }
+      _clearRestNotifs();
       // Notify all clients to update UI
       self.clients.matchAll().then(clients => {
         clients.forEach(c => c.postMessage({ type: 'REST_DONE' }));
@@ -1712,6 +1746,10 @@ self.addEventListener('message', e => {
 
   if (e.data.type === 'CANCEL_REST') {
     if (restTimer) { clearTimeout(restTimer); restTimer = null; }
+    if (restTickInterval) { clearInterval(restTickInterval); restTickInterval = null; }
+    restEndTime = null;
+    _clearRestNotifs();
+    self.registration.getNotifications({tag:'rest-done'}).then(ns => ns.forEach(n => n.close()));
   }
 
   if (e.data.type === 'CACHE_PAGE') {
@@ -1721,6 +1759,16 @@ self.addEventListener('message', e => {
 
 self.addEventListener('notificationclick', e => {
   e.notification.close();
+  if (e.action === 'skip') {
+    if (restTimer) { clearTimeout(restTimer); restTimer = null; }
+    if (restTickInterval) { clearInterval(restTickInterval); restTickInterval = null; }
+    restEndTime = null;
+    _clearRestNotifs();
+    e.waitUntil(self.clients.matchAll().then(clients => {
+      clients.forEach(c => c.postMessage({ type: 'SKIP_REST_FROM_NOTIF' }));
+    }));
+    return;
+  }
   e.waitUntil(self.clients.matchAll({ type: 'window' }).then(clients => {
     if (clients.length) clients[0].focus();
     else self.clients.openWindow('./');
@@ -5233,6 +5281,9 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.addEventListener('message', e => {
     if (e.data && e.data.type === 'REST_DONE') {
       if (navigator.vibrate) navigator.vibrate([300, 100, 300]);
+      skipRest();
+    }
+    if (e.data && e.data.type === 'SKIP_REST_FROM_NOTIF') {
       skipRest();
     }
   });
