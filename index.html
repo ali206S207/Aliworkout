@@ -1757,6 +1757,22 @@ self.addEventListener('message', e => {
   }
 });
 
+self.addEventListener('push', e => {
+  let data = { title: 'TRAINER PRO 💪', body: 'انتهى وقت الراحة!' };
+  try { if (e.data) data = e.data.json(); } catch(_) {}
+  e.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      tag: 'rest-done',
+      renotify: true,
+      requireInteraction: true,
+      vibrate: [300, 100, 300, 100, 300],
+      silent: false,
+      actions: [{ action: 'ok', title: '✓ جاهز' }]
+    })
+  );
+});
+
 self.addEventListener('notificationclick', e => {
   e.notification.close();
   if (e.action === 'skip') {
@@ -5197,8 +5213,7 @@ function startBetweenSetTimer(ei, si, seconds) {
   if (_bstInterval) clearInterval(_bstInterval);
   requestNotifPermission();
   sendToSW({ type: 'START_REST', seconds, icon: '' });
-
-  _bstTotal = seconds;
+  scheduleServerPush(seconds, 'TRAINER PRO 💪', 'انتهى وقت الراحة — ابدأ السيت الجديد!');
   _bstEndTime = Date.now() + seconds * 1000;
 
   // Mark previous timer strips inactive
@@ -5229,6 +5244,7 @@ function startBetweenSetTimer(ei, si, seconds) {
       if (navigator.vibrate) navigator.vibrate([150, 60, 150]);
       strip.classList.remove('active');
       sendToSW({ type: 'CANCEL_REST' });
+      cancelServerPush();
     }
   };
   tick();
@@ -5241,8 +5257,7 @@ function showRestTimer(seconds = 90) {
 
   requestNotifPermission();
   sendToSW({ type: 'START_REST', seconds, icon: document.getElementById('apple-icon')?.href || '' });
-
-  // Show inline bar (not modal)
+  scheduleServerPush(seconds, 'TRAINER PRO 💪', 'انتهى وقت الراحة — ابدأ السيت الجديد!');
   const bar = document.getElementById('inline-rest-bar');
   if (bar) bar.style.display = 'block';
 
@@ -5299,6 +5314,7 @@ function adjustRest(delta) {
   // Update SW with new remaining time
   const newSecs = Math.round((restEndTime - Date.now()) / 1000);
   sendToSW({ type: 'START_REST', seconds: newSecs, icon: document.getElementById('apple-icon')?.href || '' });
+  scheduleServerPush(newSecs, 'TRAINER PRO 💪', 'انتهى وقت الراحة — ابدأ السيت الجديد!');
   document.getElementById('rest-time-text').textContent = newSecs;
 }
 
@@ -5307,6 +5323,7 @@ function skipRest() {
   restEndTime = null;
   if (window._hideBubble) window._hideBubble();
   sendToSW({ type: 'CANCEL_REST' });
+  cancelServerPush();
   const bar = document.getElementById('inline-rest-bar');
   if (bar) bar.style.display = 'none';
   closeRestTimer();
@@ -6006,16 +6023,84 @@ function sendToSW(msg) {
 
 function requestNotifPermission() {
   if (!('Notification' in window)) return;
-  if (Notification.permission === 'granted') return;
+  if (Notification.permission === 'granted') { ensurePushSubscription(); return; }
   if (Notification.permission === 'denied') {
     showToast('🔕 الإشعارات متمنوعة — فعّلها من إعدادات الموقع في كروم');
     return;
   }
   // permission === 'default' — must be called from a real tap (Chrome ignores it otherwise)
   Notification.requestPermission().then(p => {
-    if (p === 'granted') showToast('✓ الإشعارات مفعلة');
+    if (p === 'granted') { showToast('✓ الإشعارات مفعلة'); ensurePushSubscription(); }
     else if (p === 'denied') showToast('🔕 الإشعارات متمنوعة — فعّلها من إعدادات الموقع في كروم');
   });
+}
+
+// ── REAL WEB PUSH (works even if phone is locked / tab gets killed) ──
+const PUSH_SUPABASE_URL = 'https://ublurrzfsxikexfhqbns.supabase.co';
+const PUSH_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVibHVycnpmc3hpa2V4ZmhxYm5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NDEyODEsImV4cCI6MjA5MzExNzI4MX0.SPlW6T2iBg8tTkFbp1FXDKHaoZrkDlnUAxlUPNhIiFQ';
+const PUSH_VAPID_PUBLIC = 'BPYeO_c5-hqfPXxjBqkSuDd1YH6LxPWJoNJDFjMTQCkkzAT_J2XDBxg6M6tSQWvvHBZF3pvhoo6GnOjPOrf-__I';
+let _pushSubId = localStorage.getItem('tw_push_sub_id') || null;
+let _ensuringPush = false;
+
+function _urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(base64);
+  const arr = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+  return arr;
+}
+
+async function ensurePushSubscription() {
+  if (_pushSubId || _ensuringPush) return _pushSubId;
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return null;
+  _ensuringPush = true;
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) {
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: _urlBase64ToUint8Array(PUSH_VAPID_PUBLIC)
+      });
+    }
+    const raw = sub.toJSON();
+    const res = await fetch(PUSH_SUPABASE_URL + '/functions/v1/save-subscription', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': PUSH_ANON_KEY, 'Authorization': 'Bearer ' + PUSH_ANON_KEY },
+      body: JSON.stringify({ endpoint: raw.endpoint, keys: raw.keys, app: 'aliworkout' })
+    });
+    const json = await res.json();
+    if (json.subscription_id) {
+      _pushSubId = json.subscription_id;
+      localStorage.setItem('tw_push_sub_id', _pushSubId);
+    }
+  } catch (e) {
+    console.warn('push subscribe failed', e);
+  }
+  _ensuringPush = false;
+  return _pushSubId;
+}
+
+async function scheduleServerPush(seconds, title, body) {
+  try {
+    const subId = await ensurePushSubscription();
+    if (!subId) return;
+    fetch(PUSH_SUPABASE_URL + '/functions/v1/schedule-push', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': PUSH_ANON_KEY, 'Authorization': 'Bearer ' + PUSH_ANON_KEY },
+      body: JSON.stringify({ subscription_id: subId, seconds, title, body })
+    }).catch(() => {});
+  } catch (e) { console.warn('schedule push failed', e); }
+}
+
+function cancelServerPush() {
+  if (!_pushSubId) return;
+  fetch(PUSH_SUPABASE_URL + '/functions/v1/cancel-push', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'apikey': PUSH_ANON_KEY, 'Authorization': 'Bearer ' + PUSH_ANON_KEY },
+    body: JSON.stringify({ subscription_id: _pushSubId })
+  }).catch(() => {});
 }
 
 // ── CUSTOM EXERCISES ──
