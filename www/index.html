@@ -6028,6 +6028,13 @@ async function requestNativeNotifPermission() {
   try {
     const perm = await LN.checkPermissions();
     if (perm.display !== 'granted') await LN.requestPermissions();
+    // صلاحية التنبيهات الدقيقة (Android 12+) — من غيرها الإشعار بيتأخر لحد ما تفتح الشاشة
+    if (LN.checkExactNotificationSetting) {
+      const exact = await LN.checkExactNotificationSetting();
+      if (exact.exact_alarm !== 'granted' && LN.changeExactNotificationSetting) {
+        await LN.changeExactNotificationSetting();
+      }
+    }
   } catch (e) { console.error('notif permission error', e); }
 }
 
