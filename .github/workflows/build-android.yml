@@ -57,8 +57,29 @@ jobs:
         run: chmod +x android/gradlew
 
       - name: Build debug APK
+        id: build
         working-directory: android
-        run: ./gradlew assembleDebug --no-daemon
+        run: |
+          set +e
+          ./gradlew assembleDebug --no-daemon --stacktrace > ../gradle-log.txt 2>&1
+          code=$?
+          tail -n 200 ../gradle-log.txt
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Save gradle debug log on failure
+        if: steps.build.outputs.exit_code != '0'
+        run: |
+          git config user.name "gh-actions-bot"
+          git config user.email "actions@github.com"
+          git checkout -B ci-debug-log
+          git add -f gradle-log.txt
+          git commit -m "ci: gradle debug log"
+          git push origin ci-debug-log --force
+
+      - name: Fail if build failed
+        if: steps.build.outputs.exit_code != '0'
+        run: exit 1
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
