@@ -6012,8 +6012,73 @@ function showAIError(msg) {
 
 // ── NOTIFICATIONS ──
 let _swReg = null;
+const REST_NOTIF_ID = 991177;
+
+function isNativeApp() {
+  return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+}
+
+function getLocalNotifPlugin() {
+  return window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.LocalNotifications;
+}
+
+async function requestNativeNotifPermission() {
+  const LN = getLocalNotifPlugin();
+  if (!LN) return;
+  try {
+    const perm = await LN.checkPermissions();
+    if (perm.display !== 'granted') await LN.requestPermissions();
+  } catch (e) { console.error('notif permission error', e); }
+}
+
+async function scheduleNativeRestNotif(seconds) {
+  const LN = getLocalNotifPlugin();
+  if (!LN) return;
+  try {
+    await LN.cancel({ notifications: [{ id: REST_NOTIF_ID }] });
+    await LN.schedule({
+      notifications: [{
+        id: REST_NOTIF_ID,
+        title: 'TRAINER PRO 💪',
+        body: 'انتهى وقت الراحة — ابدأ السيت الجديد!',
+        schedule: { at: new Date(Date.now() + seconds * 1000), allowWhileIdle: true },
+        channelId: 'rest_timer',
+        smallIcon: 'ic_stat_trainer'
+      }]
+    });
+  } catch (e) { console.error('scheduleNativeRestNotif error', e); }
+}
+
+async function cancelNativeRestNotif() {
+  const LN = getLocalNotifPlugin();
+  if (!LN) return;
+  try { await LN.cancel({ notifications: [{ id: REST_NOTIF_ID }] }); } catch (e) {}
+}
+
+if (isNativeApp()) {
+  document.addEventListener('DOMContentLoaded', () => {
+    requestNativeNotifPermission();
+    const LN = getLocalNotifPlugin();
+    if (LN && LN.createChannel) {
+      LN.createChannel({
+        id: 'rest_timer',
+        name: 'مؤقت الراحة',
+        description: 'تنبيه لما يخلص وقت الراحة بين السيتات',
+        importance: 5,
+        vibration: true
+      }).catch(() => {});
+    }
+  });
+}
 
 function sendToSW(msg) {
+  // في التطبيق الأصلي (Android): استخدم إشعار نظام حقيقي بيشتغل حتى لو الشاشة مقفولة
+  if (isNativeApp()) {
+    if (msg && msg.type === 'START_REST') scheduleNativeRestNotif(msg.seconds);
+    if (msg && msg.type === 'CANCEL_REST') cancelNativeRestNotif();
+    return;
+  }
+  // في نسخة الويب (PWA): سيبها زي ما هي (Service Worker)
   if (_swReg && _swReg.active) { _swReg.active.postMessage(msg); return; }
   navigator.serviceWorker && navigator.serviceWorker.ready.then(reg => {
     _swReg = reg;

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">TRAINER PRO</string>
+    <string name="title_activity_main">TRAINER PRO</string>
+    <string name="package_name">com.ali.trainerpro</string>
+    <string name="custom_url_scheme">com.ali.trainerpro</string>
+</resources>
